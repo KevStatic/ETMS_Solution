@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Repositories\" />
+    <Folder Include="Database\Backups\" />
   </ItemGroup>
 
   <PropertyGroup>
