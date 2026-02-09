@@ -1,10 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ETMS.Domain.Entities
 {
-    internal class Employee
+    public class Employee
     {
+        public int EmployeeId { get; set; }
+        public string EmployeeCode { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime DateOfJoining { get; set; }
+        public string EmploymentType { get; set; }
+
+        // Foreign Keys
+        public int DepartmentId { get; set; }
+        public int BranchId { get; set; }
+        public int LocationId { get; set; }
+        public int DesignationId { get; set; }
+        public int? ReportingManagerId { get; set; }
+
+        public string Status { get; set; }
+        public bool IsActive { get; set; }
+
+        // Extra properties for display 
     }
 }

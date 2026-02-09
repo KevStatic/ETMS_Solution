@@ -1,10 +1,13 @@
-﻿using System;
+using ETMS.Domain.Entities;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
 {
-    internal interface IEmployeeRepository
+    public interface IEmployeeRepository
     {
+        Task<IEnumerable<Employee>> GetAllEmployeesAsync();
+        Task<Employee> GetEmployeeByIdAsync(int id);
+        Task<Employee?> GetEmployeeByCodeAsync(string employeeCode);
     }
 }
