@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/Database/" />
+  <Folder Name="/Database/Backups/" />
+  <Folder Name="/Database/Scripts/">
+    <File Path="001_Initial_Setup.sql" />
+  </Folder>
   <Project Path="ETMS.Application/ETMS.Application.csproj" />
   <Project Path="ETMS.Domain/ETMS.Domain.csproj" />
   <Project Path="ETMS.Infrastructure/ETMS.Infrastructure.csproj" />
