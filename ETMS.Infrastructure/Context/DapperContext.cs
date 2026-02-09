@@ -2,8 +2,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
-namespace 
-    .Infrastructure.Context
+namespace ETMS.Infrastructure.Context
 {
     public class DapperContext
     {
