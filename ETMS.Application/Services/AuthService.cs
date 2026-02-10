@@ -1,0 +1,43 @@
+﻿using System;
+using System.Threading.Tasks;
+using ETMS.Application.DTOs.Auth;
+
+namespace ETMS.Application.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly IUserAccountRepository _userRepository;
+
+        public AuthService(IUserAccountRepository userRepository)
+        {
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        }
+
+        public async Task<LoginResultDto> AuthenticateAsync(LoginRequestDto request)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+
+            var user = await _userRepository.GetByUsernameAsync(request.Username);
+
+            // Use proper password hashing in production (e.g., BCrypt or Identity PasswordHasher)
+            if (user == null || user.Password != request.Password)
+            {
+                return new LoginResultDto { Success = false, ErrorMessage = "Invalid username or password." };
+            }
+
+            if (!user.IsActive)
+            {
+                return new LoginResultDto { Success = false, ErrorMessage = "Account is inactive." };
+            }
+
+            return new LoginResultDto
+            {
+                Success = true,
+                Username = user.Username,
+                Role = user.Role,
+                EmployeeId = user.EmployeeId,
+                ErrorMessage = null
+            };
+        }
+    }
+}
