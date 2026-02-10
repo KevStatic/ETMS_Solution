@@ -1,3 +1,4 @@
+//using ETMS.Application.Services;
 using ETMS.Infrastructure.Context;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<DapperContext>();
+//// Infrastructure Layer
+//builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
+
+//// Application Layer
+//builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
