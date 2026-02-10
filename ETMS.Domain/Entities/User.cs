@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ETMS.Domain.Entities
+﻿namespace ETMS.Domain.Entities
 {
-    internal class User
+    public class User
     {
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public int EmployeeId { get; set; }
     }
 }

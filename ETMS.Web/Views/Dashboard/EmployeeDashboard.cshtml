@@ -1,0 +1,146 @@
+﻿@model ETMS.Web.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Employee Dashboard";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<div class="container-fluid mt-4" style="max-width: 1400px;">
+
+    <div class="row mb-5">
+        <div class="col-md-8">
+            <h2 class="fw-bold" style="color: #333;">Welcome, @Model.EmployeeName</h2>
+            <p class="text-muted fs-5">
+                You are currently posted at <strong class="text-dark">@Model.CurrentLocation (@Model.Department)</strong><br />
+                You report to <strong class="text-dark">@Model.ManagerName</strong>
+            </p>
+        </div>
+        <div class="col-md-4 text-end align-self-center">
+            <div class="d-flex justify-content-end align-items-center mb-3">
+                <div class="text-end me-3">
+                    <span class="d-block fw-bold">@Model.EmployeeName</span>
+                    <span class="d-block small text-muted">@Model.EmployeeCode</span>
+                </div>
+                <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    @Model.EmployeeName.Substring(0, 1)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">My Transfer Requests</h4>
+
+                    <ul class="nav nav-pills mt-3">
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
+                               href="@Url.Action("Index", new { filterType = "Active" })"
+                               style="@(ViewBag.CurrentFilter == "Active" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
+                                Active
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
+                               href="@Url.Action("Index", new { filterType = "All" })"
+                               style="@(ViewBag.CurrentFilter == "All" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
+                                All Requests
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <form asp-action="Index" method="get" class="d-flex">
+                        <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
+                        <div class="input-group" style="width: 250px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0" placeholder="Search ID or Status...">
+                        </div>
+                    </form>
+
+                    <a href="/Transfer/Create" class="btn text-white fw-bold px-4 py-2" style="background-color: #66D2CE; border-radius: 6px;">
+                        + New Transfer Request
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="bg-light text-muted text-uppercase small">
+                        <tr>
+                            <th class="py-3 ps-3">TransferId</th>
+                            <th class="py-3">TargetPosting</th>
+
+                            <th class="py-3">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                    Date <i class="fas fa-sort ms-1"></i>
+                                </a>
+                            </th>
+                            <th class="py-3">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                    Status <i class="fas fa-sort ms-1"></i>
+                                </a>
+                            </th>
+                            <th class="py-3 text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Requests.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+                                    No transfer requests found matching your criteria.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var req in Model.Requests)
+                            {
+                                <tr>
+                                    <td class="ps-3 fw-bold text-dark">
+                                        TR-@req.TransferRequestId.ToString("D5") <br />
+                                        <span class="text-muted small fw-normal">#@Model.EmployeeCode</span>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold text-dark">Bangalore Branch</span>
+                                        <span class="text-muted small">@Model.Department</span>
+                                    </td>
+                                    <td class="text-muted fw-bold">
+                                        @req.RequestDate.ToString("dd MMM, yyyy")
+                                    </td>
+                                    <td>
+                                        @if (req.Status == "Approved")
+                                        {
+                                            <span class="badge bg-light text-success border border-success px-3 py-2 rounded-pill">Approved</span>
+                                        }
+                                        else if (req.Status == "Rejected" || req.Status == "Cancelled")
+                                        {
+                                            <span class="badge bg-light text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-warning border border-warning px-3 py-2 rounded-pill text-dark">Pending</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-light btn-sm mx-1"><i class="far fa-eye"></i></button>
+                                        @if (req.Status == "Pending")
+                                        {
+                                            <button class="btn btn-light btn-sm mx-1 text-danger"><i class="far fa-trash-alt"></i></button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>

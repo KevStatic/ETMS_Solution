@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ETMS.Application\ETMS.Application.csproj" />
+    <ProjectReference Include="..\ETMS.Domain\ETMS.Domain.csproj" />
     <ProjectReference Include="..\ETMS.Infrastructure\ETMS.Infrastructure.csproj" />
   </ItemGroup>
 
