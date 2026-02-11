@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 //using ETMS.Application.Services;
+=======
+>>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
 using ETMS.Application.Interfaces;
 using ETMS.Infrastructure.Context;
 using ETMS.Infrastructure.Repositories;
@@ -10,6 +13,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<DapperContext>();
 
+<<<<<<< HEAD
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
@@ -20,6 +24,11 @@ builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository
 
 //// Application Layer
 //builder.Services.AddScoped<IAuthService, AuthService>();
+=======
+builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository>();
+
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+>>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
 
 var app = builder.Build();
 
