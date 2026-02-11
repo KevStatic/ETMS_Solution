@@ -1,5 +1,5 @@
 ﻿@{
-    Layout = null; // We are not using the default layout to keep it clean like your design
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -7,52 +7,43 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Employee Transfer</title>
+    <title>Login - ETMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="~/css/login.css" />
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-left">
-            <div class="form-wrapper">
-                <h2>Welcome to your mobility portal</h2>
-                <form>
-                    <div class="input-group">
-                        <label>Email</label>
-                        <input type="email" placeholder="email@mail.com" required />
-                    </div>
-                    <div class="input-group">
-                        <label>Password</label>
-                        <input type="password" placeholder="Your password" required />
-                    </div>
-                    <div class="form-options">
-                        <label><input type="checkbox"> Remember me</label>
-                        <a href="#">Forgot password?</a>
-                    </div>
-                    <button type="submit" class="login-btn">Login</button>
-                </form>
-            </div>
-        </div>
+    <div class="login-page-container">
+        <div class="login-card">
+            <div class="brand-section">
+                
 
-        <div class="login-right">
-            <div class="overlay-content">
-                <img src="~/images/lt_logo.png" alt="L&T Logo" class="logo" />
-                <h1>Power that stretches across the seven seas.</h1>
-                <p class="location-tag">OFFSHORE FACILITY, SAUDI ARABIA</p>
-            </div>
+            <h2 class="login-header">Login</h2>
+
             <form asp-action="Login" asp-controller="Account" method="post">
-                <div class="input-group">
-                    <label>Email</label>
-                    <input type="email" name="Email" placeholder="email@mail.com" required />
+                <div class="field-wrapper">
+                    <label>Username</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="email" name="Email" placeholder="Enter Username" required />
+                    </div>
                 </div>
-                <div class="input-group">
+
+                <div class="field-wrapper">
                     <label>Password</label>
-                    <input type="password" name="Password" placeholder="Your password" required />
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" name="Password" placeholder="Enter Password" required />
+                    </div>
                 </div>
-                <div class="form-options">
-                    <label><input type="checkbox"> Remember me</label>
-                    <a href="#">Forgot password?</a>
+
+                <div class="options-row">
+                    <label class="check-container">
+                        <input type="checkbox" name="RememberMe"> Remember Me
+                    </label>
+                    <a href="#" class="forgot-pwd">Forgot Password?</a>
                 </div>
-                <button type="submit" class="login-btn">Login</button>
+
+                <button type="submit" class="btn-primary-login">Login</button>
             </form>
         </div>
     </div>

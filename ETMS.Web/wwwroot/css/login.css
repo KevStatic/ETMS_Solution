@@ -7,87 +7,108 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
+    overflow: hidden;
 }
 
-.login-container {
-    display: flex;
+.login-page-container {
     height: 100vh;
-}
-
-.login-left {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 50px;
+    /* Your specific L&T Hydrocarbon background */
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://2025prodstorageaccount-eqdyc8g8hpccdfez.a02.azurefd.net/ltprod/media/rlojt5xu/hydrocarbon-offshore.webp') no-repeat center center;
+    background-size: cover;
 }
 
-.form-wrapper {
+.login-card {
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 12px;
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    text-align: center;
 }
 
-h2 {
+.brand-section {
+    margin-bottom: 15px;
+}
+
+.login-logo {
+    width: 110px;
+}
+
+.login-header {
+    font-size: 22px;
     color: #333;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
+    font-weight: 600;
 }
 
-.input-group {
-    margin-bottom: 20px;
+.field-wrapper {
+    text-align: left;
+    margin-bottom: 18px;
 }
 
-    .input-group label {
+    .field-wrapper label {
         display: block;
-        margin-bottom: 5px;
+        font-size: 13px;
         color: #666;
+        margin-bottom: 6px;
+    }
+
+.input-with-icon {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
+    .input-with-icon i {
+        color: #0056b3; /* L&T Blue icon color */
+        margin-right: 10px;
         font-size: 14px;
     }
 
-    .input-group input {
+    .input-with-icon input {
+        border: none;
+        outline: none;
         width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        font-size: 14px;
     }
 
-.form-options {
+.options-row {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
+    align-items: center;
+    font-size: 12.5px;
     margin-bottom: 25px;
 }
 
-.login-btn {
+.check-container {
+    color: #555;
+    cursor: pointer;
+}
+
+.forgot-pwd {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.btn-primary-login {
     width: 100%;
     padding: 12px;
-    background-color: #5d5fef;
+    background-color: #0056b3;
     color: white;
     border: none;
     border-radius: 5px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
+    transition: background 0.3s;
 }
 
-.login-right {
-    flex: 1;
-    background: url('../images/offshore.jpg') no-repeat center center;
-    background-size: cover;
-    position: relative;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 60px;
-}
-
-.logo {
-    width: 150px;
-    margin-bottom: 20px;
-}
-
-.location-tag {
-    position: absolute;
-    bottom: 40px;
-    right: 40px;
-    font-weight: bold;
-}
+    .btn-primary-login:hover {
+        background-color: #004494;
+    }
