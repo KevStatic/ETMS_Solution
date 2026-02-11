@@ -1,21 +1,10 @@
-<<<<<<< HEAD
-﻿namespace ETMS.Domain.Entities
-=======
-﻿using System;
+using System;
 
 namespace ETMS.Domain.Entities
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
 {
     public class Employee
     {
         public int EmployeeId { get; set; }
-<<<<<<< HEAD
-        public string EmployeeCode { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-    }
-}
-=======
         public string EmployeeCode { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -35,4 +24,3 @@ namespace ETMS.Domain.Entities
         // Extra properties for display 
     }
 }
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e

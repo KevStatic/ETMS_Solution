@@ -1,25 +1,14 @@
-<<<<<<< HEAD
-﻿using Dapper;
+using Dapper;
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Application.Interfaces;
+using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ETMS.Infrastructure.Repositories
 {
-    public class TransferRequestRepository : ITransferRequestRepository
-=======
-using Dapper;
-using ETMS.Application.DTOs.Transfer;
-using ETMS.Application.Interfaces;
-using ETMS.Domain.Entities;
-using ETMS.Infrastructure.Context;
-
-namespace ETMS.Infrastructure.Repositories
-{
     public sealed class TransferRequestRepository : ITransferRequestRepository
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
     {
         private readonly DapperContext _context;
 
@@ -28,22 +17,6 @@ namespace ETMS.Infrastructure.Repositories
             _context = context;
         }
 
-<<<<<<< HEAD
-        public async Task<IEnumerable<TransferRequestDto>> GetByEmployeeIdAsync(int employeeId)
-        {
-            var sql = @"SELECT tr.TransferRequestId, tr.EmployeeId, tr.RequestDate, 
-                               tr.Status, tr.TransferType,
-                               CONCAT(e.FirstName, ' ', e.LastName) AS EmployeeName
-                        FROM TransferRequests tr
-                        JOIN Employees e ON tr.EmployeeId = e.EmployeeId
-                        WHERE tr.EmployeeId = @EmployeeId";
-
-            using var connection = _context.CreateConnection();
-            return await connection.QueryAsync<TransferRequestDto>(sql, new { EmployeeId = employeeId });
-        }
-    }
-}
-=======
         public async Task<int> CreateAsync(TransferRequest request, CancellationToken cancellationToken = default)
         {
             const string sql = @"
@@ -81,7 +54,7 @@ VALUES
     @ExpectedJoiningDate,
     @Status,
     @IsActive
-);";
+);@";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(new CommandDefinition(sql, request, cancellationToken: cancellationToken));
@@ -217,5 +190,3 @@ WHERE Status = 'Pending';";
         }
     }
 }
-
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e

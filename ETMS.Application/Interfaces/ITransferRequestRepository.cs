@@ -1,21 +1,12 @@
-<<<<<<< HEAD
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ETMS.Application.DTOs.Transfer;
-=======
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Domain.Entities;
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
 {
     public interface ITransferRequestRepository
     {
-<<<<<<< HEAD
-        Task<IEnumerable<TransferRequestDto>> GetByEmployeeIdAsync(int employeeId);
-    }
-}
-=======
         Task<int> CreateAsync(TransferRequest request, CancellationToken cancellationToken = default);
         Task<TransferRequest?> GetByIdAsync(int transferRequestId, CancellationToken cancellationToken = default);
         Task<IEnumerable<TransferRequestListItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
@@ -24,5 +15,3 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
     }
 }
-
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e

@@ -1,15 +1,8 @@
-<<<<<<< HEAD
-﻿using Dapper;
-using ETMS.Application.Interfaces;
-using ETMS.Domain.Entities;
-using ETMS.Infrastructure.Context;
-=======
 using Dapper;
 using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
 using System.Collections.Generic;
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
 using System.Threading.Tasks;
 
 namespace ETMS.Infrastructure.Repositories
@@ -23,17 +16,6 @@ namespace ETMS.Infrastructure.Repositories
             _context = context;
         }
 
-<<<<<<< HEAD
-        public async Task<Employee?> GetEmployeeByIdAsync(int id)
-        {
-            var sql = "SELECT * FROM Employees WHERE EmployeeId = @Id";
-
-            using var connection = _context.CreateConnection();
-            return await connection.QueryFirstOrDefaultAsync<Employee>(sql, new { Id = id });
-        }
-    }
-}
-=======
         public async Task<IEnumerable<Employee>> GetAllEmployeesAsync()
         {
             var query = "SELECT * FROM Employee";
@@ -73,4 +55,3 @@ namespace ETMS.Infrastructure.Repositories
         }
     }
 }
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e

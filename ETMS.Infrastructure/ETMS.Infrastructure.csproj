@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\ETMS.Application\ETMS.Application.csproj" />
-    <ProjectReference Include="..\ETMS.Domain\ETMS.Domain.csproj" />
-  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
@@ -11,17 +12,13 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
   </ItemGroup>
 
-<<<<<<< HEAD
-=======
+  <ItemGroup>
+    <ProjectReference Include="..\ETMS.Application\ETMS.Application.csproj" />
+    <ProjectReference Include="..\ETMS.Domain\ETMS.Domain.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Folder Include="Database\Backups\" />
   </ItemGroup>
-
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 </Project>
