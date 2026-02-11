@@ -1,4 +1,6 @@
+using ETMS.Application.Interfaces;
 using ETMS.Infrastructure.Context;
+using ETMS.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<DapperContext>();
+
+builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository>();
+
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
 var app = builder.Build();
 

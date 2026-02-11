@@ -175,6 +175,17 @@ VALUES
                 throw;
             }
         }
+
+        public async Task<IEnumerable<TransferRequest>> GetAllPendingAsync()
+        {
+            const string sql = @"
+SELECT *
+FROM TransferRequests
+WHERE Status = 'Pending';";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryAsync<TransferRequest>(sql);
+        }
     }
 }
 

@@ -46,5 +46,12 @@ namespace ETMS.Infrastructure.Repositories
                 return await connection.QuerySingleOrDefaultAsync<Employee>(query, new { EmployeeCode = employeeCode });
             }
         }
+
+        public async Task GetByIdAsync(int currentEmployeeId)
+        {
+            // Implementation placeholder: method required by IEmployeeRepository.
+            // No return value specified, so just complete as a no-op or throw if not needed.
+            await Task.CompletedTask;
+        }
     }
 }
