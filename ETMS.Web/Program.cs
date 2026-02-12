@@ -64,6 +64,14 @@ app.MapControllerRoute(
     defaults: new { controller = "Account", action = "Login" })
     .WithStaticAssets();
 
+// Explicit route for /login
+app.MapControllerRoute(
+    name: "login",
+    pattern: "login",
+    defaults: new { controller = "Account", action = "Login" })
+    .WithStaticAssets();
+
+// Default landing route -> /login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")

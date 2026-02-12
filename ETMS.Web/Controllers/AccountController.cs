@@ -1,12 +1,9 @@
 ﻿using ETMS.Application.DTOs;
 using ETMS.Application.DTOs.Auth;
-using ETMS.Application.Interfaces;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace EmployeeTransferPortal.Controllers
+namespace EmployeeTransferPortal.Controllers // Or ETMS.Web.Controllers (Check your folder structure)
 {
     public class AccountController : Controller
     {
