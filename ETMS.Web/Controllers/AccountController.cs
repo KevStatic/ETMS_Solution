@@ -1,43 +1,19 @@
-﻿//using ETMS.Application.Interfaces;
-//using Microsoft.AspNetCore.Mvc;
-
-//namespace ETMS.Web.Controllers
-//{
-//    public class AccountController : Controller
-//    {
-//        private readonly IAuthService _authService;
-
-//        public AccountController(IAuthService authService) => _authService = authService;
-
-//        [HttpGet]
-//        public IActionResult Login() => View();
-
-//        [HttpPost]
-//        public async Task<IActionResult> Login(LoginRequestDto model)
-//        {
-//            if (!ModelState.IsValid) return View(model);
-
-//            var result = await _authService.AuthenticateAsync(model);
-//            if (result.Success)
-//            {
-//                // Set up Authentication Cookies or Session here
-//                return RedirectToAction("Index", "Home");
-//            }
-
-//            ModelState.AddModelError("", result.ErrorMessage);
-//            return View(model);
-//        }
-//    }
-//}
-
-using ETMS.Application.DTOs.Auth;
+﻿using ETMS.Application.DTOs.Auth;
+using ETMS.Application.Interfaces; // Added to find IAuthService
 using Microsoft.AspNetCore.Mvc;
 
-namespace EmployeeTransferPortal.Controllers
+namespace EmployeeTransferPortal.Controllers // Or ETMS.Web.Controllers (Check your folder structure)
 {
-    [Route("login")] // This makes the URL https://localhost:7179/login
     public class AccountController : Controller
     {
+        private readonly IAuthService _authService;
+
+        // 1. We inject the Auth Service here so we can check passwords
+        public AccountController(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -47,7 +23,22 @@ namespace EmployeeTransferPortal.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequestDto model)
         {
-            // Your existing login logic
+            if (!ModelState.IsValid) return View(model);
+
+            // 2. The Logic from the top section
+            var result = await _authService.AuthenticateAsync(model);
+
+            if (result.Success)
+            {
+                // ============================================================
+                // 3. THIS IS THE "LINK" TO YOUR DASHBOARD
+                // ============================================================
+                // "Index" is the Action, "Dashboard" is your Controller
+                return RedirectToAction("Index", "Dashboard");
+            }
+
+            // If login fails, stay on page and show error
+            ModelState.AddModelError("", result.ErrorMessage);
             return View(model);
         }
     }

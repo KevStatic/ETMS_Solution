@@ -6,24 +6,15 @@
 
 <div class="container-fluid mt-4" style="max-width: 1400px;">
 
-    <div class="row mb-5">
-        <div class="col-md-8">
-            <h2 class="fw-bold" style="color: #333;">Welcome, @Model.EmployeeName</h2>
-            <p class="text-muted fs-5">
-                You are currently posted at <strong class="text-dark">@Model.CurrentLocation (@Model.Department)</strong><br />
-                You report to <strong class="text-dark">@Model.ManagerName</strong>
-            </p>
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Welcome to your mobility portal</h2>
+            <p class="text-muted mb-0">Manage your transfer requests and approvals.</p>
         </div>
-        <div class="col-md-4 text-end align-self-center">
-            <div class="d-flex justify-content-end align-items-center mb-3">
-                <div class="text-end me-3">
-                    <span class="d-block fw-bold">@Model.EmployeeName</span>
-                    <span class="d-block small text-muted">@Model.EmployeeCode</span>
-                </div>
-                <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    @Model.EmployeeName.Substring(0, 1)
-                </div>
-            </div>
+        <div class="text-end">
+            <span class="badge bg-light text-dark border px-3 py-2">
+                <i class="fas fa-building me-1"></i> @Model.CurrentLocation (@Model.Department)
+            </span>
         </div>
     </div>
 
@@ -67,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-scroll-wrapper">
                 <table class="table table-hover align-middle">
                     <thead class="bg-light text-muted text-uppercase small">
                         <tr>
@@ -103,12 +94,10 @@
                             {
                                 <tr>
                                     <td class="ps-3 fw-bold text-dark">
-                                        TR-@req.TransferRequestId.ToString("D5") <br />
-                                        <span class="text-muted small fw-normal">#@Model.EmployeeCode</span>
+                                        TR-@req.TransferRequestId.ToString("D5")
                                     </td>
                                     <td>
-                                        <span class="d-block fw-bold text-dark">Bangalore Branch</span>
-                                        <span class="text-muted small">@Model.Department</span>
+                                        <span class="d-block fw-bold text-dark">Bangalore Branch</span> <span class="text-muted small">@Model.Department</span>
                                     </td>
                                     <td class="text-muted fw-bold">
                                         @req.RequestDate.ToString("dd MMM, yyyy")

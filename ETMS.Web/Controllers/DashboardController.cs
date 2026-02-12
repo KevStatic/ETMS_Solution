@@ -49,23 +49,31 @@ namespace ETMS.Web.Controllers
             }
 
             // ==========================================
-            // 4. APPLY SEARCH
+            // 4. APPLY SEARCH (Checks ID, Status, Date, Location, etc.)
             // ==========================================
             ViewBag.CurrentSearch = searchTerm;
+
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                searchTerm = searchTerm.ToLower();
+                searchTerm = searchTerm.ToLower().Trim(); // Clean input
+
                 requests = requests.Where(r =>
+                    // 1. FIX FOR ID: Recreate "TR-00001" format so "TR-00007" search works
+                    $"tr-{r.TransferRequestId:D5}".Contains(searchTerm) ||
                     r.TransferRequestId.ToString().Contains(searchTerm) ||
-                    r.Status.ToLower().Contains(searchTerm) ||
-                    r.TransferType.ToLower().Contains(searchTerm) ||
-                    // Search safe checks for potential nulls in DTO strings just in case
-                    (r.EmployeeName != null && r.EmployeeName.ToLower().Contains(searchTerm)) ||
-                    (r.FromDepartment != null && r.FromDepartment.ToLower().Contains(searchTerm)) ||
-                    (r.ToDepartment != null && r.ToDepartment.ToLower().Contains(searchTerm)) ||
-                    (r.FromLocation != null && r.FromLocation.ToLower().Contains(searchTerm)) ||
+
+                    // 2. FIX FOR DATE: Convert DB Date to "10 Feb, 2026" text so search works
+                    r.RequestDate.ToString("dd MMM, yyyy").ToLower().Contains(searchTerm) ||
+
+                    // 3. Check Status (e.g., "Pending")
+                    (r.Status != null && r.Status.ToLower().Contains(searchTerm)) ||
+
+                    // 4. Check Type (e.g., "Permanent")
+                    (r.TransferType != null && r.TransferType.ToLower().Contains(searchTerm)) ||
+
+                    // 5. Check Location/Dept (Safe null checks)
                     (r.ToLocation != null && r.ToLocation.ToLower().Contains(searchTerm)) ||
-                    r.RequestDate.ToString().ToLower().Contains(searchTerm)
+                    (r.ToDepartment != null && r.ToDepartment.ToLower().Contains(searchTerm))
                 );
             }
 

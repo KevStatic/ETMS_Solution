@@ -1,0 +1,48 @@
+/* Confine scrolling to content area and hide scrollbar */
+.content-scroll {
+    max-height: calc(100vh - 180px); /* header + footer space */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Hide scrollbar (WebKit) */
+.content-scroll::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+}
+
+/* Hide scrollbar (Firefox) */
+.content-scroll {
+    scrollbar-width: none;
+}
+
+/* Optional: ensure body/page does not force extra scrolling if content is long */
+html, body {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.table-scroll-wrapper {
+    max-height: 420px; /* adjust if needed */
+    overflow-y: auto;
+    position: relative;
+}
+
+.table-scroll-wrapper::after {
+    content: "";
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px; /* size of fade */
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+}
+
+/* Make table header sticky */
+.table-scroll-wrapper thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa; /* same as bg-light */
+    z-index: 5;
+}
