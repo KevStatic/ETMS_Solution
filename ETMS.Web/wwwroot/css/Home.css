@@ -1,0 +1,8 @@
+﻿ .adjustable-img {
+    width: 100%;             /* Makes image span the full width */
+    height: 500px;           /* Set your desired height */
+    object-fit: cover;       /* CRITICAL: Scales image without stretching it */
+    object-position: center; /* Adjust to 'top', 'bottom', or percentages like '50% 20%' */
+    border-radius: 8px;      /* Optional: rounds the corners */
+    display: block;
+}
