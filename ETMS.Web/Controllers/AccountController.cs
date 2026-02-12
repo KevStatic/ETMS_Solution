@@ -30,16 +30,25 @@
 //    }
 //}
 
+using ETMS.Application.DTOs.Auth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeTransferPortal.Controllers
 {
+    [Route("login")] // This makes the URL https://localhost:7179/login
     public class AccountController : Controller
     {
+        [HttpGet]
         public IActionResult Login()
         {
             return View();
+        }
 
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginRequestDto model)
+        {
+            // Your existing login logic
+            return View(model);
         }
     }
 }
