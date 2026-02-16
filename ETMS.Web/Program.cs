@@ -44,6 +44,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        // This tells the app exactly where to redirect unauthorized users!
+        // Since Sattvik used [Route("login")], we point it here:
+        options.LoginPath = "/login";
+
+        // Optional but good practice
+        options.AccessDeniedPath = "/login/accessdenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Log them out after 8 hours
+    });
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -54,7 +66,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseRouting();
+
+// ✅ ADD THIS LINE (Must be exactly here, before Authorization)
 app.UseAuthentication();
+
 app.UseAuthorization();
 app.MapStaticAssets();
 

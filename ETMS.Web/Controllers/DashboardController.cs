@@ -31,14 +31,41 @@ namespace ETMS.Web.Controllers
             string filterType = "Active")
         {
             // ==========================================
-            // 1. GET CURRENT USER FROM CLAIMS
+            // 1. GET CURRENT USER (REAL LOGIC)
+            // ==========================================
+            // We set default values just in case, but [Authorize] ensures we should have data.
+
+            int currentEmployeeId = 0;
+            string currentRole = "Employee";
+
+            // Extract the User ID from the Identity Claims (set during Login)
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim != null && int.TryParse(idClaim.Value, out int parsedId))
+            {
+                currentEmployeeId = parsedId;
+            }
+            else
+            {
+                // Safety Net: If we can't find the ID, force them back to Login
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Extract the Role
+            var roleClaim = User.FindFirst(ClaimTypes.Role);
+            if (roleClaim != null)
+            {
+                currentRole = roleClaim.Value;
+            }
+
+            // ==========================================
+            // 2. FETCH DATA FROM DB
             // ==========================================
 
-            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var employee = await _employeeRepo.GetEmployeeByIdAsync(currentEmployeeId);
 
-            if (idClaim == null || !int.TryParse(idClaim.Value, out int currentEmployeeId))
+            if (employee == null)
             {
-                return RedirectToAction("Login", "Account");
+                return Content($"Error: Employee with ID {currentEmployeeId} not found in database.");
             }
 
             var roleClaim = User.FindFirst(ClaimTypes.Role);
@@ -114,16 +141,19 @@ namespace ETMS.Web.Controllers
 
             var model = new DashboardViewModel
             {
+                // Mapping view for the following fields
                 EmployeeName = $"{employee.FirstName} {employee.LastName}",
+                
                 EmployeeCode = employee.EmployeeCode,
+                
                 Role = currentRole,
-                CurrentLocation = employee.Location != null
-                    ? $"{employee.Location.City}, {employee.Location.State}, {employee.Location.Country}"
-                    : "N/A",
+                
+                CurrentLocation = employee.Location != null? $"{employee.Location.City}, {employee.Location.State},{employee.Location.Country}": "N/A",
+
+                
                 Department = employee.Department?.DepartmentName ?? "N/A",
-                ManagerName = employee.ReportingManager != null
-                    ? $"{employee.ReportingManager.FirstName} {employee.ReportingManager.LastName}"
-                    : "Not Assigned",
+                
+                ManagerName = employee.ReportingManager != null? $"{employee.ReportingManager.FirstName} {employee.ReportingManager.LastName}": "Not Assigned",
 
                 Requests = requests.Select(r => new TransferRequest
                 {
