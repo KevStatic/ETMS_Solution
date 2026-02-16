@@ -3,10 +3,13 @@ using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
+using System.Security.Claims;
 
 namespace ETMS.Web.Controllers
 {
-    // [Authorize] // Uncomment this once Login page finishes!
+    [Authorize]
     public class DashboardController : Controller
     {
         private readonly ITransferRequestRepository _transferRepo;
@@ -20,17 +23,42 @@ namespace ETMS.Web.Controllers
 
         public async Task<IActionResult> Index(string searchTerm, string sortOrder, string filterType = "Active")
         {
-            // 1. Get Current User (Hardcoded ID until Login is ready)
-            int currentEmployeeId = 1;
+            // ==========================================
+            // 1. GET CURRENT USER (REAL LOGIC)
+            // ==========================================
+            // We set default values just in case, but [Authorize] ensures we should have data.
+
+            int currentEmployeeId = 0;
             string currentRole = "Employee";
 
-            // 2. Fetch Data from DB
+            // Extract the User ID from the Identity Claims (set during Login)
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim != null && int.TryParse(idClaim.Value, out int parsedId))
+            {
+                currentEmployeeId = parsedId;
+            }
+            else
+            {
+                // Safety Net: If we can't find the ID, force them back to Login
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Extract the Role
+            var roleClaim = User.FindFirst(ClaimTypes.Role);
+            if (roleClaim != null)
+            {
+                currentRole = roleClaim.Value;
+            }
+
+            // ==========================================
+            // 2. FETCH DATA FROM DB
+            // ==========================================
+
             var employee = await _employeeRepo.GetEmployeeByIdAsync(currentEmployeeId);
 
-            // STOP: If DB is empty, show error (No more Developer Mock Data)
             if (employee == null)
             {
-                return Content("Error: Employee not found. Please run the Seed Script to populate the database.");
+                return Content($"Error: Employee with ID {currentEmployeeId} not found in database.");
             }
 
             var requests = await _transferRepo.GetByEmployeeIdAsync(currentEmployeeId);
@@ -103,12 +131,19 @@ namespace ETMS.Web.Controllers
             // 6. Map to ViewModel
             var model = new DashboardViewModel
             {
+                // Mapping view for the following fields
                 EmployeeName = $"{employee.FirstName} {employee.LastName}",
+                
                 EmployeeCode = employee.EmployeeCode,
+                
                 Role = currentRole,
-                CurrentLocation = "Mumbai Branch",
-                Department = "IT Department",
-                ManagerName = "Sattvik Gurav",
+                
+                CurrentLocation = employee.Location != null? $"{employee.Location.City}, {employee.Location.State},{employee.Location.Country}": "N/A",
+
+                
+                Department = employee.Department?.DepartmentName ?? "N/A",
+                
+                ManagerName = employee.ReportingManager != null? $"{employee.ReportingManager.FirstName} {employee.ReportingManager.LastName}": "Not Assigned",
 
                 // MAPPING DTO -> ENTITY (To match your current ViewModel definition)
                 Requests = requests.Select(r => new TransferRequest

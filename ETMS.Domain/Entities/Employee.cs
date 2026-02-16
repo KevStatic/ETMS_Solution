@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ETMS.Domain.Entities
 {
@@ -21,6 +22,9 @@ namespace ETMS.Domain.Entities
         public string Status { get; set; }
         public bool IsActive { get; set; }
 
-        // Extra properties for display 
+        // NULL CHECK FOR NULLABLE VALUES
+        public Department? Department { get; set; }
+        public Location? Location { get; set; }
+        public Employee? ReportingManager { get; set; }
     }
 }

@@ -27,13 +27,36 @@ namespace ETMS.Infrastructure.Repositories
             }
         }
 
-        public async Task<Employee> GetEmployeeByIdAsync(int id)
+        public async Task<Employee?> GetEmployeeByIdAsync(int id)
         {
-            var query = "SELECT * FROM Employee WHERE EmployeeId = @Id";
+            var query = @"
+        SELECT 
+            e.*,
+            d.*,
+            l.*,
+            m.*
+        FROM Employee e
+        LEFT JOIN Departments d ON e.DepartmentId = d.DepartmentId
+        LEFT JOIN Locations l ON e.LocationId = l.LocationId
+        LEFT JOIN Employee m ON e.ReportingManagerId = m.EmployeeId
+        WHERE e.EmployeeId = @Id";
 
             using (var connection = _context.CreateConnection())
             {
-                return await connection.QuerySingleOrDefaultAsync<Employee>(query, new { Id = id });
+                var result = await connection.QueryAsync<Employee, Department, Location, Employee, Employee>(
+                    query,
+                    (emp, dept, loc, manager) =>
+                    {
+                        emp.Department = dept;
+                        emp.Location = loc;
+                        emp.ReportingManager = manager;
+                        return emp;
+                    },
+                    new { Id = id },
+                    splitOn: "DepartmentId,LocationId,EmployeeId"
+                );
+
+                return result.FirstOrDefault();
             }
         }
 

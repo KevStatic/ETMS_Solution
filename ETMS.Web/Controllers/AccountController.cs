@@ -1,6 +1,9 @@
 ﻿using ETMS.Application.DTOs.Auth;
 using ETMS.Application.Interfaces; // Added to find IAuthService
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EmployeeTransferPortal.Controllers // Or ETMS.Web.Controllers (Check your folder structure)
 {
@@ -30,10 +33,30 @@ namespace EmployeeTransferPortal.Controllers // Or ETMS.Web.Controllers (Check y
 
             if (result.Success)
             {
-                // ============================================================
-                // 3. THIS IS THE "LINK" TO YOUR DASHBOARD
-                // ============================================================
-                // "Index" is the Action, "Dashboard" is your Controller
+                // 2. CREATE THE USER SESSION (COOKIES)
+                // This is how the server remembers "Keval is logged in"
+                var claims = new List<Claim>
+                {
+                    // Store the Username
+                    new Claim(ClaimTypes.Name, result.Username),
+            
+                    // Store the Role (Employee)
+                    new Claim(ClaimTypes.Role, result.Role),
+
+                    // IMPORTANT: Store the EmployeeId (1) so Dashboard can read it
+                    new Claim(ClaimTypes.NameIdentifier, result.EmployeeId.ToString())
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties { IsPersistent = true };
+
+                // 3. ACTUAL LOGIN STEP
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
+                // 4. Redirect to Dashboard
                 return RedirectToAction("Index", "Dashboard");
             }
 
