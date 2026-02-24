@@ -1,7 +1,6 @@
 @{
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,10 +14,8 @@
     <div class="login-page-container">
         <div class="login-card">
             <div class="brand-section">
-                
             </div>
             <h2 class="login-header">Login</h2>
-
             <form asp-action="Login" asp-controller="Account" method="post">
                 <div class="field-wrapper">
                     <label>Username</label>
@@ -27,7 +24,6 @@
                         <input type="text" name="Username" placeholder="Enter Username" autocomplete="username" required />
                     </div>
                 </div>
-
                 <div class="field-wrapper">
                     <label>Password</label>
                     <div class="input-with-icon">
@@ -35,14 +31,14 @@
                         <input type="password" name="Password" placeholder="Enter Password" required />
                     </div>
                 </div>
-
                 <div class="options-row">
                     <label class="check-container">
                         <input type="checkbox" name="RememberMe"> Remember Me
                     </label>
-                    <a href="#" class="forgot-pwd">Forgot Password?</a>
-                </div>
 
+                    <a asp-controller="Account" asp-action="ForgotPassword" class="forgot-pwd">Forgot Password?</a>
+
+                </div>
                 <button type="submit" class="btn-primary-login">Login</button>
             </form>
         </div>
