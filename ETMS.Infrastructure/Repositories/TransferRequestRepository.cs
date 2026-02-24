@@ -188,5 +188,18 @@ WHERE Status = 'Pending';";
             using var connection = _context.CreateConnection();
             return await connection.QueryAsync<TransferRequest>(sql);
         }
+
+        public async Task<int> AddAsync(TransferRequest request)
+        {
+            var sql = @"
+INSERT INTO TransferRequests 
+(EmployeeId, ToDepartmentId, ToLocationId, TransferType, Reason, RequestDate, Status)
+VALUES 
+(@EmployeeId, @ToDepartmentId, @ToLocationId, @TransferType, @Reason, @RequestDate, @Status);
+SELECT CAST(SCOPE_IDENTITY() as int);";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteScalarAsync<int>(sql, request);
+        }
     }
 }
