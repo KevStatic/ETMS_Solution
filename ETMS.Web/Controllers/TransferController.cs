@@ -36,19 +36,20 @@ namespace ETMS.Web.Controllers
 
         // 2. POST: Saves the form data
         [HttpPost]
-        [HttpPost]
         public async Task<IActionResult> Create(CreateTransferViewModel model)
         {
             if (!ModelState.IsValid)
             {
+                // If form has errors, reload the dropdowns and show the page again
                 await PopulateDropdownsAsync(model);
                 return View(model);
             }
 
-            var employeeIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
+            // Get the logged-in user's Employee ID from the Cookie
+            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(employeeIdClaim)) return RedirectToAction("Login", "Account");
 
+            // Create the new entity
             var newRequest = new TransferRequest
             {
                 EmployeeId = int.Parse(employeeIdClaim),
@@ -56,15 +57,16 @@ namespace ETMS.Web.Controllers
                 ToDepartmentId = model.ToDepartmentId,
                 TransferType = model.TransferType,
                 Reason = model.Reason,
-                ExpectedRelievingDate = model.EffectiveDate,
-                ExpectedJoiningDate = null,
-                Status = "Pending",
+                Status = "Pending", // Default status for new requests
                 RequestDate = DateTime.Now,
                 IsActive = true
             };
 
+            // Save to database
+            // NOTE: Make sure your ITransferRequestRepository has an AddAsync method!
             await _transferRepo.AddAsync(newRequest);
 
+            // Redirect back to the dashboard with a success message
             TempData["SuccessMessage"] = "Transfer Request submitted successfully!";
             return RedirectToAction("Index", "Dashboard");
         }

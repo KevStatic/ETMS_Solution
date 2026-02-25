@@ -192,33 +192,11 @@ WHERE Status = 'Pending';";
         public async Task<int> AddAsync(TransferRequest request)
         {
             var sql = @"
-        INSERT INTO TransferRequests 
-        (
-            EmployeeId, 
-            ToDepartmentId, 
-            ToLocationId, 
-            TransferType, 
-            Reason, 
-            RequestDate, 
-            Status, 
-            ExpectedRelievingDate,  -- Added
-            ExpectedJoiningDate,    -- Added
-            IsActive
-        )
-        VALUES 
-        (
-            @EmployeeId, 
-            @ToDepartmentId, 
-            @ToLocationId, 
-            @TransferType, 
-            @Reason, 
-            @RequestDate, 
-            @Status, 
-            @ExpectedRelievingDate, -- Added
-            @ExpectedJoiningDate,   -- Added
-            1
-        );
-        SELECT CAST(SCOPE_IDENTITY() as int);";
+INSERT INTO TransferRequests 
+(EmployeeId, ToDepartmentId, ToLocationId, TransferType, Reason, RequestDate, Status)
+VALUES 
+(@EmployeeId, @ToDepartmentId, @ToLocationId, @TransferType, @Reason, @RequestDate, @Status);
+SELECT CAST(SCOPE_IDENTITY() as int);";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(sql, request);

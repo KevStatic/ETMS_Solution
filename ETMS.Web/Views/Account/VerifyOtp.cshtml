@@ -1,0 +1,357 @@
+﻿@model ETMS.Application.DTOs.VerifyOtpDto
+@{
+    ViewData["Title"] = "Verify OTP";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ETMS – Verify OTP</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans',sans-serif;
+            min-height: 100vh;
+            background: #1a2744;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            body::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: url('/images/login-bg.jpg') center/cover no-repeat;
+                opacity: .35;
+            }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 44px;
+            width: 460px;
+            max-width: 95vw;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 24px 64px rgba(0,0,0,.35);
+            animation: slideUp .4s cubic-bezier(.22,1,.36,1);
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e8eefb;
+            color: #6b7a99;
+            font-size: .8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .step-dot.active {
+                background: #2a56c6;
+                color: #fff;
+            }
+
+            .step-dot.done {
+                background: #1e8449;
+                color: #fff;
+            }
+
+        .step-line {
+            flex: 1;
+            height: 3px;
+            background: #e8eefb;
+            max-width: 60px;
+        }
+
+            .step-line.done {
+                background: #1e8449;
+            }
+
+        .icon-wrap {
+            width: 62px;
+            height: 62px;
+            background: #e8eefb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+        }
+
+            .icon-wrap svg {
+                width: 28px;
+                height: 28px;
+                stroke: #2a56c6;
+                fill: none;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .sub {
+            color: #6b7a99;
+            font-size: .9rem;
+            text-align: center;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .contact-badge {
+            background: #e8eefb;
+            color: #2a56c6;
+            font-size: .85rem;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 99px;
+            display: inline-block;
+            margin: 0 auto 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .otp-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 8px 0 16px;
+        }
+
+        .otp-box {
+            width: 50px;
+            height: 58px;
+            border: 2px solid #d0d8e8;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: #1a1a2e;
+            background: #f4f7fc;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s, transform .15s;
+        }
+
+            .otp-box:focus {
+                border-color: #2a56c6;
+                box-shadow: 0 0 0 3px rgba(42,86,198,.15);
+                transform: scale(1.06);
+            }
+
+            .otp-box.filled {
+                border-color: #2a56c6;
+                background: #e8eefb;
+            }
+
+        .timer-row {
+            text-align: center;
+            font-size: .875rem;
+            color: #6b7a99;
+            margin-bottom: 6px;
+        }
+
+        .timer {
+            font-weight: 600;
+            color: #2a56c6;
+        }
+
+            .timer.expired {
+                color: #d93025;
+            }
+
+        .resend-row {
+            text-align: center;
+            font-size: .875rem;
+            color: #6b7a99;
+            margin-bottom: 16px;
+        }
+
+            .resend-row a {
+                color: #2a56c6;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+                .resend-row a:hover {
+                    text-decoration: underline;
+                }
+
+        .val-summary {
+            background: #fdecea;
+            border: 1px solid #f5c6c2;
+            border-radius: 8px;
+            color: #d93025;
+            font-size: .875rem;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .info-msg {
+            background: #e8f4fd;
+            border: 1px solid #b3d4f5;
+            border-radius: 8px;
+            color: #1a5799;
+            font-size: .875rem;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #2a56c6;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .15s;
+            margin-top: 4px;
+        }
+
+            .btn:hover {
+                background: #1e3f99;
+                transform: translateY(-1px);
+            }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 18px;
+            color: #6b7a99;
+            font-size: .875rem;
+            text-decoration: none;
+        }
+
+            .back-link:hover {
+                color: #2a56c6;
+            }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="steps">
+            <div class="step-dot done">✓</div>
+            <div class="step-line done"></div>
+            <div class="step-dot active">2</div>
+            <div class="step-line"></div>
+            <div class="step-dot">3</div>
+        </div>
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+        </div>
+        <h2>Enter OTP Code</h2>
+        <p class="sub">A 6-digit code was sent to your email</p>
+        <div class="contact-badge">@Model.Email</div>
+
+        @if (ViewBag.InfoMessage != null)
+        {
+            <div class="info-msg">@ViewBag.InfoMessage</div>
+        }
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="val-summary">
+                @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@err.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form asp-action="VerifyOtp" method="post" id="otpForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="OtpCode" id="otpHidden" />
+            <div class="otp-row">
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+                <input class="otp-box" maxlength="1" type="text" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div class="timer-row">Code expires in <span class="timer" id="timerDisplay">02:00</span></div>
+            <div class="resend-row">Didn't receive it? <a asp-action="ForgotPassword" asp-controller="Account">Resend OTP</a></div>
+            <button type="submit" class="btn">Verify OTP</button>
+        </form>
+        <a asp-action="ForgotPassword" asp-controller="Account" class="back-link">← Change email</a>
+    </div>
+    <script>
+        const boxes  = document.querySelectorAll('.otp-box');
+        const hidden = document.getElementById('otpHidden');
+        boxes.forEach((box, i) => {
+            box.addEventListener('input', () => {
+                box.value = box.value.replace(/\D/g,'').slice(0,1);
+                box.classList.toggle('filled', box.value !== '');
+                if (box.value && i < 5) boxes[i+1].focus();
+                sync();
+            });
+            box.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !box.value && i > 0) {
+                    boxes[i-1].value = ''; boxes[i-1].classList.remove('filled');
+                    boxes[i-1].focus(); sync();
+                }
+            });
+            box.addEventListener('paste', e => {
+                e.preventDefault();
+                const p = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+                [...p.slice(0,6)].forEach((ch,idx) => { if(boxes[idx]){boxes[idx].value=ch;boxes[idx].classList.add('filled');} });
+                sync(); boxes[Math.min(p.length,5)].focus();
+            });
+        });
+        function sync() { hidden.value = [...boxes].map(b=>b.value).join(''); }
+        let t = 120;
+        const el = document.getElementById('timerDisplay');
+        const iv = setInterval(() => {
+            t--;
+            el.textContent = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+            if (t <= 0) { clearInterval(iv); el.textContent='Expired'; el.classList.add('expired'); }
+        }, 1000);
+        boxes[0].focus();
+    </script>
+</body>
+</html>

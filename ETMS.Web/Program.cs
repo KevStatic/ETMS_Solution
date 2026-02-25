@@ -1,25 +1,50 @@
 using ETMS.Application.Interfaces;
 using ETMS.Application.Services;
+using ETMS.Domain.Interfaces;
 using ETMS.Infrastructure.Context;
 using ETMS.Infrastructure.Repositories;
+using ETMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
-
 builder.Services.AddSingleton<DapperContext>();
 
-// Infrastructure Layer
+// ── Infrastructure Layer ──────────────────────────────────────────────────────
 builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
-
-// Application Layer
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository>();
+builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+
+// ── Email Service ─────────────────────────────────────────────────────────────
+builder.Services.AddScoped<IEmailService>(_ =>
+{
+    var smtp = builder.Configuration.GetSection("Smtp");
+    return new EmailService(
+        host: smtp["Host"]!,
+        port: int.Parse(smtp["Port"]!),
+        username: smtp["Username"]!,
+        password: smtp["Password"]!,
+        fromEmail: smtp["FromEmail"]!
+    );
+});
+
+// ── Application Layer ─────────────────────────────────────────────────────────
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
+builder.Services.AddMemoryCache();
+
+// ── Authentication ────────────────────────────────────────────────────────────
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login/accessdenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -30,16 +55,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
         // Optional but good practice
         options.AccessDeniedPath = "/login/accessdenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1); // Log them out after 8 hours
+        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Log them out after 8 hours
     });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -52,8 +75,13 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
-
 app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "login",
+    pattern: "login",
+    defaults: new { controller = "Account", action = "Login" })
+    .WithStaticAssets();
 
 // Explicit route for /login
 app.MapControllerRoute(
