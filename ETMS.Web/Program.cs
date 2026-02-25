@@ -30,7 +30,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
         // Optional but good practice
         options.AccessDeniedPath = "/login/accessdenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Log them out after 8 hours
+        options.ExpireTimeSpan = TimeSpan.FromHours(1); // Log them out after 8 hours
     });
 
 var app = builder.Build();
