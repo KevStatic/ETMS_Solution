@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<DapperContext>();
+builder.Services.AddMemoryCache();
 
 // ── Infrastructure Layer ──────────────────────────────────────────────────────
 builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
@@ -35,9 +36,8 @@ builder.Services.AddScoped<IEmailService>(_ =>
 // ── Application Layer ─────────────────────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
-builder.Services.AddMemoryCache();
 
-// ── Authentication ────────────────────────────────────────────────────────────
+// ── Authentication (only once) ────────────────────────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -46,18 +46,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        // This tells the app exactly where to redirect unauthorized users!
-        // Since Sattvik used [Route("login")], we point it here:
-        options.LoginPath = "/login";
-
-        // Optional but good practice
-        options.AccessDeniedPath = "/login/accessdenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Log them out after 8 hours
-    });
-
+// ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -67,30 +56,19 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseRouting();
-
-app.UseRouting();
-
-// ✅ ADD THIS LINE (Must be exactly here, before Authorization)
-app.UseAuthentication();
-
+app.UseRouting();           // ✅ only once
+app.UseAuthentication();   // ✅ must be before UseAuthorization
 app.UseAuthorization();
+
 app.MapStaticAssets();
 
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.MapControllerRoute(
     name: "login",
     pattern: "login",
     defaults: new { controller = "Account", action = "Login" })
     .WithStaticAssets();
 
-// Explicit route for /login
-app.MapControllerRoute(
-    name: "login",
-    pattern: "login",
-    defaults: new { controller = "Account", action = "Login" })
-    .WithStaticAssets();
-
-// Default landing route -> /login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")
