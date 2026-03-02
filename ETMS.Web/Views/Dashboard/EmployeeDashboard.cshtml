@@ -6,6 +6,14 @@
 
 <div class="container-fluid mt-4" style="max-width: 1400px;">
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="border-radius: 10px;">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <h2 class="fw-bold text-dark">Welcome to your mobility portal</h2>

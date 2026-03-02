@@ -1,4 +1,7 @@
--- 1. Create Database (Run this line alone first if DB doesn't exist)
+/*==========================================================
+    0. CREATE DATABASE (if not exists)
+===========================================================*/
+
 IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'ETMSsol_DB')
 BEGIN
     CREATE DATABASE ETMSsol_DB;
@@ -8,162 +11,107 @@ GO
 USE ETMSsol_DB;
 GO
 
-<<<<<<< HEAD
--- 2. Users Table (For Login/Auth)
--- We separate Login info (Credentials) from Employee info (Profile)
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
-CREATE TABLE Users (
-    UserId INT IDENTITY(1,1) PRIMARY KEY,
-    Username NVARCHAR(50) UNIQUE NOT NULL,
-    PasswordHash NVARCHAR(255) NOT NULL, -- In real app, store HASH not plain text
-    Role NVARCHAR(20) NOT NULL CHECK (Role IN ('Admin', 'HR', 'Employee')),
-    IsActive BIT DEFAULT 1,
-    CreatedAt DATETIME DEFAULT GETDATE()
-);
-GO
 
--- 3. Employees Table (Profile Details)
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Employees')
-CREATE TABLE Employees (
-    EmployeeId INT IDENTITY(1,1) PRIMARY KEY,
-    UserId INT UNIQUE NOT NULL, -- Links to Users table
-    FullName NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(100) UNIQUE NOT NULL,
-    Department NVARCHAR(50) NOT NULL, -- e.g., 'IT', 'HR', 'Finance'
-    Designation NVARCHAR(50) NOT NULL, -- e.g., 'Intern', 'Manager'
-    CurrentLocation NVARCHAR(50) NOT NULL, -- e.g., 'Mumbai', 'Bangalore'
-    ManagerName NVARCHAR(100),
-    JoinedDate DATE DEFAULT GETDATE(),
-    CONSTRAINT FK_Employees_Users FOREIGN KEY (UserId) REFERENCES Users(UserId)
-);
-GO
+/*==========================================================
+    1. CREATE CORE MASTER TABLES
+===========================================================*/
 
--- 4. TransferRequests Table (The Core Feature)
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TransferRequests')
-CREATE TABLE TransferRequests (
-    RequestId INT IDENTITY(1,1) PRIMARY KEY,
-    EmployeeId INT NOT NULL,
-    CurrentLocation NVARCHAR(50) NOT NULL,
-    TargetLocation NVARCHAR(50) NOT NULL,
-    Reason NVARCHAR(500),
-    RequestDate DATETIME DEFAULT GETDATE(),
-    Status NVARCHAR(20) DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Approved', 'Rejected')),
-    HrComments NVARCHAR(500),
-    CONSTRAINT FK_Transfer_Employee FOREIGN KEY (EmployeeId) REFERENCES Employees(EmployeeId)
-);
-GO
-
--- =============================================
--- SEED DATA (So you don't start with empty screens)
--- =============================================
-
--- A. Create Users (Password is 'pass123' for everyone for now)
-INSERT INTO Users (Username, PasswordHash, Role) VALUES 
-('keval_admin', 'pass123', 'HR'),
-('tejas_emp', 'pass123', 'Employee'),
-('rahul_emp', 'pass123', 'Employee');
-
--- B. Create Employee Profiles
--- Get IDs dynamically to avoid errors if IDs change
-DECLARE @HrId INT = (SELECT UserId FROM Users WHERE Username = 'keval_admin');
-DECLARE @Emp1Id INT = (SELECT UserId FROM Users WHERE Username = 'tejas_emp');
-DECLARE @Emp2Id INT = (SELECT UserId FROM Users WHERE Username = 'rahul_emp');
-
-INSERT INTO Employees (UserId, FullName, Email, Department, Designation, CurrentLocation, ManagerName) VALUES
-(@HrId, 'Keval Shah', 'keval@lt.com', 'HR', 'HR Manager', 'Mumbai', 'Director X'),
-(@Emp1Id, 'Tejas Patel', 'tejas@lt.com', 'IT', 'Software Intern', 'Pune', 'Keval Shah'),
-(@Emp2Id, 'Rahul Verma', 'rahul@lt.com', 'Civil', 'Site Engineer', 'Delhi', 'Keval Shah');
-
--- C. Create Dummy Transfer Requests
-DECLARE @Emp1ProfileId INT = (SELECT EmployeeId FROM Employees WHERE UserId = @Emp1Id);
-
-INSERT INTO TransferRequests (EmployeeId, CurrentLocation, TargetLocation, Reason, Status, RequestDate) VALUES
-(@Emp1ProfileId, 'Pune', 'Mumbai', 'Family relocation', 'Pending', GETDATE()),
-(@Emp1ProfileId, 'Pune', 'Bangalore', 'Project requirement', 'Rejected', GETDATE()-5);
-
-GO
-=======
--- ********** ETMS Database Schema Creation Script **********
-
--- 1. Create Locations (Independent)
+-- LOCATIONS
 CREATE TABLE Locations(
-	LocationId INT IDENTITY(1, 1) PRIMARY KEY,
-	City NVARCHAR(100) NOT NULL,
-	State NVARCHAR(100) NOT NULL,
-	Country NVARCHAR(100) NOT NULL
+    LocationId INT IDENTITY(1, 1) PRIMARY KEY,
+    City NVARCHAR(100) NOT NULL,
+    State NVARCHAR(100) NOT NULL,
+    Country NVARCHAR(100) NOT NULL
 );
 
--- 2. Create Designations (Independent)
+-- DESIGNATIONS
 CREATE TABLE Designations(
-	DesignationId INT IDENTITY(1, 1) PRIMARY KEY,
-	Title NVARCHAR(100) NOT NULL,
-	Level NVARCHAR(50) NOT NULL -- e.g., 'L1', 'L2', 'Senior'
+    DesignationId INT IDENTITY(1, 1) PRIMARY KEY,
+    Title NVARCHAR(100) NOT NULL,
+    Level NVARCHAR(50) NOT NULL
 );
 
--- 3. Create Status Master (Independent)
+-- STATUS MASTER
 CREATE TABLE StatusMaster(
-	StatusId INT IDENTITY(1, 1) PRIMARY KEY,
-	StatusName NVARCHAR(50) NOT NULL, -- 'Pending', 'Approved', 'Rejected'
-	Module NVARCHAR(50) NOT NULL -- 'Transfer', 'Onboarding'
+    StatusId INT IDENTITY(1, 1) PRIMARY KEY,
+    StatusName NVARCHAR(50) NOT NULL,
+    Module NVARCHAR(50) NOT NULL
 );
 
--- 4. Create Branches (Depends on Locations)
+-- BRANCHES
 CREATE TABLE Branches(
-	BranchId INT IDENTITY(1, 1) PRIMARY KEY,
-	BranchName NVARCHAR(100) NOT NULL,
-	LocationId INT NOT NULL,
-	CONSTRAINT FK_Branches_Locations FOREIGN KEY (LocationId) REFERENCES Locations(LocationId)
+    BranchId INT IDENTITY(1, 1) PRIMARY KEY,
+    BranchName NVARCHAR(100) NOT NULL,
+    LocationId INT NOT NULL,
+    CONSTRAINT FK_Branches_Locations FOREIGN KEY (LocationId) REFERENCES Locations(LocationId)
 );
 
--- 5. Create Departments 
+-- DEPARTMENTS
 CREATE TABLE Departments(
-	DepartmentId INT IDENTITY(1, 1) PRIMARY KEY,
-	DepartmentName NVARCHAR(100) NOT NULL,
-	HeadOfDepartmentId INT NULL -- Nullable because a new dept might not have a head yet
+    DepartmentId INT IDENTITY(1, 1) PRIMARY KEY,
+    DepartmentName NVARCHAR(100) NOT NULL,
+    HeadOfDepartmentId INT NULL
 );
 
--- 6. Create Employee
-CREATE TABLE Employee(
-	EmployeeId INT IDENTITY(1, 1) PRIMARY KEY,
-	EmployeeCode NVARCHAR(20) NOT NULL UNIQUE,
-	FirstName NVARCHAR(100) NOT NULL,
-	LastName NVARCHAR(100) NOT NULL,
-	DateOfJoining DATETIME NOT NULL,
-	EmploymentType NVARCHAR(50) NOT NULL,
-	DepartmentId INT NOT NULL,
-	BranchId INT NOT NULL,
-	LocationId INT NOT NULL,
-	DesignationId INT NOT NULL,
-	ReportingManagerId INT NULL, -- Self-referencing
-	Status NVARCHAR(50) NOT NULL DEFAULT 'Active',
-	IsActive BIT  NOT NULL DEFAULT 1,
 
-	CONSTRAINT FK_Employee_Department FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId),
-	CONSTRAINT FK_Employee_Branch FOREIGN KEY (BranchId) REFERENCES Branches(BranchId),
+/*==========================================================
+    2. EMPLOYEE TABLE
+===========================================================*/
+
+CREATE TABLE Employee(
+    EmployeeId INT IDENTITY(1, 1) PRIMARY KEY,
+    EmployeeCode NVARCHAR(20) NOT NULL UNIQUE,
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    DateOfJoining DATETIME NOT NULL,
+    EmploymentType NVARCHAR(50) NOT NULL,
+
+    DepartmentId INT NOT NULL,
+    BranchId INT NOT NULL,
+    LocationId INT NOT NULL,
+    DesignationId INT NOT NULL,
+    ReportingManagerId INT NULL,
+
+    Status NVARCHAR(50) NOT NULL DEFAULT 'Active',
+    IsActive BIT NOT NULL DEFAULT 1,
+
+    CONSTRAINT FK_Employee_Department FOREIGN KEY (DepartmentId) REFERENCES Departments(DepartmentId),
+    CONSTRAINT FK_Employee_Branch FOREIGN KEY (BranchId) REFERENCES Branches(BranchId),
     CONSTRAINT FK_Employee_Location FOREIGN KEY (LocationId) REFERENCES Locations(LocationId),
     CONSTRAINT FK_Employee_Designation FOREIGN KEY (DesignationId) REFERENCES Designations(DesignationId),
     CONSTRAINT FK_Employee_Manager FOREIGN KEY (ReportingManagerId) REFERENCES Employee(EmployeeId)
 );
 
--- 7. NOW Link Department back to Employee
+-- LINK DEPARTMENT HEAD
 ALTER TABLE Departments
 ADD CONSTRAINT FK_Departments_Head FOREIGN KEY (HeadOfDepartmentId) REFERENCES Employee(EmployeeId);
 
--- 8. Create TransferRequests (The Core Feature)
+
+/*==========================================================
+    3. TRANSFER REQUESTS
+===========================================================*/
+
 CREATE TABLE TransferRequests (
     TransferRequestId INT IDENTITY(1,1) PRIMARY KEY,
+
     EmployeeId INT NOT NULL,
+
     FromDepartmentId INT NOT NULL,
     ToDepartmentId INT NOT NULL,
+
     FromLocationId INT NOT NULL,
     ToLocationId INT NOT NULL,
+
     OldManagerId INT NULL,
     NewManagerId INT NULL,
-    TransferType NVARCHAR(50) NOT NULL, -- 'Permanent', 'Temporary'
+
+    TransferType NVARCHAR(50) NOT NULL,
     Reason NVARCHAR(MAX) NOT NULL,
+
     RequestDate DATETIME NOT NULL DEFAULT GETDATE(),
     ExpectedRelievingDate DATETIME NULL,
     ExpectedJoiningDate DATETIME NULL,
+
     Status NVARCHAR(50) NOT NULL DEFAULT 'Pending',
     IsActive BIT NOT NULL DEFAULT 1,
 
@@ -174,12 +122,16 @@ CREATE TABLE TransferRequests (
     CONSTRAINT FK_Transfer_ToLoc FOREIGN KEY (ToLocationId) REFERENCES Locations(LocationId)
 );
 
--- 9. Create TransferApprovals (Workflow)
+
+/*==========================================================
+    4. TRANSFER APPROVALS
+===========================================================*/
+
 CREATE TABLE TransferApprovals (
     ApprovalId INT IDENTITY(1,1) PRIMARY KEY,
     TransferRequestId INT NOT NULL,
     ApproverId INT NOT NULL,
-    ApproverRole NVARCHAR(50) NOT NULL, -- 'HR', 'Manager'
+    ApproverRole NVARCHAR(50) NOT NULL,
     ApprovalStatus NVARCHAR(50) NOT NULL,
     Remarks NVARCHAR(MAX) NULL,
     ActionDate DATETIME NOT NULL DEFAULT GETDATE(),
@@ -188,7 +140,11 @@ CREATE TABLE TransferApprovals (
     CONSTRAINT FK_Approval_Approver FOREIGN KEY (ApproverId) REFERENCES Employee(EmployeeId)
 );
 
--- 10. Create TransferHistory (Audit Log)
+
+/*==========================================================
+    5. TRANSFER HISTORY
+===========================================================*/
+
 CREATE TABLE TransferHistory (
     HistoryId INT IDENTITY(1,1) PRIMARY KEY,
     EmployeeId INT NOT NULL,
@@ -199,7 +155,75 @@ CREATE TABLE TransferHistory (
     OldLocationId INT NOT NULL,
     NewLocationId INT NOT NULL,
     EffectiveDate DATETIME NOT NULL DEFAULT GETDATE(),
-    
+
     CONSTRAINT FK_History_Employee FOREIGN KEY (EmployeeId) REFERENCES Employee(EmployeeId)
 );
->>>>>>> f0ee524405ff6582eb67b8a17f4e922eeb967f9e
+
+
+/*==========================================================
+    6. USER ACCOUNTS
+===========================================================*/
+
+CREATE TABLE UserAccounts (
+    UserAccountId INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeeId INT NOT NULL,
+    Username NVARCHAR(100) NOT NULL UNIQUE,
+    Password NVARCHAR(200) NOT NULL,
+    Role NVARCHAR(50) NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
+
+    CONSTRAINT FK_UserAccounts_Employee FOREIGN KEY (EmployeeId) REFERENCES Employee(EmployeeId)
+);
+
+
+/*==========================================================
+    7. MASTER SEED DATA
+===========================================================*/
+
+INSERT INTO Locations (City, State, Country) VALUES
+('Mumbai', 'Maharashtra', 'India'),
+('Bangalore', 'Karnataka', 'India');
+
+INSERT INTO Departments (DepartmentName) VALUES
+('IT'), ('HR'), ('Finance');
+
+INSERT INTO Branches (BranchName, LocationId) VALUES
+('Powai HQ', 1),
+('Whitefield DC', 2);
+
+INSERT INTO Designations (Title, Level) VALUES
+('Software Engineer', 'L1'),
+('HR Manager', 'M1');
+
+INSERT INTO StatusMaster (StatusName, Module) VALUES
+('Pending', 'Transfer'),
+('Approved', 'Transfer'),
+('Rejected', 'Transfer');
+
+
+/*==========================================================
+    8. PRIMARY SEED EMPLOYEE + ACCOUNT
+===========================================================*/
+
+INSERT INTO Employee
+(EmployeeCode, FirstName, LastName, DateOfJoining, EmploymentType, DepartmentId, BranchId, LocationId, DesignationId)
+VALUES
+('EMP001', 'Keval', 'Shah', GETDATE(), 'Full-Time', 1, 1, 1, 1);
+
+DECLARE @EmpId INT = SCOPE_IDENTITY();
+
+INSERT INTO UserAccounts (EmployeeId, Username, Password, Role)
+VALUES (@EmpId, 'keval', 'pass123', 'Employee');
+
+
+/*==========================================================
+    9. SAMPLE TRANSFER REQUESTS
+===========================================================*/
+
+INSERT INTO TransferRequests
+(EmployeeId, FromDepartmentId, ToDepartmentId, FromLocationId, ToLocationId, TransferType, Reason, Status)
+VALUES
+(@EmpId, 1, 1, 1, 2, 'Permanent', 'Relocation for Project X', 'Pending'),
+(@EmpId, 1, 1, 1, 2, 'Temporary', 'Client onsite requirement', 'Approved');
+
+GO

@@ -1,0 +1,18 @@
+USE ETMSsol_DB;
+GO
+
+ALTER TABLE TransferRequests
+ADD LetterType NVARCHAR(100) NULL,
+    WithinCity NVARCHAR(10) NULL,
+    RelocationStatus NVARCHAR(50) NULL,
+    StartDate DATETIME NULL,
+    EndDate DATETIME NULL,
+    ProjectName NVARCHAR(200) NULL,
+    NewVertical NVARCHAR(100) NULL,
+    NewBU NVARCHAR(100) NULL,
+    NewISPsno NVARCHAR(50) NULL,
+    NewISName NVARCHAR(100) NULL,
+    NewISEmail NVARCHAR(100) NULL,
+    ICHead NVARCHAR(100) NULL,
+    Remarks NVARCHAR(MAX) NULL;
+GO

@@ -4,6 +4,7 @@ using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ETMS.Infrastructure.Repositories
@@ -22,39 +23,23 @@ namespace ETMS.Infrastructure.Repositories
             const string sql = @"
 INSERT INTO TransferRequests
 (
-    EmployeeId,
-    FromDepartmentId,
-    ToDepartmentId,
-    FromLocationId,
-    ToLocationId,
-    OldManagerId,
-    NewManagerId,
-    TransferType,
-    Reason,
-    RequestDate,
-    ExpectedRelievingDate,
-    ExpectedJoiningDate,
-    Status,
-    IsActive
+    EmployeeId, FromDepartmentId, ToDepartmentId, FromLocationId, ToLocationId,
+    OldManagerId, NewManagerId, TransferType, Reason, RequestDate, 
+    ExpectedRelievingDate, ExpectedJoiningDate, Status, IsActive,
+    -- NEW FIELDS
+    LetterType, WithinCity, RelocationStatus, StartDate, EndDate, 
+    ProjectName, NewVertical, NewBU, NewISPsno, NewISName, NewISEmail, ICHead, Remarks
 )
 OUTPUT INSERTED.TransferRequestId
 VALUES
 (
-    @EmployeeId,
-    @FromDepartmentId,
-    @ToDepartmentId,
-    @FromLocationId,
-    @ToLocationId,
-    @OldManagerId,
-    @NewManagerId,
-    @TransferType,
-    @Reason,
-    @RequestDate,
-    @ExpectedRelievingDate,
-    @ExpectedJoiningDate,
-    @Status,
-    @IsActive
-);@";
+    @EmployeeId, @FromDepartmentId, @ToDepartmentId, @FromLocationId, @ToLocationId,
+    @OldManagerId, @NewManagerId, @TransferType, @Reason, @RequestDate, 
+    @ExpectedRelievingDate, @ExpectedJoiningDate, @Status, @IsActive,
+    -- NEW FIELDS
+    @LetterType, @WithinCity, @RelocationStatus, @StartDate, @EndDate, 
+    @ProjectName, @NewVertical, @NewBU, @NewISPsno, @NewISName, @NewISEmail, @ICHead, @Remarks
+);";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(new CommandDefinition(sql, request, cancellationToken: cancellationToken));
@@ -192,33 +177,33 @@ WHERE Status = 'Pending';";
         public async Task<int> AddAsync(TransferRequest request)
         {
             var sql = @"
-        INSERT INTO TransferRequests 
-        (
-            EmployeeId, 
-            ToDepartmentId, 
-            ToLocationId, 
-            TransferType, 
-            Reason, 
-            RequestDate, 
-            Status, 
-            ExpectedRelievingDate,  -- Added
-            ExpectedJoiningDate,    -- Added
-            IsActive
-        )
-        VALUES 
-        (
-            @EmployeeId, 
-            @ToDepartmentId, 
-            @ToLocationId, 
-            @TransferType, 
-            @Reason, 
-            @RequestDate, 
-            @Status, 
-            @ExpectedRelievingDate, -- Added
-            @ExpectedJoiningDate,   -- Added
-            1
-        );
-        SELECT CAST(SCOPE_IDENTITY() as int);";
+INSERT INTO TransferRequests 
+(
+    EmployeeId, 
+    ToDepartmentId, 
+    ToLocationId, 
+    TransferType, 
+    Reason, 
+    RequestDate, 
+    Status, 
+    ExpectedRelievingDate,
+    ExpectedJoiningDate,
+    IsActive
+)
+VALUES 
+(
+    @EmployeeId, 
+    @ToDepartmentId, 
+    @ToLocationId, 
+    @TransferType, 
+    @Reason, 
+    @RequestDate, 
+    @Status, 
+    @ExpectedRelievingDate,
+    @ExpectedJoiningDate,
+    1
+);
+SELECT CAST(SCOPE_IDENTITY() as int);";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(sql, request);
