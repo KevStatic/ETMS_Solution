@@ -107,6 +107,35 @@ ORDER BY tr.RequestDate DESC;";
                 new CommandDefinition(sql, new { EmployeeId = employeeId }, cancellationToken: cancellationToken));
         }
 
+        // New: fetch pending approvals for a specific manager
+        public async Task<IEnumerable<TransferRequestListItemDto>> GetPendingApprovalsForManagerAsync(int managerEmployeeId, CancellationToken cancellationToken = default)
+        {
+            const string sql = @"
+SELECT
+    tr.TransferRequestId,
+    tr.EmployeeId,
+    (e.FirstName + ' ' + e.LastName) AS EmployeeName,
+    dFrom.DepartmentName AS FromDepartment,
+    dTo.DepartmentName AS ToDepartment,
+    (lFrom.City + ', ' + lFrom.State) AS FromLocation,
+    (lTo.City + ', ' + lTo.State) AS ToLocation,
+    tr.RequestDate,
+    tr.Status,
+    tr.TransferType
+FROM TransferRequests tr
+INNER JOIN Employee e ON e.EmployeeId = tr.EmployeeId
+INNER JOIN Departments dFrom ON dFrom.DepartmentId = tr.FromDepartmentId
+INNER JOIN Departments dTo ON dTo.DepartmentId = tr.ToDepartmentId
+INNER JOIN Locations lFrom ON lFrom.LocationId = tr.FromLocationId
+INNER JOIN Locations lTo ON lTo.LocationId = tr.ToLocationId
+WHERE tr.NewManagerId = @ManagerId AND tr.Status = 'Pending'
+ORDER BY tr.RequestDate DESC;";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryAsync<TransferRequestListItemDto>(
+                new CommandDefinition(sql, new { ManagerId = managerEmployeeId }, cancellationToken: cancellationToken));
+        }
+
         public async Task UpdateStatusAsync(int transferRequestId, string status, int actionByEmployeeId, string? remarks, CancellationToken cancellationToken = default)
         {
             const string update = @"
@@ -212,28 +241,40 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
 
         public async Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId)
         {
-            var sql = @"
+            var metricsSql = @"
         SELECT 
             COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS ActiveRequests,
             COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS PendingApprovals,
             COUNT(CASE WHEN Status = 'Rejected' THEN 1 END) AS Rejected,
-            
-            -- FIXED: Changed ta.ApprovalDate to ta.ActionDate to match your DB schema
             ISNULL(AVG(CASE WHEN ta.ActionDate IS NOT NULL 
                 THEN DATEDIFF(day, tr.RequestDate, ta.ActionDate) 
                 ELSE NULL END), 0) AS AvgApprovalDays,
             
-            -- Gets total active employees in the company
-            (SELECT COUNT(*) FROM Employee WHERE IsActive = 1) AS TotalPersonnel
-            
+            -- Now reads from the REAL Open Positions table
+            (SELECT ISNULL(SUM(VacancyCount), 0) FROM OpenPositions) AS TotalOpenPositions
         FROM TransferRequests tr
         LEFT JOIN TransferApprovals ta ON tr.TransferRequestId = ta.TransferRequestId
         WHERE tr.EmployeeId = @EmployeeId AND tr.IsActive = 1;
     ";
 
+            // Now reads exactly what HR puts into the database
+            var locationsSql = @"
+        SELECT TOP 4 LocationName AS [Key], SUM(VacancyCount) AS [Value]
+        FROM OpenPositions
+        GROUP BY LocationName
+        ORDER BY [Value] DESC;
+    ";
+
             using var connection = _context.CreateConnection();
-            var result = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(sql, new { EmployeeId = employeeId });
-            return result ?? new DashboardMetrics();
+
+            var metrics = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(metricsSql, new { EmployeeId = employeeId })
+                          ?? new DashboardMetrics();
+
+            var positionsList = await connection.QueryAsync<KeyValuePair<string, int>>(locationsSql);
+            metrics.OpenPositionsByLocation = positionsList.AsList();
+
+            return metrics;
         }
+
     }
 }

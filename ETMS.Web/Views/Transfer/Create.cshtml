@@ -128,10 +128,19 @@
                         </div>
 
                         <div class="row g-3 mb-4 pb-3 border-bottom">
+
                             <div class="col-md-3">
-                                <label class="form-label info-label">Letter Type :</label>
-                                <select asp-for="LetterType" class="form-select form-select-sm"><option value="">Select</option><option>Transfer Letter</option><option>Deputation Letter</option></select>
+                                <label class="form-label info-label">Transfer Type *</label>
+                                <select asp-for="TransferType" class="form-select form-select-sm">
+                                    <option value="">Select</option>
+                                    <option value="Permanent">Permanent Transfer</option>
+                                    <option value="Temporary">Temporary Transfer</option>
+                                    <option value="Deputation">Deputation</option>
+                                    <option value="ProjectAssignment">Project Assignment</option>
+                                    <option value="DepartmentChange">Department Change</option>
+                                </select>
                             </div>
+
                             <div class="col-md-3">
                                 <label class="form-label info-label">Within City :</label>
                                 <div class="mt-1">
@@ -145,6 +154,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div class="col-md-3">
                                 <label class="form-label info-label">Bachelor / Family :</label>
                                 <div class="mt-1">
@@ -158,10 +168,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label info-label">Transfer Type (Auto Select) :</label>
-                                <input type="text" class="form-control form-control-sm bg-white" readonly value="Domestic Transfer" />
-                            </div>
+
                         </div>
 
                         <div class="row g-3">

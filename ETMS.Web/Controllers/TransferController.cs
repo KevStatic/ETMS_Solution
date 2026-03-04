@@ -111,7 +111,7 @@ namespace ETMS.Web.Controllers
                 IsActive = true,
 
                 // --- MAPPING NEW L&T FIELDS ---
-                LetterType = model.LetterType,
+                LetterType = model.TransferType,
                 WithinCity = model.WithinCity,
                 RelocationStatus = model.RelocationStatus,
                 StartDate = model.StartDate,

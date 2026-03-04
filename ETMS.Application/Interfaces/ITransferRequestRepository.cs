@@ -1,7 +1,7 @@
-using ETMS.Application.DTOs.Transfer;
 using ETMS.Domain.Entities;
 using ETMS.Application.DTOs;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
@@ -10,8 +10,12 @@ namespace ETMS.Application.Interfaces
     {
         Task<int> CreateAsync(TransferRequest request, CancellationToken cancellationToken = default);
         Task<TransferRequest?> GetByIdAsync(int transferRequestId, CancellationToken cancellationToken = default);
-        Task<IEnumerable<TransferRequestListItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<IEnumerable<TransferRequestListItemDto>> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default);
+
+        // FIX: Explicitly specifying the full path to remove the ambiguity error
+        Task<IEnumerable<ETMS.Application.DTOs.Transfer.TransferRequestListItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<ETMS.Application.DTOs.Transfer.TransferRequestListItemDto>> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default);
+        Task<IEnumerable<ETMS.Application.DTOs.Transfer.TransferRequestListItemDto>> GetPendingApprovalsForManagerAsync(int managerEmployeeId, CancellationToken cancellationToken = default);
+
         Task UpdateStatusAsync(int transferRequestId, string status, int actionByEmployeeId, string? remarks, CancellationToken cancellationToken = default);
         Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
         Task<int> AddAsync(TransferRequest request);

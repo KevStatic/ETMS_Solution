@@ -43,12 +43,13 @@ namespace ETMS.Web.Models
 
         // Logistics
         [Required]
-        public string LetterType { get; set; } = string.Empty;
-        [Required]
         public string WithinCity { get; set; } = "No"; // Yes or No
         [Required]
         public string RelocationStatus { get; set; } = "Bachelor"; // Bachelor or Family
         public string TransferTypeAuto { get; set; } = "Permanent"; // Usually read-only/auto-selected
+
+        // NEW: LetterType was missing and is used by TransferController
+        public string LetterType { get; set; } = string.Empty;
 
         // Details
         [Required]
@@ -81,5 +82,8 @@ namespace ETMS.Web.Models
         public IEnumerable<SelectListItem>? Locations { get; set; }
         public IEnumerable<SelectListItem>? Departments { get; set; }
         public IEnumerable<ETMS.Domain.Entities.Location>? RawLocations { get; set; }
+
+        // Transfer Type
+        public string TransferType { get; set; } = "Permanent"; // Usually read-only/auto-selected
     }
 }
