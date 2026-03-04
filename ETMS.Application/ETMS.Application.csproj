@@ -10,8 +10,4 @@
     <ProjectReference Include="..\ETMS.Domain\ETMS.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DTOs\" />
-  </ItemGroup>
-
 </Project>

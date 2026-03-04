@@ -1,4 +1,5 @@
 using Dapper;
+using ETMS.Application.DTOs;
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
@@ -207,6 +208,32 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(sql, request);
+        }
+
+        public async Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId)
+        {
+            var sql = @"
+        SELECT 
+            COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS ActiveRequests,
+            COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS PendingApprovals,
+            COUNT(CASE WHEN Status = 'Rejected' THEN 1 END) AS Rejected,
+            
+            -- FIXED: Changed ta.ApprovalDate to ta.ActionDate to match your DB schema
+            ISNULL(AVG(CASE WHEN ta.ActionDate IS NOT NULL 
+                THEN DATEDIFF(day, tr.RequestDate, ta.ActionDate) 
+                ELSE NULL END), 0) AS AvgApprovalDays,
+            
+            -- Gets total active employees in the company
+            (SELECT COUNT(*) FROM Employee WHERE IsActive = 1) AS TotalPersonnel
+            
+        FROM TransferRequests tr
+        LEFT JOIN TransferApprovals ta ON tr.TransferRequestId = ta.TransferRequestId
+        WHERE tr.EmployeeId = @EmployeeId AND tr.IsActive = 1;
+    ";
+
+            using var connection = _context.CreateConnection();
+            var result = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(sql, new { EmployeeId = employeeId });
+            return result ?? new DashboardMetrics();
         }
     }
 }

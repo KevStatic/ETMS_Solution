@@ -1,4 +1,6 @@
-﻿using ETMS.Domain.Entities;
+﻿using ETMS.Application.DTOs;
+using ETMS.Domain.Entities;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ETMS.Web.Models
 {
@@ -13,10 +15,10 @@ namespace ETMS.Web.Models
 
         // Lists of requests for the dashboard
         public IEnumerable<TransferRequest> Requests { get; set; } = new List<TransferRequest>();
-
-        // Stats for the top cards
-        public int TotalRequests { get; set; }
-        public int PendingRequests { get; set; }
-        public int ApprovedRequests { get; set; }
+        public DashboardMetrics Metrics { get; set; } = new DashboardMetrics();
+        public string UserLocationName { get; set; } = string.Empty;
+        public string UserDepartmentName { get; set; } = string.Empty;
+        public IEnumerable<SelectListItem> Locations { get; set; } = new List<SelectListItem>();
+        public IEnumerable<SelectListItem> Departments { get; set; } = new List<SelectListItem>();
     }
 }

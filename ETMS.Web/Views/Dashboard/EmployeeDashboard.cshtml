@@ -4,86 +4,194 @@
 }
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<div class="container-fluid mt-4" style="max-width: 1400px;">
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+
+    .metric-card {
+        border-radius: 12px;
+        transition: transform 0.2s;
+        border: none;
+    }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+        }
+
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .filter-input {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+
+    .active-tab {
+        color: #333 !important;
+        border-bottom: 3px solid #333 !important;
+        background: transparent !important;
+    }
+</style>
+
+<div class="container-fluid mt-4 mb-5 pb-5" style="max-width: 1400px;">
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="border-radius: 10px;">
+        <div id="toastSuccess" class="alert alert-success shadow-sm border-0 position-fixed"
+             style="top: 20px; right: 20px; z-index: 9999; border-radius: 8px; transition: opacity 0.5s ease-in-out;">
             <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+
+        <script>
+            setTimeout(function() {
+                var alert = document.getElementById('toastSuccess');
+                if (alert) {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            }, 3000);
+        </script>
     }
 
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark">Welcome to your mobility portal</h2>
+            <h3 class="fw-bold text-dark d-flex align-items-center mb-1">
+                <i class="fas fa-mountain text-primary me-2"></i> Welcome to your mobility portal
+            </h3>
             <p class="text-muted mb-0">Manage your transfer requests and approvals.</p>
         </div>
         <div class="text-end">
-            <span class="badge bg-light text-dark border px-3 py-2">
-                <i class="fas fa-building me-1"></i> @Model.CurrentLocation (@Model.Department)
-            </span>
+            <div class="bg-white px-3 py-2 border shadow-sm text-muted" style="border-radius: 8px; font-size: 0.85rem; font-weight: 500;">
+                <i class="fas fa-building me-2"></i> @Model.UserLocationName | @Model.UserDepartmentName
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #e8f5e9;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Active Requests</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #fff8e1;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Pending Approvals</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #ffebee;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Rejected</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Avg Approval Time</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size: 1rem;" class="text-muted fw-normal">days</span></h2>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-12">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-info text-white me-2"><i class="fas fa-users"></i></div>
+                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">Active Personnel</div>
+                    </div>
+                    <h2 class="fw-bold mb-0 text-secondary">@Model.Metrics.TotalPersonnel</h2>
+                </div>
+                <div class="text-muted small mt-1 ms-1">Total active employees in DB</div>
+            </div>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
         <div class="card-body p-4">
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h4 class="fw-bold mb-1">My Transfer Requests</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0 text-dark">My Transfer Requests</h4>
+            </div>
 
-                    <ul class="nav nav-pills mt-3">
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
-                               href="@Url.Action("Index", new { filterType = "Active" })"
-                               style="@(ViewBag.CurrentFilter == "Active" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
-                                Active
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
-                               href="@Url.Action("Index", new { filterType = "All" })"
-                               style="@(ViewBag.CurrentFilter == "All" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
-                                All Requests
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-3">
+                <ul class="nav nav-pills border-0 mb-2 mb-md-0">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "Active" })">
+                            Active
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "All" })">
+                            All Requests
+                        </a>
+                    </li>
+                </ul>
 
-                <div class="d-flex gap-2">
-                    <form asp-action="Index" method="get" class="d-flex">
+                <div class="d-flex gap-2 align-items-center">
+                    <form asp-action="Index" method="get" class="d-flex gap-2 mb-0">
                         <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
+
                         <div class="input-group" style="width: 250px;">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0" placeholder="Search ID or Status...">
+                            <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0 filter-input" placeholder="Search ID or Status...">
                         </div>
+
+                        <select class="form-select filter-input" style="width: 170px;" asp-items="Model.Locations">
+                            <option value="">Filter by Location</option>
+                        </select>
+                        <select class="form-select filter-input" style="width: 190px;" asp-items="Model.Departments">
+                            <option value="">Filter by Dept</option>
+                        </select>
                     </form>
 
-                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 6px;">
+                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 8px;">
                         + New Transfer Request
                     </a>
                 </div>
             </div>
 
-            <div class="table-scroll-wrapper">
-                <table class="table table-hover align-middle">
-                    <thead class="bg-light text-muted text-uppercase small">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-white text-muted text-uppercase small" style="border-bottom: 2px solid #e9ecef;">
                         <tr>
-                            <th class="py-3 ps-3">TransferId</th>
-                            <th class="py-3">TargetPosting</th>
-
-                            <th class="py-3">
+                            <th class="py-3 ps-3 border-0 fw-bold">TransferId</th>
+                            <th class="py-3 border-0 fw-bold">Target Posting</th>
+                            <th class="py-3 border-0 fw-bold">
                                 <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
                                     Date <i class="fas fa-sort ms-1"></i>
                                 </a>
                             </th>
-                            <th class="py-3">
+                            <th class="py-3 border-0 fw-bold">
                                 <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
                                     Status <i class="fas fa-sort ms-1"></i>
                                 </a>
                             </th>
-                            <th class="py-3 text-end pe-4">Actions</th>
+                            <th class="py-3 text-end pe-4 border-0 fw-bold">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,34 +209,35 @@
                             @foreach (var req in Model.Requests)
                             {
                                 <tr>
-                                    <td class="ps-3 fw-bold text-dark">
+                                    <td class="ps-3 fw-bold text-dark py-3">
                                         TR-@req.TransferRequestId.ToString("D5")
                                     </td>
                                     <td>
-                                        <span class="d-block fw-bold text-dark">Bangalore Branch</span> <span class="text-muted small">@Model.Department</span>
+                                        <span class="d-block fw-bold text-dark">@req.TransferType</span>
+                                        <span class="text-muted small">@Model.UserDepartmentName</span>
                                     </td>
-                                    <td class="text-muted fw-bold">
+                                    <td class="text-dark fw-medium">
                                         @req.RequestDate.ToString("dd MMM, yyyy")
                                     </td>
                                     <td>
                                         @if (req.Status == "Approved")
                                         {
-                                            <span class="badge bg-light text-success border border-success px-3 py-2 rounded-pill">Approved</span>
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">Approved</span>
                                         }
                                         else if (req.Status == "Rejected" || req.Status == "Cancelled")
                                         {
-                                            <span class="badge bg-light text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-light text-warning border border-warning px-3 py-2 rounded-pill text-dark">Pending</span>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 rounded-pill">Pending</span>
                                         }
                                     </td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-light btn-sm mx-1"><i class="far fa-eye"></i></button>
+                                        <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-eye text-secondary"></i></button>
                                         @if (req.Status == "Pending")
                                         {
-                                            <button class="btn btn-light btn-sm mx-1 text-danger"><i class="far fa-trash-alt"></i></button>
+                                            <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-trash-alt text-danger"></i></button>
                                         }
                                     </td>
                                 </tr>

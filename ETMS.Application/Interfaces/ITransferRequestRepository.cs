@@ -1,5 +1,6 @@
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Domain.Entities;
+using ETMS.Application.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,5 +15,6 @@ namespace ETMS.Application.Interfaces
         Task UpdateStatusAsync(int transferRequestId, string status, int actionByEmployeeId, string? remarks, CancellationToken cancellationToken = default);
         Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
         Task<int> AddAsync(TransferRequest request);
+        Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId);
     }
 }

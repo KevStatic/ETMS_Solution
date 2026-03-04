@@ -1,10 +1,7 @@
-﻿@using ETMS.Application.Interfaces
-@inject IEmployeeRepository _employeeRepo
-@{
-    // HARDCODED ID: 1 (Simulating a logged-in user)
-    // Later, we will replace this with: int.Parse(User.Identity.GetUserId())
-    var currentUser = await _employeeRepo.GetEmployeeByIdAsync(1);
-}
+﻿@using System.Security.Claims
+@using ETMS.Application.Interfaces
+@inject IEmployeeRepository EmployeeRepo
+@inject ITransferRequestRepository TransferRepo
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,77 +11,137 @@
     <title>@ViewData["Title"] - ETMS.Web</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ETMS.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Home.css" />
     <link rel="stylesheet" href="~/css/content-scroll.css" asp-append-version="true" />
-    
+    <style>
+        .dropdown-toggle-no-caret::after {
+            display: none !important;
+        }
+
+        body {
+            background-color: #f4f7fa;
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ETMS.Web</a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Dashboard" asp-action="Index" style="color: #333;">Employee Transfer</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                        @if (currentUser != null)
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end">
+                    <div class="d-flex align-items-center">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <div class="text-end d-none d-lg-block" style="line-height: 1.2;">
-                                        <small class="d-block fw-bold text-dark">@currentUser.FirstName @currentUser.LastName</small>
-                                        <small class="d-block text-muted" style="font-size: 0.75rem;">@currentUser.EmploymentType</small>
+                            var empIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                            if (int.TryParse(empIdClaim, out int empId))
+                            {
+                                var currentEmp = await EmployeeRepo.GetEmployeeByIdAsync(empId);
+
+                                // FETCH DYNAMIC NOTIFICATIONS
+                                var allMyRequests = await TransferRepo.GetByEmployeeIdAsync(empId);
+                                var recentRequests = allMyRequests.Take(3).ToList();
+                                var notifCount = recentRequests.Count;
+
+                                if (currentEmp != null)
+                                {
+                                    <div class="dropdown me-4 mt-1">
+                                        <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle-no-caret position-relative" id="dropdownNotifications" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="far fa-bell" style="font-size: 1.3rem; color: #555;"></i>
+                                            @if (notifCount > 0)
+                                            {
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; margin-top: 2px;">
+                                                    @notifCount
+                                                    <span class="visually-hidden">unread messages</span>
+                                                </span>
+                                            }
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownNotifications" style="width: 320px; border-radius: 8px;">
+                                            <li><h6 class="dropdown-header fw-bold text-dark" style="font-size: 14px;">Recent Request Updates</h6></li>
+                                            <li><hr class="dropdown-divider"></li>
+
+                                            @if (!recentRequests.Any())
+                                            {
+                                                <li><span class="dropdown-item-text text-muted small text-center d-block py-2">No recent updates</span></li>
+                                            }
+                                            else
+                                            {
+                                                foreach (var req in recentRequests)
+                                                {
+                                                    string iconClass = req.Status == "Approved" ? "fa-check" : (req.Status == "Rejected" ? "fa-times" : "fa-clock");
+                                                    string bgClass = req.Status == "Approved" ? "bg-success" : (req.Status == "Rejected" ? "bg-danger" : "bg-warning");
+
+                                                    <li>
+                                                        <a class="dropdown-item py-2 px-3" href="#">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="@bgClass text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px; flex-shrink: 0;">
+                                                                    <i class="fas @iconClass" style="font-size: 14px;"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="mb-0 fw-bold" style="font-size: 13px; color: #333;">TR-@req.TransferRequestId.ToString("D5")</p>
+                                                                    <p class="mb-0 text-muted" style="font-size: 12px; white-space: normal;">Status: @req.Status</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                }
+                                            }
+
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a asp-controller="Dashboard" asp-action="Index" class="dropdown-item text-center small fw-bold" style="color: #00d0f1;">View All Requests</a></li>
+                                        </ul>
                                     </div>
-                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" 
-                                         style="width: 35px; height: 35px; font-size: 0.9rem;">
-                                        @currentUser.FirstName.Substring(0, 1)
+
+                                    <div class="text-end me-3 d-none d-sm-block">
+                                        <div class="fw-bold" style="font-size: 15px; color: #333; line-height: 1.2;">
+                                            @currentEmp.FirstName @currentEmp.LastName
+                                        </div>
+                                        <div class="text-muted" style="font-size: 13px;">
+                                            @currentEmp.EmploymentType
+                                        </div>
                                     </div>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2" aria-labelledby="navbarDropdown">
-                                    <li>
-                                        <h6 class="dropdown-header">
-                                            @currentUser.EmployeeCode <br />
-                                            <span class="fw-normal">Mumbai Branch</span>
-                                        </h6>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2"></i> My Profile</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="/Account/Logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-                                </ul>
-                            </li>
+
+                                    <div class="dropdown">
+                                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                                 style="width: 42px; height: 42px; background-color: #00d0f1; font-size: 18px; vertical-align: middle;">
+                                                @currentEmp.FirstName.Substring(0, 1).ToUpper()
+                                            </div>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end text-small shadow border-0" aria-labelledby="dropdownUser" style="border-radius: 8px;">
+                                            <li><span class="dropdown-item-text text-muted small">ID: @currentEmp.EmployeeCode</span></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item" href="#"><i class="far fa-user me-2 text-muted"></i> My Profile</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2 text-muted"></i> Settings</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i> Sign out</a></li>
+                                        </ul>
+                                    </div>
+                                }
+                            }
                         }
-                    </ul>
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-sm">Log In</a>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <div class="content-scroll">
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
-        </div>
+    <div class="container-fluid" style="max-width: 1400px; min-height: 100vh; padding-bottom: 100px;">
+        <main role="main">
+            @RenderBody()
+        </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ETMS.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

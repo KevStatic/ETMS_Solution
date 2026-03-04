@@ -64,5 +64,18 @@ namespace EmployeeTransferPortal.Controllers // Or ETMS.Web.Controllers (Check y
             ModelState.AddModelError("", result.ErrorMessage);
             return View(model);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            // 1. Clear the secure authentication cookie
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // 2. Clear any temporary messages or session data
+            TempData.Clear();
+
+            // 3. Redirect them straight to the Login screen
+            return RedirectToAction("Login", "Account");
+        }
     }
 }

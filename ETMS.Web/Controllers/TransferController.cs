@@ -40,59 +40,9 @@ namespace ETMS.Web.Controllers
 
             if (int.TryParse(employeeIdClaim, out int employeeId))
             {
-                // 1. Fetch the logged-in Employee
-                var employee = await _employeeRepo.GetEmployeeByIdAsync(employeeId);
-
-                if (employee != null)
-                {
-                    model.EmployeeName = $"{employee.FirstName} {employee.LastName}";
-                    model.EmployeeCode = employee.EmployeeCode;
-
-                    // 2. Fetch Location and Department dynamically
-                    var locations = await _locationRepo.GetAllAsync();
-                    var departments = await _deptRepo.GetAllAsync();
-
-                    var loc = locations.FirstOrDefault(l => l.LocationId == employee.LocationId);
-                    model.CurrentLocation = loc?.City ?? "Unknown";
-                    model.CurrentCountry = loc?.Country ?? "India";
-                    model.FromType = model.CurrentCountry == "India" ? "Domestic" : "International";
-
-                    var currentDept = departments.FirstOrDefault(d => d.DepartmentId == employee.DepartmentId);
-                    model.CurrentDepartment = currentDept?.DepartmentName ?? "Unknown";
-
-                    // 3. Map the new L&T specific fields straight from the database
-                    model.Grade = employee.Grade ?? "N/A";
-                    model.SBU = employee.SBU ?? "N/A";
-                    model.CostCenter = employee.CostCenter ?? "N/A";
-                    model.Company = employee.Company ?? "Larsen & Toubro Limited";
-                    model.HRBPName = employee.HRBP ?? "N/A";
-
-                    // 4. DYNAMICALLY FETCH IMMEDIATE SUPERVISOR (IS)
-                    if (employee.ReportingManagerId.HasValue)
-                    {
-                        var manager = await _employeeRepo.GetEmployeeByIdAsync(employee.ReportingManagerId.Value);
-                        model.ISName = manager != null ? $"{manager.FirstName} {manager.LastName}" : "Not Assigned";
-                        model.ISCode = manager?.EmployeeCode ?? "N/A";
-                    }
-                    else { model.ISName = "Not Assigned"; model.ISCode = "N/A"; }
-
-                    // 5. DYNAMICALLY FETCH DEPARTMENT HEAD (DH)
-                    // (Assuming your Departments table has HeadOfDepartmentId mapped in the Entity)
-                    if (currentDept != null && currentDept.HeadOfDepartmentId.HasValue)
-                    {
-                        var deptHead = await _employeeRepo.GetEmployeeByIdAsync(currentDept.HeadOfDepartmentId.Value);
-                        model.DHName = deptHead != null ? $"{deptHead.FirstName} {deptHead.LastName}" : "Not Assigned";
-                        model.DHCode = deptHead?.EmployeeCode ?? "N/A";
-                    }
-                    else { model.DHName = "Not Assigned"; model.DHCode = "N/A"; }
-
-                    // 6. Pass Raw Locations to View for JS filtering
-                    model.RawLocations = locations;
-                    model.Departments = departments.Select(d => new SelectListItem { Value = d.DepartmentId.ToString(), Text = d.DepartmentName });
-                }
+                // This calls our new helper method below to load all the left-panel data and dropdowns
+                await PopulateEmployeeDisplayDataAsync(model, employeeId);
             }
-
-            await PopulateDropdownsAsync(model);
 
             return View(model);
         }
@@ -100,11 +50,12 @@ namespace ETMS.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateTransferViewModel model)
         {
-            // Ignore validation for the display-only fields on the left panel
+            // Ignore validation for the display-only fields on the left panel so they don't block submission
             ModelState.Remove(nameof(model.EmployeeName));
             ModelState.Remove(nameof(model.EmployeeCode));
             ModelState.Remove(nameof(model.CurrentDepartment));
             ModelState.Remove(nameof(model.CurrentLocation));
+            ModelState.Remove(nameof(model.CurrentCountry));
             ModelState.Remove(nameof(model.Grade));
             ModelState.Remove(nameof(model.SBU));
             ModelState.Remove(nameof(model.CostCenter));
@@ -112,22 +63,30 @@ namespace ETMS.Web.Controllers
             ModelState.Remove(nameof(model.ImmediateSupervisor));
             ModelState.Remove(nameof(model.DepartmentHead));
             ModelState.Remove(nameof(model.HRBP));
+            ModelState.Remove(nameof(model.ISName));
+            ModelState.Remove(nameof(model.ISCode));
+            ModelState.Remove(nameof(model.DHName));
+            ModelState.Remove(nameof(model.DHCode));
+            ModelState.Remove(nameof(model.HRBPName));
+            ModelState.Remove(nameof(model.FromType));
             ModelState.Remove(nameof(model.Locations));
             ModelState.Remove(nameof(model.Departments));
-            ModelState.Remove(nameof(model.FromType)); // Display only
-            ModelState.Remove(nameof(model.ISName));
+            ModelState.Remove(nameof(model.RawLocations));
 
-            if (!ModelState.IsValid)
-            {
-                await PopulateDropdownsAsync(model);
-                return View(model);
-            }
-
-            var employeeIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(employeeIdClaim))
                 return RedirectToAction("Login", "Account");
 
             var employeeId = int.Parse(employeeIdClaim);
+
+            // IF VALIDATION FAILS (e.g., they missed a required field)
+            if (!ModelState.IsValid)
+            {
+                // Re-hydrate the left panel data BEFORE returning the view so the UI doesn't break into a blank screen!
+                await PopulateEmployeeDisplayDataAsync(model, employeeId);
+                return View(model);
+            }
+
             var currentEmployee = await _employeeRepo.GetEmployeeByIdAsync(employeeId);
 
             if (currentEmployee == null)
@@ -144,8 +103,8 @@ namespace ETMS.Web.Controllers
                 // Use TransferTypeAuto or default to Domestic Transfer
                 TransferType = string.IsNullOrEmpty(model.TransferTypeAuto) ? "Domestic Transfer" : model.TransferTypeAuto,
 
-                // Use Remarks for Reason since we swapped it in the UI
-                Reason = model.Remarks,
+                // Map Remarks to Reason since we swapped it in the UI
+                Reason = model.Remarks ?? "Mobility Request",
 
                 RequestDate = DateTime.Now,
                 Status = "Pending",
@@ -169,26 +128,59 @@ namespace ETMS.Web.Controllers
 
             await _transferRepo.CreateAsync(newRequest);
 
-            TempData["SuccessMessage"] = "Mobility Request submitted successfully!";
+            // Set the exact success message requested to trigger the Javascript toast
+            TempData["SuccessMessage"] = "Transfer request sent for approval";
             return RedirectToAction("Index", "Dashboard");
         }
 
-        private async Task PopulateDropdownsAsync(CreateTransferViewModel model)
+        // --- HELPER METHOD TO KEEP CODE CLEAN ---
+        // This handles fetching all the complex profile data for the left panel and dropdowns
+        private async Task PopulateEmployeeDisplayDataAsync(CreateTransferViewModel model, int employeeId)
         {
-            var locations = await _locationRepo.GetAllAsync();
-            var departments = await _deptRepo.GetAllAsync();
-
-            model.Locations = locations.Select(l => new SelectListItem
+            var employee = await _employeeRepo.GetEmployeeByIdAsync(employeeId);
+            if (employee != null)
             {
-                Value = l.LocationId.ToString(),
-                Text = l.City
-            });
+                model.EmployeeName = $"{employee.FirstName} {employee.LastName}";
+                model.EmployeeCode = employee.EmployeeCode;
 
-            model.Departments = departments.Select(d => new SelectListItem
-            {
-                Value = d.DepartmentId.ToString(),
-                Text = d.DepartmentName
-            });
+                var locations = await _locationRepo.GetAllAsync();
+                var departments = await _deptRepo.GetAllAsync();
+
+                var loc = locations.FirstOrDefault(l => l.LocationId == employee.LocationId);
+                model.CurrentLocation = loc?.City ?? "Unknown";
+                model.CurrentCountry = loc?.Country ?? "India";
+                model.FromType = model.CurrentCountry == "India" ? "Domestic" : "International";
+
+                var currentDept = departments.FirstOrDefault(d => d.DepartmentId == employee.DepartmentId);
+                model.CurrentDepartment = currentDept?.DepartmentName ?? "Unknown";
+
+                model.Grade = employee.Grade ?? "N/A";
+                model.SBU = employee.SBU ?? "N/A";
+                model.CostCenter = employee.CostCenter ?? "N/A";
+                model.Company = employee.Company ?? "Larsen & Toubro Limited";
+                model.HRBPName = employee.HRBP ?? "N/A";
+
+                if (employee.ReportingManagerId.HasValue)
+                {
+                    var manager = await _employeeRepo.GetEmployeeByIdAsync(employee.ReportingManagerId.Value);
+                    model.ISName = manager != null ? $"{manager.FirstName} {manager.LastName}" : "Not Assigned";
+                    model.ISCode = manager?.EmployeeCode ?? "N/A";
+                }
+                else { model.ISName = "Not Assigned"; model.ISCode = "N/A"; }
+
+                if (currentDept != null && currentDept.HeadOfDepartmentId.HasValue)
+                {
+                    var deptHead = await _employeeRepo.GetEmployeeByIdAsync(currentDept.HeadOfDepartmentId.Value);
+                    model.DHName = deptHead != null ? $"{deptHead.FirstName} {deptHead.LastName}" : "Not Assigned";
+                    model.DHCode = deptHead?.EmployeeCode ?? "N/A";
+                }
+                else { model.DHName = "Not Assigned"; model.DHCode = "N/A"; }
+
+                // Populate the dropdown options
+                model.RawLocations = locations;
+                model.Locations = locations.Select(l => new SelectListItem { Value = l.LocationId.ToString(), Text = l.City });
+                model.Departments = departments.Select(d => new SelectListItem { Value = d.DepartmentId.ToString(), Text = d.DepartmentName });
+            }
         }
     }
 }
