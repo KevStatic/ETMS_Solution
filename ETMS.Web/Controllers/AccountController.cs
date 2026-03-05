@@ -177,5 +177,18 @@ namespace ETMS.Web.Controllers
             TempData["SuccessMessage"] = message;
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            // 1. Clear the secure authentication cookie
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // 2. Clear any temporary messages or session data
+            TempData.Clear();
+
+            // 3. Redirect them straight to the Login screen
+            return RedirectToAction("Login", "Account");
+        }
     }
 }

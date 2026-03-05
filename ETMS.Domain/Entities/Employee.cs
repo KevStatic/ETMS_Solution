@@ -22,9 +22,14 @@ namespace ETMS.Domain.Entities
         public string Status { get; set; }
         public bool IsActive { get; set; }
 
-        // NULL CHECK FOR NULLABLE VALUES
         public Department? Department { get; set; }
         public Location? Location { get; set; }
         public Employee? ReportingManager { get; set; }
+
+        public string? Grade { get; set; }
+        public string? SBU { get; set; }
+        public string? CostCenter { get; set; }
+        public string? Company { get; set; }
+        public string? HRBP { get; set; }
     }
 }

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ETMS.Domain\ETMS.Domain.csproj" />
+    <Folder Include="DTOs\" />
   </ItemGroup>
 
 </Project>

@@ -1,65 +1,303 @@
 ﻿@model ETMS.Web.Models.CreateTransferViewModel
 
 @{
-    ViewData["Title"] = "New Transfer Request";
+    ViewData["Title"] = "Employee Mobility Request";
 }
 
-<div class="container mt-5" style="max-width: 800px;">
-    <div class="card shadow-sm border-0" style="border-radius: 12px;">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-            <h3 class="fw-bold" style="color: #333;">Submit Transfer Request</h3>
-            <p class="text-muted">Please fill in the details for your relocation request.</p>
+<style>
+    .info-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
+    .info-value { font-size: 0.9rem; color: #212529; font-weight: 500; margin-bottom: 12px; }
+    .personnel-card { display: flex; align-items: center; margin-bottom: 15px; }
+    .personnel-avatar { width: 35px; height: 35px; border-radius: 50%; background-color: #6c757d; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin-right: 12px; }
+</style>
+
+<div class="container-fluid mt-4" style="max-width: 1400px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-1" style="color: #333;">
+            <i class="fas fa-plane-departure text-primary me-2"></i> 
+            Employee Mobility
+        </h3>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 20px; font-weight: 500;">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 sticky-top" style="border-radius: 8px; top: 20px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center p-3 mb-4" style="background-color: #e2e8f0; border-radius: 8px;">
+                        <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center fw-bold fs-4 me-3" style="width: 50px; height: 50px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-primary">@Model.EmployeeName</h6>
+                            <span class="text-muted small">@Model.EmployeeCode</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="info-label"><i class="fas fa-tag me-1"></i> Grade</div>
+                        <div class="info-value">@Model.Grade</div>
+
+                        <div class="info-label"><i class="fas fa-sitemap me-1"></i> SBU</div>
+                        <div class="info-value">@Model.SBU</div>
+
+                        <div class="info-label"><i class="fas fa-building me-1"></i> Department</div>
+                        <div class="info-value">@Model.CurrentDepartment</div>
+
+                        <div class="info-label"><i class="fas fa-rupee-sign me-1"></i> Cost Center</div>
+                        <div class="info-value">@Model.CostCenter</div>
+
+                        <div class="info-label"><i class="fas fa-map-marker-alt me-1"></i> Location</div>
+                        <div class="info-value">@Model.CurrentLocation</div>
+
+                        <div class="info-label"><i class="fas fa-briefcase me-1"></i> Company</div>
+                        <div class="info-value">@Model.Company</div>
+                    </div>
+
+                    <hr />
+
+                    <div class="personnel-card mt-3">
+                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
+                        <div>
+                            <div class="info-label">IS DETAILS</div>
+                            <div class="info-value mb-0"> @Model.ISName <br><small class="text-muted"> @Model.ISCode </small></div>
+                        </div>
+                    </div>
+                    <div class="personnel-card">
+                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
+                        <div>
+                            <div class="info-label">DH DETAILS</div>
+                            <div class="info-value mb-0"> @Model.DHName <br><small class="text-muted"> @Model.DHCode </small></div>
+                        </div>
+                    </div>
+                    <div class="personnel-card">
+                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
+                        <div>
+                            <div class="info-label">HRBP DETAILS</div>
+                            <div class="info-value mb-0"> @Model.HRBPName <br><small class="text-muted"> HR Central </small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card-body p-4">
+        <div class="col-lg-9">
             <form asp-action="Create" method="post">
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="ToLocationId" class="form-label fw-bold">Target Location</label>
-                        <select asp-for="ToLocationId" asp-items="Model.Locations" class="form-select bg-light border-0 py-2">
-                            <option value="">-- Select Destination --</option>
-                        </select>
-                        <span asp-validation-for="ToLocationId" class="text-danger small"></span>
+                <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
+                    <div class="card-header bg-white border-bottom pt-3 pb-2 px-4">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-exchange-alt me-2"></i> Transfer Information</h6>
                     </div>
+                    <div class="card-body p-4 bg-light">
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-5">
+                                <div class="p-3 border rounded bg-white h-100">
+                                    <h6 class="fw-bold mb-3"><i class="fas fa-map-marker-alt text-secondary me-2"></i> From</h6>
+                                    <select class="form-select form-select-sm mb-2 bg-light" disabled><option>@Model.FromType</option></select>
+                                    <select class="form-select form-select-sm bg-light" disabled><option>@Model.CurrentLocation, @Model.CurrentCountry</option></select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="p-3 border rounded bg-white h-100" style="border-color: #86b7fe !important; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);">
+                                    <h6 class="fw-bold mb-3"><i class="fas fa-dot-circle text-success me-2"></i> To</h6>
+                                    <select asp-for="ToType" class="form-select form-select-sm mb-2" id="toTypeDropdown">
+                                        <option value="">Select Type</option>
+                                        <option value="Domestic">Domestic</option>
+                                        <option value="International">International</option>
+                                    </select>
+                                    <select asp-for="ToLocationId" class="form-select form-select-sm" id="toLocationDropdown">
+                                        <option value="">Select Location</option>
+                                        @if (Model.RawLocations != null)
+                                        {
+                                            foreach (var loc in Model.RawLocations)
+                                            {
+                                                var type = loc.Country == "India" ? "Domestic" : "International";
+                                                <option value="@loc.LocationId" data-type="@type">@loc.City, @loc.Country</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label asp-for="ToDepartmentId" class="form-label fw-bold">Target Department</label>
-                        <select asp-for="ToDepartmentId" asp-items="Model.Departments" class="form-select bg-light border-0 py-2">
-                            <option value="">-- Select Department --</option>
-                        </select>
-                        <span asp-validation-for="ToDepartmentId" class="text-danger small"></span>
+                        <div class="row g-3 mb-4 pb-3 border-bottom">
+
+                            <div class="col-md-3">
+                                <label class="form-label info-label">Transfer Type *</label>
+                                <select asp-for="TransferType" class="form-select form-select-sm">
+                                    <option value="">Select</option>
+                                    <option value="Permanent">Permanent Transfer</option>
+                                    <option value="Temporary">Temporary Transfer</option>
+                                    <option value="Deputation">Deputation</option>
+                                    <option value="ProjectAssignment">Project Assignment</option>
+                                    <option value="DepartmentChange">Department Change</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label info-label">Within City :</label>
+                                <div class="mt-1">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" asp-for="WithinCity" value="Yes" id="cityYes">
+                                        <label class="form-check-label small" for="cityYes">Yes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" asp-for="WithinCity" value="No" id="cityNo">
+                                        <label class="form-check-label small" for="cityNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label info-label">Bachelor / Family :</label>
+                                <div class="mt-1">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Bachelor" id="bachelor">
+                                        <label class="form-check-label small" for="bachelor">Bachelor</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Family" id="family">
+                                        <label class="form-check-label small" for="family">Family</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="mb-4">
+                        <div class="row g-3">
+                            
+                            <div class="col-md-4">
+                                <label class="form-label info-label">Start Date *</label>
+                                <input asp-for="StartDate" type="date" class="form-control form-control-sm" />
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label info-label">End Date</label>
+                                <input asp-for="EndDate" type="date" class="form-control form-control-sm" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">Project Name *</label>
+                                <input asp-for="ProjectName" type="text" class="form-control form-control-sm" placeholder="Project Name" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New Vertical *</label>
+                                <select asp-for="NewVertical" class="form-select form-select-sm">
+                                    <option value="">Select Vertical</option>
+                                    <option value="IT Operations">IT Operations</option>
+                                    <option value="Civil Infrastructure">Civil Infrastructure</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New Department *</label>
+                                <select asp-for="ToDepartmentId" asp-items="Model.Departments" class="form-select form-select-sm">
+                                    <option value="">Select Department</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New BU *</label>
+                                <select asp-for="NewBU" class="form-select form-select-sm">
+                                    <option value="">Select BU</option>
+                                    <option value="Corporate">Corporate</option>
+                                    <option value="Metro Projects">Metro Projects</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New IS PSNO *</label>
+                                <input asp-for="NewISPsno" type="text" class="form-control form-control-sm" placeholder="PSNO, Name, Email" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New IS Name *</label>
+                                <input asp-for="NewISName" type="text" class="form-control form-control-sm" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">New IS Email *</label>
+                                <input asp-for="NewISEmail" type="email" class="form-control form-control-sm" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label info-label">IC Head *</label>
+                                <select asp-for="ICHead" class="form-select form-select-sm">
+                                    <option value="">Select</option>
+                                    <option value="S. N. Subrahmanyan">S. N. Subrahmanyan</option>
+                                    <option value="R. Shankar Raman">R. Shankar Raman</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label info-label">Remarks *</label>
+                                <input asp-for="Remarks" type="text" class="form-control form-control-sm" />
+                            </div>
+
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-3 mt-5 mb-5 pb-4">
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-light px-4 py-2" style="border-radius: 20px; font-weight: 500; border: 1px solid #ced4da;">
+                                Cancel
+                            </a>
+                            <button type="button" class="btn btn-outline-primary px-4 py-2" style="border-radius: 20px; font-weight: 500;">
+                                <i class="far fa-save me-1"></i> Save As Draft
+                            </button>
+                            <button type="submit" class="btn btn-success px-4 py-2" style="border-radius: 20px; font-weight: 500; background-color: #28a745; border: none;">
+                                <i class="far fa-paper-plane me-1"></i> Send For Approval
+                            </button>
+                        </div>
+
+                    </div>
+                            <button type="submit" class="btn text-white fw-bold px-5 py-2" style="background-color: #66D2CE; border-radius: 6px;">
+                                Submit Request
+                            </button>
+                        </div>
+                    </div>
+                            <button type="submit" class="btn text-white fw-bold px-5 py-2" style="background-color: #66D2CE; border-radius: 6px;">
+                                Submit Request
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="TransferType" class="form-label fw-bold">Transfer Type</label>
-                    <select asp-for="TransferType" class="form-select bg-light border-0 py-2">
-                        <option value="">-- Select Type --</option>
-                        <option value="Permanent">Permanent Relocation</option>
-                        <option value="Temporary">Temporary Deputation</option>
-                    </select>
-                    <span asp-validation-for="TransferType" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="Reason" class="form-label fw-bold">Reason for Transfer</label>
-                    <textarea asp-for="Reason" class="form-control bg-light border-0" rows="4" placeholder="Briefly explain why you are requesting this transfer..."></textarea>
-                    <span asp-validation-for="Reason" class="text-danger small"></span>
-                </div>
-
-                <div class="d-flex justify-content-end gap-3">
-                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-light fw-bold px-4 py-2 text-muted border">Cancel</a>
-                    <button type="submit" class="btn text-white fw-bold px-4 py-2" style="background-color: #66D2CE;">Submit Request</button>
-                </div>
-
             </form>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var typeSelect = document.getElementById('toTypeDropdown');
+        var locSelect = document.getElementById('toLocationDropdown');
+
+        // Clone all options on page load
+        var allOptions = Array.from(locSelect.options).filter(o => o.value !== "");
+
+        typeSelect.addEventListener('change', function() {
+            var selectedType = this.value;
+
+            // Clear current locations
+            locSelect.innerHTML = '<option value="">Select Location</option>';
+
+            if (selectedType) {
+                // Re-add only the options that match Domestic/International
+                allOptions.forEach(opt => {
+                    if (opt.getAttribute('data-type') === selectedType) {
+                        locSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+            }
+        });
+
+        // Trigger it once in case form validation failed and reloaded the page
+        typeSelect.dispatchEvent(new Event('change'));
+    });
+</script>

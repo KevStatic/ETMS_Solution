@@ -441,182 +441,258 @@
         }
 </style>
 
-<div class="container-fluid mt-4" style="max-width: 1400px;">
-
-    @{
-        var total = Model.Requests.Count();
-        var pending = Model.Requests.Count(r => r.Status == "Pending");
-        var approved = Model.Requests.Count(r => r.Status == "Approved");
-        var rejected = Model.Requests.Count(r => r.Status == "Rejected" || r.Status == "Cancelled");
+<style>
+    body {
+        background-color: #f8fafc;
     }
 
-    <!-- WELCOME STRIP -->
-    <div class="welcome-strip">
+    .metric-card {
+        border-radius: 12px;
+        transition: transform 0.2s;
+        border: none;
+    }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+        }
+
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .filter-input {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+
+    .active-tab {
+        color: #333 !important;
+        border-bottom: 3px solid #333 !important;
+        background: transparent !important;
+    }
+</style>
+
+<div class="container-fluid mt-4 mb-5 pb-5" style="max-width: 1400px;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="toastSuccess" class="alert alert-success shadow-sm border-0 position-fixed"
+             style="top: 20px; right: 20px; z-index: 9999; border-radius: 8px; transition: opacity 0.5s ease-in-out;">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        </div>
+
+        <script>
+            setTimeout(function() {
+                var alert = document.getElementById('toastSuccess');
+                if (alert) {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            }, 3000);
+        </script>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <div class="welcome-title">Welcome back, @Model.EmployeeName.Split(' ')[0] 👋</div>
-            <div class="welcome-sub">Manage your transfer requests from your mobility portal.</div>
+            <h3 class="fw-bold text-dark d-flex align-items-center mb-1">
+                <i class="fas fa-mountain text-primary me-2"></i> Welcome to your mobility portal
+            </h3>
+            <p class="text-muted mb-0">Manage your transfer requests and approvals.</p>
         </div>
-        <div class="info-pills">
-            <div class="info-pill"><i class="fas fa-id-badge"></i> @Model.EmployeeCode</div>
-            <div class="info-pill"><i class="fas fa-building"></i> @Model.Department</div>
-            <div class="info-pill"><i class="fas fa-map-marker-alt"></i> @Model.CurrentLocation</div>
-            <div class="info-pill"><i class="fas fa-user-tie"></i> @Model.ManagerName</div>
+        <div class="text-end">
+            <div class="bg-white px-3 py-2 border shadow-sm text-muted" style="border-radius: 8px; font-size: 0.85rem; font-weight: 500;">
+                <i class="fas fa-building me-2"></i> @Model.UserLocationName | @Model.UserDepartmentName
+            </div>
         </div>
     </div>
 
-    <!-- STATS ROW -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon blue"><i class="fas fa-paper-plane"></i></div>
-                <div>
-                    <div class="stat-value">@total</div>
-                    <div class="stat-label">Total Requests</div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #e8f5e9;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Active Requests</div>
                 </div>
+                <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
-                <div>
-                    <div class="stat-value">@pending</div>
-                    <div class="stat-label">Pending</div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #fff8e1;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Pending Approvals</div>
                 </div>
+                <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                <div>
-                    <div class="stat-value">@approved</div>
-                    <div class="stat-label">Approved</div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #ffebee;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Rejected</div>
                 </div>
+                <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="stat-card">
-                <div class="stat-icon teal"><i class="fas fa-times-circle"></i></div>
-                <div>
-                    <div class="stat-value">@rejected</div>
-                    <div class="stat-label">Rejected / Cancelled</div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
+                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Avg Approval Time</div>
                 </div>
+                <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size: 1rem;" class="text-muted fw-normal">days</span></h2>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-12">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white" style="border: 1px solid #e9ecef;">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-info text-white me-2" style="background-color: #5c9bba !important; border-radius: 8px;"><i class="fas fa-bullseye"></i></div>
+                        <div class="fw-bold text-dark" style="font-size: 1rem;">Open Positions</div>
+                    </div>
+                    <h2 class="fw-normal mb-0 text-muted" style="font-size: 2rem; line-height: 1;">@Model.Metrics.TotalOpenPositions</h2>
+                </div>
+
+                <ul class="list-unstyled mb-0 mt-2 ms-1">
+                    @foreach (var pos in Model.Metrics.OpenPositionsByLocation)
+                    {
+                        <li class="d-flex align-items-center mb-1 text-muted" style="font-size: 0.8rem;">
+                            <i class="fas fa-circle me-2" style="font-size: 0.35rem; color: #6c757d;"></i>
+                            <span class="flex-grow-1">@pos.Key:</span>
+                            <span>@pos.Value pos.</span>
+                        </li>
+                    }
+                </ul>
             </div>
         </div>
     </div>
 
-    <!-- TABLE CARD -->
-    <div class="table-card">
-        <div class="table-card-header">
-            <div class="table-title">My Transfer Requests</div>
+    <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+        <div class="card-body p-4">
 
-            <div class="d-flex justify-content-between align-items-center pb-3 flex-wrap gap-2">
-                <!-- Tabs -->
-                <div class="tab-group">
-                    <a href="@Url.Action("Index", new { filterType = "Active" })"
-                       class="tab-btn @(ViewBag.CurrentFilter == "Active" ? "active" : "")">
-                        Active
-                    </a>
-                    <a href="@Url.Action("Index", new { filterType = "All" })"
-                       class="tab-btn @(ViewBag.CurrentFilter == "All" ? "active" : "")">
-                        All Requests
-                    </a>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0 text-dark">My Transfer Requests</h4>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-3">
+                <ul class="nav nav-pills border-0 mb-2 mb-md-0">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "Active" })">
+                            Active
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "All" })">
+                            All Requests
+                        </a>
+                    </li>
+                </ul>
 
                 <div class="d-flex gap-2 align-items-center">
-                    <form asp-action="Index" method="get">
+                    <form asp-action="Index" method="get" class="d-flex gap-2 mb-0">
                         <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
-                        <div class="search-wrap">
-                            <i class="fas fa-search"></i>
-                            <input type="text" name="searchTerm"
-                                   value="@ViewBag.CurrentSearch"
-                                   placeholder="Search requests..." />
+
+                        <div class="input-group" style="width: 250px;">
+                            <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0 filter-input" placeholder="Search ID or Status...">
                         </div>
+
+                        <select class="form-select filter-input" style="width: 170px;" asp-items="Model.Locations">
+                            <option value="">Filter by Location</option>
+                        </select>
+                        <select class="form-select filter-input" style="width: 190px;" asp-items="Model.Departments">
+                            <option value="">Filter by Dept</option>
+                        </select>
                     </form>
-                    <a asp-controller="Transfer" asp-action="Create" class="btn-new">
-                        <i class="fas fa-plus"></i> New Request
+
+                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 8px;">
+                        + New Transfer Request
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- TABLE -->
-        <table class="requests-table">
-            <thead>
-                <tr>
-                    <th>Transfer ID</th>
-                    <th>Target Posting</th>
-                    <th>
-                        <a class="sort-link"
-                           href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })">
-                            Date <i class="fas fa-sort"></i>
-                        </a>
-                    </th>
-                    <th>Type</th>
-                    <th>
-                        <a class="sort-link"
-                           href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })">
-                            Status <i class="fas fa-sort"></i>
-                        </a>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (!Model.Requests.Any())
-                {
-                    <tr>
-                        <td colspan="6">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <p>No transfer requests found matching your criteria.</p>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var req in Model.Requests)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-white text-muted text-uppercase small" style="border-bottom: 2px solid #e9ecef;">
                         <tr>
-                            <td><span class="tr-id">TR-@req.TransferRequestId.ToString("D5")</span></td>
-                            <td>
-                                <div class="target-dept">@(req.ToDepartment ?? "N/A")</div>
-                                <div class="target-loc"><i class="fas fa-map-marker-alt me-1"></i>@(req.ToLocation ?? "N/A")</div>
-                            </td>
-                            <td class="date-cell">@req.RequestDate.ToString("dd MMM, yyyy")</td>
-                            <td><span style="font-size:12px;font-weight:600;color:var(--muted);">@req.TransferType</span></td>
-                            <td>
-                                @if (req.Status == "Approved")
-                                {
-                                    <span class="badge-status badge-approved">Approved</span>
-                                }
-                                else if (req.Status == "Rejected")
-                                {
-                                    <span class="badge-status badge-rejected">Rejected</span>
-                                }
-                                else if (req.Status == "Cancelled")
-                                {
-                                    <span class="badge-status badge-cancelled">Cancelled</span>
-                                }
-                                else
-                                {
-                                    <span class="badge-status badge-pending">Pending</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1 justify-content-end">
-                                    <a href="#" class="btn-icon" title="View"><i class="far fa-eye"></i></a>
-                                    @if (req.Status == "Pending")
-                                    {
-                                        <a href="#" class="btn-icon danger" title="Cancel"><i class="far fa-trash-alt"></i></a>
-                                    }
-                                </div>
-                            </td>
+                            <th class="py-3 ps-3 border-0 fw-bold">TransferId</th>
+                            <th class="py-3 border-0 fw-bold">Target Posting</th>
+                            <th class="py-3 border-0 fw-bold">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                    Date <i class="fas fa-sort ms-1"></i>
+                                </a>
+                            </th>
+                            <th class="py-3 border-0 fw-bold">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                    Status <i class="fas fa-sort ms-1"></i>
+                                </a>
+                            </th>
+                            <th class="py-3 text-end pe-4 border-0 fw-bold">Actions</th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Requests.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+                                    No transfer requests found matching your criteria.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var req in Model.Requests)
+                            {
+                                <tr>
+                                    <td class="ps-3 fw-bold text-dark py-3">
+                                        TR-@req.TransferRequestId.ToString("D5")
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
+                                        <span class="text-muted small">@req.TargetDepartment</span>
+                                    </td>
+                                    <td class="text-dark fw-medium">
+                                        @req.RequestDate.ToString("dd MMM, yyyy")
+                                    </td>
+                                    <td>
+                                        @if (req.Status == "Approved")
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">Approved</span>
+                                        }
+                                        else if (req.Status == "Rejected" || req.Status == "Cancelled")
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 rounded-pill">Pending</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-eye text-secondary"></i></button>
+                                        @if (req.Status == "Pending")
+                                        {
+                                            <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-trash-alt text-danger"></i></button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
 
 </div>

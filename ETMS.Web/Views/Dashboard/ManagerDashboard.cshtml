@@ -1,0 +1,85 @@
+﻿@model ETMS.Web.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Manager Dashboard";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<style>
+    body {
+        background-color: #f4f7fa;
+    }
+
+    .table-header {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 700;
+        border-bottom: 2px solid #e9ecef;
+    }
+</style>
+
+<div class="container-fluid mt-4 mb-5 pb-5" style="max-width: 1400px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark d-flex align-items-center mb-1">
+                <i class="fas fa-inbox text-primary me-2"></i> Manager Approvals
+            </h3>
+            <p class="text-muted mb-0">Review and action mobility requests from your team.</p>
+        </div>
+        @if (Model.Role == "HR")
+        {
+            <button class="btn btn-outline-dark fw-bold" style="border-radius: 8px;">
+                <i class="fas fa-edit me-2"></i> Manage Open Positions
+            </button>
+        }
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold text-dark mb-4">Pending Team Requests</h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="table-header py-3 ps-3 border-top-0">Request ID</th>
+                            <th class="table-header py-3 border-top-0">Requested By</th>
+                            <th class="table-header py-3 border-top-0">Target Location</th>
+                            <th class="table-header py-3 border-top-0">Date Submitted</th>
+                            <th class="table-header py-3 text-end pe-4 border-top-0">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Requests.Any())
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-5">You have no pending approvals in your queue.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var req in Model.Requests)
+                            {
+                                <tr>
+                                    <td class="ps-3 fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">Employee Data</div>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
+                                        <span class="text-muted small">@req.TargetDepartment</span>
+                                    </td>
+                                    <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-sm btn-success fw-bold px-3 me-1" style="border-radius: 6px;">Approve</button>
+                                        <button class="btn btn-sm btn-danger fw-bold px-3" style="border-radius: 6px;">Reject</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
