@@ -2,140 +2,621 @@
 @{
     ViewData["Title"] = "Employee Dashboard";
 }
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --accent: #4F7EFF;
+        --accent-soft: #EEF2FF;
+        --teal: #38C9C0;
+        --teal-soft: #E8FAF9;
+        --text: #1A1D2E;
+        --muted: #8B90A7;
+        --border: #E4E8F0;
+        --bg: #F4F6FB;
+        --card: #FFFFFF;
+        --success: #22C55E;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+    }
+
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+    }
+
+    .welcome-strip {
+        background: linear-gradient(120deg, #4F7EFF 0%, #38C9C0 100%);
+        border-radius: 14px;
+        padding: 28px 36px;
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .welcome-strip::before {
+            content: '';
+            position: absolute;
+            right: -40px;
+            top: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .welcome-strip::after {
+            content: '';
+            position: absolute;
+            right: 60px;
+            bottom: -60px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+
+    .welcome-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .welcome-sub {
+        font-size: 14px;
+        opacity: 0.85;
+    }
+
+    .info-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .info-pill {
+        background: rgba(255,255,255,0.18);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 50px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #fff;
+    }
+
+    .stat-card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 20px 22px;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 12px rgba(79,126,255,0.06);
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+        .stat-icon.blue {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .stat-icon.teal {
+            background: var(--teal-soft);
+            color: var(--teal);
+        }
+
+        .stat-icon.green {
+            background: #F0FDF4;
+            color: var(--success);
+        }
+
+        .stat-icon.amber {
+            background: #FFFBEB;
+            color: var(--warning);
+        }
+
+    .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        font-family: 'DM Mono', monospace;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+    }
+
+    .table-card {
+        background: var(--card);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(79,126,255,0.06);
+    }
+
+    .table-card-header {
+        padding: 24px 28px 0;
+    }
+
+    .table-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .tab-group {
+        background: var(--bg);
+        border-radius: 10px;
+        padding: 4px;
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .tab-btn {
+        padding: 7px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--muted);
+        transition: all 0.15s;
+    }
+
+        .tab-btn.active {
+            background: var(--card);
+            color: var(--text);
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        }
+
+    .search-wrap {
+        display: flex;
+        align-items: center;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0 14px;
+        gap: 8px;
+        width: 240px;
+    }
+
+        .search-wrap i {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .search-wrap input {
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            padding: 9px 0;
+            width: 100%;
+            outline: none;
+        }
+
+    .btn-new {
+        background: var(--accent);
+        color: #fff !important;
+        border: none;
+        border-radius: 10px;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'DM Sans', sans-serif;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+
+        .btn-new:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+    .requests-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .requests-table thead th {
+            padding: 13px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            text-align: left;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+            .requests-table thead th:first-child {
+                padding-left: 28px;
+            }
+
+            .requests-table thead th:last-child {
+                text-align: right;
+                padding-right: 28px;
+            }
+
+        .requests-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+        }
+
+            .requests-table tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .requests-table tbody tr:hover {
+                background: var(--bg);
+            }
+
+        .requests-table tbody td {
+            padding: 16px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+            .requests-table tbody td:first-child {
+                padding-left: 28px;
+            }
+
+            .requests-table tbody td:last-child {
+                text-align: right;
+                padding-right: 24px;
+            }
+
+    .tr-id {
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent);
+        background: var(--accent-soft);
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    .target-dept {
+        font-weight: 600;
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    .target-loc {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .date-cell {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .sort-link {
+        color: var(--muted);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition: color 0.15s;
+    }
+
+        .sort-link:hover {
+            color: var(--text);
+        }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .badge-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+    .badge-approved {
+        background: #F0FDF4;
+        color: #16A34A;
+    }
+
+        .badge-approved::before {
+            background: var(--success);
+        }
+
+    .badge-pending {
+        background: #FFFBEB;
+        color: #B45309;
+    }
+
+        .badge-pending::before {
+            background: var(--warning);
+        }
+
+    .badge-rejected {
+        background: #FFF1F2;
+        color: #BE123C;
+    }
+
+        .badge-rejected::before {
+            background: var(--danger);
+        }
+
+    .badge-cancelled {
+        background: #F8FAFC;
+        color: var(--muted);
+    }
+
+        .badge-cancelled::before {
+            background: var(--muted);
+        }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        text-decoration: none;
+    }
+
+        .btn-icon:hover {
+            background: var(--bg);
+            color: var(--text);
+            border-color: var(--text);
+        }
+
+        .btn-icon.danger:hover {
+            background: #FFF1F2;
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 64px 20px;
+        color: var(--muted);
+    }
+
+        .empty-state i {
+            font-size: 36px;
+            opacity: 0.3;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+</style>
 
 <div class="container-fluid mt-4" style="max-width: 1400px;">
 
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    @{
+        var total = Model.Requests.Count();
+        var pending = Model.Requests.Count(r => r.Status == "Pending");
+        var approved = Model.Requests.Count(r => r.Status == "Approved");
+        var rejected = Model.Requests.Count(r => r.Status == "Rejected" || r.Status == "Cancelled");
+    }
+
+    <!-- WELCOME STRIP -->
+    <div class="welcome-strip">
         <div>
-            <h2 class="fw-bold text-dark">Welcome to your mobility portal</h2>
-            <p class="text-muted mb-0">Manage your transfer requests and approvals.</p>
+            <div class="welcome-title">Welcome back, @Model.EmployeeName.Split(' ')[0] 👋</div>
+            <div class="welcome-sub">Manage your transfer requests from your mobility portal.</div>
         </div>
-        <div class="text-end">
-            <span class="badge bg-light text-dark border px-3 py-2">
-                <i class="fas fa-building me-1"></i> @Model.CurrentLocation (@Model.Department)
-            </span>
+        <div class="info-pills">
+            <div class="info-pill"><i class="fas fa-id-badge"></i> @Model.EmployeeCode</div>
+            <div class="info-pill"><i class="fas fa-building"></i> @Model.Department</div>
+            <div class="info-pill"><i class="fas fa-map-marker-alt"></i> @Model.CurrentLocation</div>
+            <div class="info-pill"><i class="fas fa-user-tie"></i> @Model.ManagerName</div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-        <div class="card-body p-4">
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- STATS ROW -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-paper-plane"></i></div>
                 <div>
-                    <h4 class="fw-bold mb-1">My Transfer Requests</h4>
+                    <div class="stat-value">@total</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
+                <div>
+                    <div class="stat-value">@pending</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div>
+                    <div class="stat-value">@approved</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon teal"><i class="fas fa-times-circle"></i></div>
+                <div>
+                    <div class="stat-value">@rejected</div>
+                    <div class="stat-label">Rejected / Cancelled</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <ul class="nav nav-pills mt-3">
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
-                               href="@Url.Action("Index", new { filterType = "Active" })"
-                               style="@(ViewBag.CurrentFilter == "Active" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
-                                Active
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
-                               href="@Url.Action("Index", new { filterType = "All" })"
-                               style="@(ViewBag.CurrentFilter == "All" ? "color: #333; border-bottom: 3px solid #333; background: transparent;" : "background: transparent;")">
-                                All Requests
-                            </a>
-                        </li>
-                    </ul>
+    <!-- TABLE CARD -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="table-title">My Transfer Requests</div>
+
+            <div class="d-flex justify-content-between align-items-center pb-3 flex-wrap gap-2">
+                <!-- Tabs -->
+                <div class="tab-group">
+                    <a href="@Url.Action("Index", new { filterType = "Active" })"
+                       class="tab-btn @(ViewBag.CurrentFilter == "Active" ? "active" : "")">
+                        Active
+                    </a>
+                    <a href="@Url.Action("Index", new { filterType = "All" })"
+                       class="tab-btn @(ViewBag.CurrentFilter == "All" ? "active" : "")">
+                        All Requests
+                    </a>
                 </div>
 
-                <div class="d-flex gap-2">
-                    <form asp-action="Index" method="get" class="d-flex">
+                <div class="d-flex gap-2 align-items-center">
+                    <form asp-action="Index" method="get">
                         <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
-                        <div class="input-group" style="width: 250px;">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0" placeholder="Search ID or Status...">
+                        <div class="search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" name="searchTerm"
+                                   value="@ViewBag.CurrentSearch"
+                                   placeholder="Search requests..." />
                         </div>
                     </form>
-
-                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 6px;">
-                        + New Transfer Request
+                    <a asp-controller="Transfer" asp-action="Create" class="btn-new">
+                        <i class="fas fa-plus"></i> New Request
                     </a>
                 </div>
             </div>
-
-            <div class="table-scroll-wrapper">
-                <table class="table table-hover align-middle">
-                    <thead class="bg-light text-muted text-uppercase small">
-                        <tr>
-                            <th class="py-3 ps-3">TransferId</th>
-                            <th class="py-3">TargetPosting</th>
-
-                            <th class="py-3">
-                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
-                                    Date <i class="fas fa-sort ms-1"></i>
-                                </a>
-                            </th>
-                            <th class="py-3">
-                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
-                                    Status <i class="fas fa-sort ms-1"></i>
-                                </a>
-                            </th>
-                            <th class="py-3 text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Requests.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
-                                    No transfer requests found matching your criteria.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var req in Model.Requests)
-                            {
-                                <tr>
-                                    <td class="ps-3 fw-bold text-dark">
-                                        TR-@req.TransferRequestId.ToString("D5")
-                                    </td>
-                                    <td>
-                                        <span class="d-block fw-bold text-dark">Bangalore Branch</span> <span class="text-muted small">@Model.Department</span>
-                                    </td>
-                                    <td class="text-muted fw-bold">
-                                        @req.RequestDate.ToString("dd MMM, yyyy")
-                                    </td>
-                                    <td>
-                                        @if (req.Status == "Approved")
-                                        {
-                                            <span class="badge bg-light text-success border border-success px-3 py-2 rounded-pill">Approved</span>
-                                        }
-                                        else if (req.Status == "Rejected" || req.Status == "Cancelled")
-                                        {
-                                            <span class="badge bg-light text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-light text-warning border border-warning px-3 py-2 rounded-pill text-dark">Pending</span>
-                                        }
-                                    </td>
-                                    <td class="text-end pe-3">
-                                        <button class="btn btn-light btn-sm mx-1"><i class="far fa-eye"></i></button>
-                                        @if (req.Status == "Pending")
-                                        {
-                                            <button class="btn btn-light btn-sm mx-1 text-danger"><i class="far fa-trash-alt"></i></button>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-
         </div>
+
+        <!-- TABLE -->
+        <table class="requests-table">
+            <thead>
+                <tr>
+                    <th>Transfer ID</th>
+                    <th>Target Posting</th>
+                    <th>
+                        <a class="sort-link"
+                           href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })">
+                            Date <i class="fas fa-sort"></i>
+                        </a>
+                    </th>
+                    <th>Type</th>
+                    <th>
+                        <a class="sort-link"
+                           href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })">
+                            Status <i class="fas fa-sort"></i>
+                        </a>
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Requests.Any())
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No transfer requests found matching your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var req in Model.Requests)
+                    {
+                        <tr>
+                            <td><span class="tr-id">TR-@req.TransferRequestId.ToString("D5")</span></td>
+                            <td>
+                                <div class="target-dept">@(req.ToDepartment ?? "N/A")</div>
+                                <div class="target-loc"><i class="fas fa-map-marker-alt me-1"></i>@(req.ToLocation ?? "N/A")</div>
+                            </td>
+                            <td class="date-cell">@req.RequestDate.ToString("dd MMM, yyyy")</td>
+                            <td><span style="font-size:12px;font-weight:600;color:var(--muted);">@req.TransferType</span></td>
+                            <td>
+                                @if (req.Status == "Approved")
+                                {
+                                    <span class="badge-status badge-approved">Approved</span>
+                                }
+                                else if (req.Status == "Rejected")
+                                {
+                                    <span class="badge-status badge-rejected">Rejected</span>
+                                }
+                                else if (req.Status == "Cancelled")
+                                {
+                                    <span class="badge-status badge-cancelled">Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-pending">Pending</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <a href="#" class="btn-icon" title="View"><i class="far fa-eye"></i></a>
+                                    @if (req.Status == "Pending")
+                                    {
+                                        <a href="#" class="btn-icon danger" title="Cancel"><i class="far fa-trash-alt"></i></a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
     </div>
+
 </div>
-
-
-
-@* This is a test message *@
-
-                                  

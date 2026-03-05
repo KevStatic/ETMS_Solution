@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace EmployeeTransferPortal.Controllers
+// ✅ FIXED: namespace matches ETMS.Web project
+namespace ETMS.Web.Controllers
 {
     public class AccountController : Controller
     {
@@ -21,18 +22,14 @@ namespace EmployeeTransferPortal.Controllers
             _forgotPasswordService = forgotPasswordService;
         }
 
-        // =========================
         // GET: /Account/Login
-        // =========================
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
-        // =========================
         // POST: /Account/Login
-        // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginRequestDto model)
@@ -66,12 +63,11 @@ namespace EmployeeTransferPortal.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            return Redirect("/portal");
+            // ✅ FIXED: was Redirect("/portal") — now correctly redirects to Dashboard
+            return RedirectToAction("Index", "Dashboard");
         }
 
-        // =========================
         // GET: /Account/Logout
-        // =========================
         [HttpGet]
         public async Task<IActionResult> Logout()
         {
@@ -79,9 +75,7 @@ namespace EmployeeTransferPortal.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // =========================
         // GET: /Account/ForgotPassword
-        // =========================
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -110,9 +104,7 @@ namespace EmployeeTransferPortal.Controllers
             return RedirectToAction("VerifyOtp");
         }
 
-        // =========================
         // GET: /Account/VerifyOtp
-        // =========================
         [HttpGet]
         public IActionResult VerifyOtp()
         {
@@ -150,9 +142,7 @@ namespace EmployeeTransferPortal.Controllers
             return RedirectToAction("ResetPassword");
         }
 
-        // =========================
         // GET: /Account/ResetPassword
-        // =========================
         [HttpGet]
         public IActionResult ResetPassword()
         {

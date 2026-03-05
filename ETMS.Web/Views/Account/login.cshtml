@@ -1,6 +1,7 @@
 @{
     Layout = null;
 }
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,10 +14,23 @@
 <body>
     <div class="login-page-container">
         <div class="login-card">
-            <div class="brand-section">
-            </div>
+            <div class="brand-section"></div>
             <h2 class="login-header">Login</h2>
-            <form asp-action="Login" asp-controller="Account" method="post">
+
+            @* ? Show error messages *@
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div style="color:red; margin-bottom:12px; font-size:13px;">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <p>@error.ErrorMessage</p>
+                    }
+                </div>
+            }
+
+            <form method="post" action="/Account/Login">
+                @Html.AntiForgeryToken()   @* ? THIS is the key fix *@
+
                 <div class="field-wrapper">
                     <label>Username</label>
                     <div class="input-with-icon">
@@ -35,9 +49,7 @@
                     <label class="check-container">
                         <input type="checkbox" name="RememberMe"> Remember Me
                     </label>
-
-                    <a asp-controller="Account" asp-action="ForgotPassword" class="forgot-pwd">Forgot Password?</a>
-
+                    <a href="/Account/ForgotPassword" class="forgot-pwd">Forgot Password?</a>
                 </div>
                 <button type="submit" class="btn-primary-login">Login</button>
             </form>
