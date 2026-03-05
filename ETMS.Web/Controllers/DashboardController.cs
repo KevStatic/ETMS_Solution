@@ -1,8 +1,9 @@
 ﻿using ETMS.Application.DTOs.Transfer;
 using ETMS.Application.Interfaces;
-using ETMS.Domain.Interfaces;        // ✅ ADD THIS
+using ETMS.Domain.Interfaces;
 using ETMS.Web.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ETMS.Application.DTOs;
 using System.Linq;
@@ -20,7 +21,10 @@ namespace ETMS.Web.Controllers
         private readonly ILocationRepository _locationRepo;
         private readonly IDepartmentRepository _deptRepo;
 
-        public DashboardController(ITransferRequestRepository transferRepo, IEmployeeRepository employeeRepo, ILocationRepository locationRepo,
+        public DashboardController(
+            ITransferRequestRepository transferRepo,
+            IEmployeeRepository employeeRepo,
+            ILocationRepository locationRepo,
             IDepartmentRepository deptRepo)
         {
             _transferRepo = transferRepo;
@@ -35,37 +39,38 @@ namespace ETMS.Web.Controllers
             string? sortOrder,
             string filterType = "Active")
         {
+            // 1. Extract claims from the secure login cookie
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var roleClaim = User.FindFirst(ClaimTypes.Role);
+
             int currentEmployeeId = 0;
             string currentRole = "Employee"; // Default fallback
 
-            // We set default values just in case, but [Authorize] ensures we should have data.
             if (idClaim != null && int.TryParse(idClaim.Value, out int parsedId))
                 currentEmployeeId = parsedId;
-            else
 
-            // Extract the User ID from the Identity Claims (set during Login)
-            // READ THE REAL ROLE FROM THE SECURE LOGIN COOKIE
-            if (idClaim != null && int.TryParse(idClaim.Value, out int parsedId))
-            if (roleClaim != null) currentRole = roleClaim.Value;
-                currentEmployeeId = parsedId;
-            else
+            if (roleClaim != null)
+                currentRole = roleClaim.Value;
+
+            // 2. Load employee and shared data
+            var employee = await _employeeRepo.GetEmployeeByIdAsync(currentEmployeeId);
             if (employee == null) return Content("Error: Employee not found.");
 
             var metrics = await _transferRepo.GetDashboardMetricsAsync(currentEmployeeId);
             var allLocations = await _locationRepo.GetAllAsync();
             var allDepartments = await _deptRepo.GetAllAsync();
-            // Extract the Role
-            var roleClaim = User.FindFirst(ClaimTypes.Role);
-            if (roleClaim != null)
-            {
-            // ==========================================
-            // ROLE-BASED ROUTING
-            // ==========================================
+
+            // 3. Resolve location/department display strings
+            string locString = employee.Location != null
+                ? $"{employee.Location.City}, {employee.Location.State}, {employee.Location.Country}"
+                : "N/A";
+            string deptString = employee.Department?.DepartmentName ?? "N/A";
+
+            // 4. Role-based routing
             if (currentRole == "Manager" || currentRole == "HR")
             {
-                // Fetch requests waiting for this manager's approval
                 var pendingApprovals = await _transferRepo.GetPendingApprovalsForManagerAsync(currentEmployeeId);
-            var employee = await _employeeRepo.GetEmployeeByIdAsync(currentEmployeeId);
+
                 var managerModel = new DashboardViewModel
                 {
                     EmployeeName = $"{employee.FirstName} {employee.LastName}",
@@ -84,92 +89,74 @@ namespace ETMS.Web.Controllers
                 };
 
                 return View("ManagerDashboard", managerModel);
-                // "Approved" requests are considered completed, so they are hidden from this view.
+            }
             else
-            ViewBag.CurrentSearch = searchTerm;
-                // Standard Employee Logic (My Requests)
+            {
+                // 5. Standard Employee Logic (My Requests)
                 var myRequests = await _transferRepo.GetByEmployeeIdAsync(currentEmployeeId);
-                requests = requests.Where(r =>
+
+                // Apply filter
+                IEnumerable<TransferRequestListItemDto> requests = myRequests;
+                if (filterType == "Active")
+                    requests = requests.Where(r => r.Status != "Rejected" && r.Status != "Cancelled");
+
+                // 6. Apply search
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                    requests = requests.Where(r =>
+                        (r.ToLocation != null && r.ToLocation.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                        (r.ToDepartment != null && r.ToDepartment.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+
+                ViewBag.CurrentSearch = searchTerm;
+
+                // 7. Apply sorting
+                ViewBag.DateSort = string.IsNullOrEmpty(sortOrder) ? "date_asc" : "";
+                ViewBag.StatusSort = sortOrder == "Status" ? "status_desc" : "Status";
+
+                switch (sortOrder)
+                {
+                    case "date_asc":
+                        requests = requests.OrderBy(r => r.RequestDate);
+                        break;
+                    case "Status":
+                        requests = requests.OrderBy(r => r.Status);
+                        break;
+                    case "status_desc":
+                        requests = requests.OrderByDescending(r => r.Status);
+                        break;
+                    default:
+                        requests = requests.OrderByDescending(r => r.RequestDate);
+                        break;
+                }
+
                 var employeeModel = new DashboardViewModel
                 {
                     EmployeeName = $"{employee.FirstName} {employee.LastName}",
+                    EmployeeCode = employee.EmployeeCode,
                     Role = currentRole,
                     Metrics = metrics,
                     UserLocationName = locString,
                     UserDepartmentName = deptString,
-                    Requests = myRequests.Select(r => new DashboardRequestItem
+                    CurrentLocation = locString,
+                    Department = deptString,
+                    ManagerName = employee.ReportingManager != null
+        ? $"{employee.ReportingManager.FirstName} {employee.ReportingManager.LastName}"
+        : "Not Assigned",
+
+                    // ADD THESE TWO:
+                    Locations = allLocations.Select(l => new SelectListItem
                     {
-                        TransferRequestId = r.TransferRequestId,
-                        TargetLocation = r.ToLocation ?? "Unknown",
-                        TargetDepartment = r.ToDepartment ?? "Unknown",
-                        RequestDate = r.RequestDate,
-                        Status = r.Status
-                    }).ToList()
+                        Value = l.LocationId.ToString(),
+                        Text = $"{l.City}, {l.Country}"
+                    }),
+                    Departments = allDepartments.Select(d => new SelectListItem
+                    {
+                        Value = d.DepartmentId.ToString(),
+                        Text = d.DepartmentName
+                    }),
                 };
-                );
-            }
-
-            // ==========================================
-            // 5. APPLY SORTING
-            // ==========================================
-            // Toggle logic: If clicking Date, switch between Asc/Desc
-            ViewBag.DateSort = string.IsNullOrEmpty(sortOrder) ? "date_asc" : "";
-            ViewBag.StatusSort = sortOrder == "Status" ? "status_desc" : "Status";
-
-            switch (sortOrder)
-            {
-                case "date_asc":
-                    requests = requests.OrderBy(r => r.RequestDate);
-                    break;
-                case "Status":
-                    requests = requests.OrderBy(r => r.Status);
-                    break;
-                case "status_desc":
-                    requests = requests.OrderByDescending(r => r.Status);
-                    break;
-                default: // Default: Newest First
-                    requests = requests.OrderByDescending(r => r.RequestDate);
-                    break;
-            }
-
-            // 6. Map to ViewModel
-            var model = new DashboardViewModel
-            {
-                // Mapping view for the following fields
-                EmployeeName = $"{employee.FirstName} {employee.LastName}",
-                
-                EmployeeCode = employee.EmployeeCode,
-                
-                Role = currentRole,
-                
-                CurrentLocation = employee.Location != null? $"{employee.Location.City}, {employee.Location.State},{employee.Location.Country}": "N/A",
-
-                
-                Department = employee.Department?.DepartmentName ?? "N/A",
-                
-                ManagerName = employee.ReportingManager != null? $"{employee.ReportingManager.FirstName} {employee.ReportingManager.LastName}": "Not Assigned",
-
-                // MAPPING DTO -> ENTITY (To match your current ViewModel definition)
-                Requests = requests.Select(r => new TransferRequest
-                {
-                    TransferRequestId = r.TransferRequestId,
-                    EmployeeId = r.EmployeeId,
-                    RequestDate = r.RequestDate,
-                    Status = r.Status,
-                    TransferType = r.TransferType,
-                    // Fill dummy data for fields not in DTO but required by Entity object
-                    Reason = string.Empty,
-                    FromDepartmentId = 0,
-                    ToDepartmentId = 0,
-                    FromLocationId = 0,
-                    ToLocationId = 0,
-                    IsActive = r.Status != "Rejected" && r.Status != "Cancelled"
-                }).ToList()
-            };
 
                 return View("EmployeeDashboard", employeeModel);
             }
         }
-
     }
 }

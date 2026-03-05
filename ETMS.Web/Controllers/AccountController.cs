@@ -67,14 +67,6 @@ namespace ETMS.Web.Controllers
             return RedirectToAction("Index", "Dashboard");
         }
 
-        // GET: /Account/Logout
-        [HttpGet]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction(nameof(Login));
-        }
-
         // GET: /Account/ForgotPassword
         [HttpGet]
         public IActionResult ForgotPassword()

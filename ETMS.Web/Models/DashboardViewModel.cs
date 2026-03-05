@@ -14,7 +14,6 @@ namespace ETMS.Web.Models
         public string CurrentLocation { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
         public string ManagerName { get; set; } = string.Empty;
-        public string EmployeeCode { get; set; } = string.Empty;
 
         // --- Dashboard Data ---
         // CRITICAL FIX: Changed from TransferRequest to DashboardRequestItem
@@ -39,4 +38,5 @@ namespace ETMS.Web.Models
         public DateTime RequestDate { get; set; }
         public string Status { get; set; }
     }
+
 }
