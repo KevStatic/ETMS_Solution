@@ -1,31 +1,48 @@
-html {
-  font-size: 14px;
+/* Confine scrolling to content area and hide scrollbar */
+.content-scroll {
+    max-height: calc(100vh - 180px); /* header + footer space */
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+/* Hide scrollbar (WebKit) */
+.content-scroll::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Hide scrollbar (Firefox) */
+.content-scroll {
+    scrollbar-width: none;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* Optional: ensure body/page does not force extra scrolling if content is long */
+html, body {
+    height: 100%;
+    overflow-y: auto;
 }
 
-body {
-  margin-bottom: 60px;
+.table-scroll-wrapper {
+    max-height: 420px; /* adjust if needed */
+    overflow-y: auto;
+    position: relative;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.table-scroll-wrapper::after {
+    content: "";
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px; /* size of fade */
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* Make table header sticky */
+.table-scroll-wrapper thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa; /* same as bg-light */
+    z-index: 5;
 }

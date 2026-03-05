@@ -10,4 +10,3 @@ namespace ETMS.Application.DTOs.Auth
         public string? Role { get; init; }
     }
 }
-

@@ -7,4 +7,3 @@ namespace ETMS.Application.DTOs.Auth
         public bool RememberMe { get; init; }
     }
 }
-

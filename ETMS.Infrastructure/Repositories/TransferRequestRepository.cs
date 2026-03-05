@@ -3,6 +3,8 @@ using ETMS.Application.DTOs.Transfer;
 using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ETMS.Infrastructure.Repositories
 {
@@ -52,7 +54,7 @@ VALUES
     @ExpectedJoiningDate,
     @Status,
     @IsActive
-);";
+);@";
 
             using var connection = _context.CreateConnection();
             return await connection.ExecuteScalarAsync<int>(new CommandDefinition(sql, request, cancellationToken: cancellationToken));
@@ -175,6 +177,29 @@ VALUES
                 throw;
             }
         }
+
+        public async Task<IEnumerable<TransferRequest>> GetAllPendingAsync()
+        {
+            const string sql = @"
+SELECT *
+FROM TransferRequests
+WHERE Status = 'Pending';";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryAsync<TransferRequest>(sql);
+        }
+
+        public async Task<int> AddAsync(TransferRequest request)
+        {
+            var sql = @"
+INSERT INTO TransferRequests 
+(EmployeeId, ToDepartmentId, ToLocationId, TransferType, Reason, RequestDate, Status)
+VALUES 
+(@EmployeeId, @ToDepartmentId, @ToLocationId, @TransferType, @Reason, @RequestDate, @Status);
+SELECT CAST(SCOPE_IDENTITY() as int);";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteScalarAsync<int>(sql, request);
+        }
     }
 }
-

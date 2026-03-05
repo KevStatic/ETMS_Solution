@@ -1,5 +1,7 @@
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Domain.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
 {
@@ -10,6 +12,7 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<TransferRequestListItemDto>> GetAllAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<TransferRequestListItemDto>> GetByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default);
         Task UpdateStatusAsync(int transferRequestId, string status, int actionByEmployeeId, string? remarks, CancellationToken cancellationToken = default);
+        Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
+        Task<int> AddAsync(TransferRequest request);
     }
 }
-
