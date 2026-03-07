@@ -1,0 +1,192 @@
+﻿@model ETMS.Application.DTOs.Profile.EmployeeProfileDto
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/profile.css" />
+
+<div class="profile-wrapper">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header Card -->
+    <div class="profile-header-card mb-4">
+        <div class="profile-header-bg"></div>
+        <div class="profile-header-content">
+            <div class="profile-avatar">
+                @(Model.FirstName?[0].ToString().ToUpper())@(Model.LastName?[0].ToString().ToUpper())
+            </div>
+            <div class="profile-header-info">
+                <h2>@Model.FirstName @Model.LastName</h2>
+                <p>@Model.Designation &middot; @Model.Branch</p>
+                <div class="profile-badges">
+                    <span class="badge-custom blue">@Model.EmployeeCode</span>
+                    <span class="badge-custom blue">@Model.EmploymentType</span>
+                    <span class="badge-custom green">Active</span>
+                </div>
+            </div>
+            <button class="btn-edit-toggle" onclick="toggleEdit()">
+                <i class="bi bi-pencil" id="editIcon"></i>
+                <span id="editLabel">Edit</span>
+            </button>
+        </div>
+    </div>
+
+    <form asp-action="UpdateProfile" method="post">
+
+        <!-- Personal Info -->
+        <div class="profile-card mb-4">
+            <div class="profile-card-title">
+                <span>👤</span> Personal Information
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>First Name</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.FirstName" name="FirstName" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Last Name</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.LastName" name="LastName" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Date of Joining</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.DateOfJoining.ToString("dd MMM yyyy")" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Grade</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.Grade" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>SBU</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.SBU" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Company</label>
+                        <input type="text" class="form-control edit-field"
+                               value="@Model.Company" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Info -->
+        <div class="profile-card mb-4">
+            <div class="profile-card-title">
+                <span>💼</span> Employment Details
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Employee Code</label>
+                        <input type="text" class="form-control"
+                               value="@Model.EmployeeCode" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Employment Type</label>
+                        <input type="text" class="form-control"
+                               value="@Model.EmploymentType" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Department</label>
+                        <input type="text" class="form-control"
+                               value="@Model.Department" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Designation</label>
+                        <input type="text" class="form-control"
+                               value="@Model.Designation" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Branch</label>
+                        <input type="text" class="form-control"
+                               value="@Model.Branch" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Reporting Manager</label>
+                        <input type="text" class="form-control"
+                               value="@Model.ReportingManager" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>Cost Center</label>
+                        <input type="text" class="form-control"
+                               value="@Model.CostCenter" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-row">
+                        <label>HRBP</label>
+                        <input type="text" class="form-control"
+                               value="@Model.HRBP" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button (hidden until edit mode) -->
+        <div id="saveBar" style="display:none;" class="text-end mb-4">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-save me-2"></i>Save Changes
+            </button>
+            <button type="button" class="btn btn-outline-secondary ms-2" onclick="toggleEdit()">
+                Cancel
+            </button>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleEdit() {
+            const fields = document.querySelectorAll('.edit-field');
+            const saveBar = document.getElementById('saveBar');
+            const label = document.getElementById('editLabel');
+            const icon = document.getElementById('editIcon');
+            const isReadonly = fields[0].hasAttribute('readonly');
+
+            fields.forEach(f => {
+                if (isReadonly) f.removeAttribute('readonly');
+                else f.setAttribute('readonly', true);
+            });
+
+            saveBar.style.display = isReadonly ? 'block' : 'none';
+            label.textContent = isReadonly ? 'Cancel' : 'Edit';
+            icon.className = isReadonly ? 'bi bi-x' : 'bi bi-pencil';
+        }
+    </script>
+}

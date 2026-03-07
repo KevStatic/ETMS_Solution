@@ -131,8 +131,21 @@
                                                 </h6>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-circle me-2"></i> My Profile</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Settings</a></li>
+
+                                            <!-- ✅ Fixed My Profile link -->
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Profile" asp-action="MyProfile">
+                                                    <i class="fas fa-user-circle me-2"></i> My Profile
+                                                </a>
+                                            </li>
+
+                                            <!-- ✅ Fixed Settings link -->
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
+                                                    <i class="fas fa-cog me-2"></i> Settings
+                                                </a>
+                                            </li>
+
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <a class="dropdown-item text-danger" href="/Account/Logout">
