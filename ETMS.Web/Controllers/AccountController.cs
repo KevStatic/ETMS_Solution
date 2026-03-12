@@ -1,6 +1,7 @@
 ﻿using ETMS.Application.DTOs;
 using ETMS.Application.DTOs.Auth;
 using ETMS.Application.Interfaces;
+using ETMS.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,7 @@ namespace ETMS.Web.Controllers
                 return View(model);
 
             var result = await _authService.AuthenticateAsync(model);
+
             if (result == null || !result.Success)
             {
                 ModelState.AddModelError(string.Empty, result?.ErrorMessage ?? "Invalid login attempt.");
@@ -45,13 +47,15 @@ namespace ETMS.Web.Controllers
             }
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, result.EmployeeId?.ToString() ?? string.Empty),
-                new Claim(ClaimTypes.Name,           result.Username ?? string.Empty),
-                new Claim(ClaimTypes.Role,           result.Role ?? string.Empty)
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, result.EmployeeId.ToString()),
+        new Claim(ClaimTypes.Name, result.Username),
+        new Claim(ClaimTypes.Role, result.Role)
+    };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsIdentity = new ClaimsIdentity(
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = true,
@@ -63,7 +67,6 @@ namespace ETMS.Web.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            // ✅ FIXED: was Redirect("/portal") — now correctly redirects to Dashboard
             return RedirectToAction("Index", "Dashboard");
         }
 

@@ -275,6 +275,20 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
 
             return metrics;
         }
+        public async Task<TransferRequest?> GetByIdAsync(int id)
+        {
+            var query = "SELECT * FROM TransferRequests WHERE TransferRequestId = @Id";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<TransferRequest>(query, new { Id = id });
+        }
+        public async Task DeleteAsync(int id)
+        {
+            var query = "DELETE FROM TransferRequests WHERE TransferRequestId = @Id";
+
+            using var connection = _context.CreateConnection();
+            await connection.ExecuteAsync(query, new { Id = id });
+        }
 
     }
 }

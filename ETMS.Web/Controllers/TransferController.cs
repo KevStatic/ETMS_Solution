@@ -134,6 +134,24 @@ namespace ETMS.Web.Controllers
             return RedirectToAction("Index", "Dashboard");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> View(int id)
+        {
+            var request = await _transferRepo.GetByIdAsync(id);
+
+            if (request == null)
+                return NotFound();
+
+            return View("ViewTransfer", request);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _transferRepo.DeleteAsync(id);
+            return RedirectToAction("Index", "Dashboard");
+        }
+
         // --- HELPER METHOD TO KEEP CODE CLEAN ---
         // This handles fetching all the complex profile data for the left panel and dropdowns
         private async Task PopulateEmployeeDisplayDataAsync(CreateTransferViewModel model, int employeeId)

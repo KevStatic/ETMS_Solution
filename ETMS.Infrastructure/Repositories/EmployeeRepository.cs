@@ -62,9 +62,9 @@ namespace ETMS.Infrastructure.Repositories
                 query, new { EmployeeCode = employeeCode });
         }
 
-        public async Task GetByIdAsync(int currentEmployeeId)
+        public Task<Employee?> GetByIdAsync(int currentEmployeeId)
         {
-            await Task.CompletedTask;
+            return GetEmployeeByIdAsync(currentEmployeeId);
         }
     }
 }
