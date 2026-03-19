@@ -112,6 +112,8 @@ namespace ETMS.Web.Controllers
                 IsActive = true,
 
                 // --- MAPPING NEW L&T FIELDS ---
+                ExpectedRelievingDate = model.ExpectedRelievingDate,
+                ExpectedJoiningDate = model.ExpectedJoiningDate,
                 LetterType = model.TransferType,
                 WithinCity = model.WithinCity,
                 RelocationStatus = model.RelocationStatus,

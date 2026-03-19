@@ -1,137 +1,208 @@
 ﻿@model ETMS.Web.Models.CreateTransferViewModel
-
 @{
     ViewData["Title"] = "Employee Mobility Request";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
 <style>
-    .info-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
-    .info-value { font-size: 0.9rem; color: #212529; font-weight: 500; margin-bottom: 12px; }
-    .personnel-card { display: flex; align-items: center; margin-bottom: 15px; }
-    .personnel-avatar { width: 35px; height: 35px; border-radius: 50%; background-color: #6c757d; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; margin-right: 12px; }
+    :root {
+        --accent: #4F7EFF;
+        --teal:   #38C9C0;
+        --text:   #1A1D2E;
+        --muted:  #8B90A7;
+        --border: #E4E8F0;
+        --bg:     #F4F6FB;
+        --card:   #FFFFFF;
+    }
+    body { background: var(--bg); font-family: 'DM Sans', sans-serif; }
+
+    .profile-card  { background: var(--card); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+    .profile-top   { background: linear-gradient(135deg, #4F7EFF 0%, #38C9C0 100%); padding: 24px; color: #fff; }
+    .avatar-circle  { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.25);
+                      display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
+    .profile-body  { padding: 20px; }
+    .info-row      { margin-bottom: 12px; }
+    .info-lbl      { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 1px; }
+    .info-val      { font-size: 13px; font-weight: 600; color: var(--text); }
+    .divider       { border-top: 1px solid var(--border); margin: 16px 0; }
+    .person-row    { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .person-av     { width:32px; height:32px; border-radius:50%; background:var(--bg);
+                     display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.8rem; flex-shrink:0; }
+
+    .section-card  { background:var(--card); border-radius:14px; border:1px solid var(--border); margin-bottom:20px; overflow:hidden; }
+    .section-head  { padding:16px 24px; border-bottom:1px solid var(--border); font-weight:700; font-size:.95rem; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .section-body  { padding:24px; }
+
+    .loc-box       { border-radius:10px; padding:18px; height:100%; }
+    .loc-from      { background:#F4F6FB; border:1px solid var(--border); }
+    .loc-to        { background:#EEF2FF; border:2px solid #4F7EFF; }
+    .loc-label     { font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .arrow-circle  { width:42px; height:42px; border-radius:50%; background:var(--accent); color:#fff;
+                     display:flex; align-items:center; justify-content:center; font-size:1rem; }
+
+    .form-label    { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; margin-bottom:4px; }
+    .form-control, .form-select { border-radius:8px; border:1px solid var(--border); font-size:13px; padding:9px 12px; background:#fff; }
+    .form-control:focus, .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,126,255,.12); }
+    .disabled-field { background:#F4F6FB !important; color:var(--muted); }
+    .radio-group   { display:flex; gap:16px; padding-top:4px; }
+    .radio-group .form-check-label { font-size:13px; font-weight:500; }
+
+    .btn-cancel  { background:#fff; border:1px solid var(--border); border-radius:10px; padding:10px 24px; font-size:13px; font-weight:600; color:var(--muted); text-decoration:none; }
+    .btn-submit  { background:linear-gradient(135deg,#4F7EFF,#38C9C0); border:none; border-radius:10px; padding:10px 28px; font-size:13px; font-weight:700; color:#fff; transition: opacity .15s, transform .1s; }
+    .btn-submit:hover { opacity:.9; transform:translateY(-1px); color:#fff; }
+
+    .field-validation-error { font-size:11px; color:#EF4444; margin-top:3px; display:block; }
+    .input-validation-error { border-color:#EF4444 !important; }
 </style>
 
-<div class="container-fluid mt-4" style="max-width: 1400px;">
+<div class="container-fluid mt-4 mb-5" style="max-width:1360px;">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-1" style="color: #333;">
-            <i class="fas fa-plane-departure text-primary me-2"></i> 
-            Employee Mobility
-        </h3>
-        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 20px; font-weight: 500;">
-            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        <div>
+            <h3 class="fw-bold mb-0" style="color:var(--text);">
+                <i class="fas fa-plane-departure me-2" style="color:var(--accent);"></i> Employee Mobility Request
+            </h3>
+            <p class="text-muted small mb-0 mt-1">Fill in the details below and submit for approval.</p>
+        </div>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-cancel d-flex align-items-center gap-2">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
     </div>
 
     <div class="row g-4">
+
+        <!-- LEFT: Profile Panel -->
         <div class="col-lg-3">
-            <div class="card shadow-sm border-0 sticky-top" style="border-radius: 8px; top: 20px;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center p-3 mb-4" style="background-color: #e2e8f0; border-radius: 8px;">
-                        <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center fw-bold fs-4 me-3" style="width: 50px; height: 50px;">
-                            <i class="fas fa-user"></i>
-                        </div>
+            <div class="profile-card sticky-top" style="top:20px;">
+                <div class="profile-top">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="avatar-circle"><i class="fas fa-user"></i></div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-primary">@Model.EmployeeName</h6>
-                            <span class="text-muted small">@Model.EmployeeCode</span>
+                            <div class="fw-bold" style="font-size:.95rem;">@Model.EmployeeName</div>
+                            <div style="font-size:.8rem;opacity:.8;">@Model.EmployeeCode</div>
                         </div>
                     </div>
-                    
-                    <div class="mb-4">
-                        <div class="info-label"><i class="fas fa-tag me-1"></i> Grade</div>
-                        <div class="info-value">@Model.Grade</div>
-
-                        <div class="info-label"><i class="fas fa-sitemap me-1"></i> SBU</div>
-                        <div class="info-value">@Model.SBU</div>
-
-                        <div class="info-label"><i class="fas fa-building me-1"></i> Department</div>
-                        <div class="info-value">@Model.CurrentDepartment</div>
-
-                        <div class="info-label"><i class="fas fa-rupee-sign me-1"></i> Cost Center</div>
-                        <div class="info-value">@Model.CostCenter</div>
-
-                        <div class="info-label"><i class="fas fa-map-marker-alt me-1"></i> Location</div>
-                        <div class="info-value">@Model.CurrentLocation</div>
-
-                        <div class="info-label"><i class="fas fa-briefcase me-1"></i> Company</div>
-                        <div class="info-value">@Model.Company</div>
-                    </div>
-
-                    <hr />
-
-                    <div class="personnel-card mt-3">
-                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
-                        <div>
-                            <div class="info-label">IS DETAILS</div>
-                            <div class="info-value mb-0"> @Model.ISName <br><small class="text-muted"> @Model.ISCode </small></div>
+                    <div style="font-size:.78rem;opacity:.75;">Current Employee Details</div>
+                </div>
+                <div class="profile-body">
+                    <div class="row g-0">
+                        <div class="col-6 info-row pe-2">
+                            <div class="info-lbl"><i class="fas fa-tag me-1"></i>Grade</div>
+                            <div class="info-val">@Model.Grade</div>
+                        </div>
+                        <div class="col-6 info-row ps-2">
+                            <div class="info-lbl"><i class="fas fa-sitemap me-1"></i>SBU</div>
+                            <div class="info-val">@Model.SBU</div>
+                        </div>
+                        <div class="col-12 info-row">
+                            <div class="info-lbl"><i class="fas fa-building me-1"></i>Department</div>
+                            <div class="info-val">@Model.CurrentDepartment</div>
+                        </div>
+                        <div class="col-12 info-row">
+                            <div class="info-lbl"><i class="fas fa-rupee-sign me-1"></i>Cost Center</div>
+                            <div class="info-val">@Model.CostCenter</div>
+                        </div>
+                        <div class="col-12 info-row">
+                            <div class="info-lbl"><i class="fas fa-map-marker-alt me-1"></i>Location</div>
+                            <div class="info-val">@Model.CurrentLocation</div>
+                        </div>
+                        <div class="col-12 info-row">
+                            <div class="info-lbl"><i class="fas fa-briefcase me-1"></i>Company</div>
+                            <div class="info-val">@Model.Company</div>
                         </div>
                     </div>
-                    <div class="personnel-card">
-                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="divider"></div>
+                    <div class="person-row">
+                        <div class="person-av"><i class="fas fa-user-tie"></i></div>
                         <div>
-                            <div class="info-label">DH DETAILS</div>
-                            <div class="info-value mb-0"> @Model.DHName <br><small class="text-muted"> @Model.DHCode </small></div>
+                            <div class="info-lbl">Immediate Supervisor</div>
+                            <div class="info-val" style="font-size:12px;">@Model.ISName</div>
+                            <div class="text-muted" style="font-size:11px;">@Model.ISCode</div>
                         </div>
                     </div>
-                    <div class="personnel-card">
-                        <div class="personnel-avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="person-row">
+                        <div class="person-av"><i class="fas fa-user-tie"></i></div>
                         <div>
-                            <div class="info-label">HRBP DETAILS</div>
-                            <div class="info-value mb-0"> @Model.HRBPName <br><small class="text-muted"> HR Central </small></div>
+                            <div class="info-lbl">Department Head</div>
+                            <div class="info-val" style="font-size:12px;">@Model.DHName</div>
+                            <div class="text-muted" style="font-size:11px;">@Model.DHCode</div>
+                        </div>
+                    </div>
+                    <div class="person-row">
+                        <div class="person-av"><i class="fas fa-user-shield"></i></div>
+                        <div>
+                            <div class="info-lbl">HRBP</div>
+                            <div class="info-val" style="font-size:12px;">@Model.HRBPName</div>
+                            <div class="text-muted" style="font-size:11px;">HR Central</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- RIGHT: Form -->
         <div class="col-lg-9">
             <form asp-action="Create" method="post">
-                <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
-                    <div class="card-header bg-white border-bottom pt-3 pb-2 px-4">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-exchange-alt me-2"></i> Transfer Information</h6>
+
+                <!-- 1. Transfer Location -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-exchange-alt" style="color:var(--accent);"></i> Transfer Location
                     </div>
-                    <div class="card-body p-4 bg-light">
-                        
-                        <div class="row g-3 mb-4">
+                    <div class="section-body">
+                        <div class="row g-3 align-items-stretch">
                             <div class="col-md-5">
-                                <div class="p-3 border rounded bg-white h-100">
-                                    <h6 class="fw-bold mb-3"><i class="fas fa-map-marker-alt text-secondary me-2"></i> From</h6>
-                                    <select class="form-select form-select-sm mb-2 bg-light" disabled><option>@Model.FromType</option></select>
-                                    <select class="form-select form-select-sm bg-light" disabled><option>@Model.CurrentLocation, @Model.CurrentCountry</option></select>
+                                <div class="loc-box loc-from h-100">
+                                    <div class="loc-label" style="color:var(--muted);">
+                                        <i class="fas fa-map-marker-alt"></i> From (Current)
+                                    </div>
+                                    <input class="form-control form-control-sm disabled-field mb-2" disabled value="@Model.FromType" />
+                                    <input class="form-control form-control-sm disabled-field" disabled value="@Model.CurrentLocation, @Model.CurrentCountry" />
                                 </div>
                             </div>
                             <div class="col-md-2 d-flex align-items-center justify-content-center">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-arrow-right"></i>
-                                </div>
+                                <div class="arrow-circle"><i class="fas fa-arrow-right"></i></div>
                             </div>
                             <div class="col-md-5">
-                                <div class="p-3 border rounded bg-white h-100" style="border-color: #86b7fe !important; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);">
-                                    <h6 class="fw-bold mb-3"><i class="fas fa-dot-circle text-success me-2"></i> To</h6>
+                                <div class="loc-box loc-to h-100">
+                                    <div class="loc-label" style="color:var(--accent);">
+                                        <i class="fas fa-dot-circle"></i> To (Target)
+                                    </div>
                                     <select asp-for="ToType" class="form-select form-select-sm mb-2" id="toTypeDropdown">
                                         <option value="">Select Type</option>
                                         <option value="Domestic">Domestic</option>
                                         <option value="International">International</option>
                                     </select>
+                                    <span asp-validation-for="ToType" class="field-validation-error"></span>
                                     <select asp-for="ToLocationId" class="form-select form-select-sm" id="toLocationDropdown">
                                         <option value="">Select Location</option>
                                         @if (Model.RawLocations != null)
                                         {
                                             foreach (var loc in Model.RawLocations)
                                             {
-                                                var type = loc.Country == "India" ? "Domestic" : "International";
-                                                <option value="@loc.LocationId" data-type="@type">@loc.City, @loc.Country</option>
+                                                var locType = loc.Country == "India" ? "Domestic" : "International";
+                                                <option value="@loc.LocationId" data-type="@locType">@loc.City, @loc.Country</option>
                                             }
                                         }
                                     </select>
+                                    <span asp-validation-for="ToLocationId" class="field-validation-error"></span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="row g-3 mb-4 pb-3 border-bottom">
-
-                            <div class="col-md-3">
-                                <label class="form-label info-label">Transfer Type *</label>
-                                <select asp-for="TransferType" class="form-select form-select-sm">
+                <!-- 2. Transfer Details -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-clipboard-list" style="color:var(--accent);"></i> Transfer Details
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Transfer Type <span class="text-danger">*</span></label>
+                                <select asp-for="TransferType" class="form-select">
                                     <option value="">Select</option>
                                     <option value="Permanent">Permanent Transfer</option>
                                     <option value="Temporary">Temporary Transfer</option>
@@ -140,153 +211,170 @@
                                     <option value="DepartmentChange">Department Change</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label info-label">Within City :</label>
-                                <div class="mt-1">
-                                    <div class="form-check form-check-inline">
+                            <div class="col-md-4">
+                                <label class="form-label">Within City</label>
+                                <div class="radio-group">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="radio" asp-for="WithinCity" value="Yes" id="cityYes">
-                                        <label class="form-check-label small" for="cityYes">Yes</label>
+                                        <label class="form-check-label" for="cityYes">Yes</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check">
                                         <input class="form-check-input" type="radio" asp-for="WithinCity" value="No" id="cityNo">
-                                        <label class="form-check-label small" for="cityNo">No</label>
+                                        <label class="form-check-label" for="cityNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Relocation Status</label>
+                                <div class="radio-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Bachelor" id="bachelor">
+                                        <label class="form-check-label" for="bachelor">Bachelor</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Family" id="family">
+                                        <label class="form-check-label" for="family">Family</label>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label info-label">Bachelor / Family :</label>
-                                <div class="mt-1">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Bachelor" id="bachelor">
-                                        <label class="form-check-label small" for="bachelor">Bachelor</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" asp-for="RelocationStatus" value="Family" id="family">
-                                        <label class="form-check-label small" for="family">Family</label>
-                                    </div>
-                                </div>
+                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input asp-for="StartDate" type="date" class="form-control" />
+                                <span asp-validation-for="StartDate" class="field-validation-error"></span>
                             </div>
-
+                            <div class="col-md-3">
+                                <label class="form-label">End Date</label>
+                                <input asp-for="EndDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Expected Relieving Date <span class="text-danger">*</span></label>
+                                <input asp-for="ExpectedRelievingDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExpectedRelievingDate" class="field-validation-error"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Expected Joining Date <span class="text-danger">*</span></label>
+                                <input asp-for="ExpectedJoiningDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExpectedJoiningDate" class="field-validation-error"></span>
+                            </div>
                         </div>
-                        <div class="mb-4">
+                    </div>
+                </div>
+
+                <!-- 3. New Posting Details -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-building" style="color:var(--accent);"></i> New Posting Details
+                    </div>
+                    <div class="section-body">
                         <div class="row g-3">
-                            
                             <div class="col-md-4">
-                                <label class="form-label info-label">Start Date *</label>
-                                <input asp-for="StartDate" type="date" class="form-control form-control-sm" />
+                                <label class="form-label">Project Name <span class="text-danger">*</span></label>
+                                <input asp-for="ProjectName" type="text" class="form-control" placeholder="Enter project name" />
+                                <span asp-validation-for="ProjectName" class="field-validation-error"></span>
                             </div>
-                            
                             <div class="col-md-4">
-                                <label class="form-label info-label">End Date</label>
-                                <input asp-for="EndDate" type="date" class="form-control form-control-sm" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label info-label">Project Name *</label>
-                                <input asp-for="ProjectName" type="text" class="form-control form-control-sm" placeholder="Project Name" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label info-label">New Vertical *</label>
-                                <select asp-for="NewVertical" class="form-select form-select-sm">
+                                <label class="form-label">New Vertical <span class="text-danger">*</span></label>
+                                <select asp-for="NewVertical" class="form-select">
                                     <option value="">Select Vertical</option>
                                     <option value="IT Operations">IT Operations</option>
                                     <option value="Civil Infrastructure">Civil Infrastructure</option>
                                 </select>
+                                <span asp-validation-for="NewVertical" class="field-validation-error"></span>
                             </div>
-
                             <div class="col-md-4">
-                                <label class="form-label info-label">New Department *</label>
-                                <select asp-for="ToDepartmentId" asp-items="Model.Departments" class="form-select form-select-sm">
+                                <label class="form-label">New Department <span class="text-danger">*</span></label>
+                                <select asp-for="ToDepartmentId" asp-items="Model.Departments" class="form-select">
                                     <option value="">Select Department</option>
                                 </select>
                             </div>
-                            
                             <div class="col-md-4">
-                                <label class="form-label info-label">New BU *</label>
-                                <select asp-for="NewBU" class="form-select form-select-sm">
+                                <label class="form-label">New BU <span class="text-danger">*</span></label>
+                                <select asp-for="NewBU" class="form-select">
                                     <option value="">Select BU</option>
                                     <option value="Corporate">Corporate</option>
                                     <option value="Metro Projects">Metro Projects</option>
                                 </select>
+                                <span asp-validation-for="NewBU" class="field-validation-error"></span>
                             </div>
-
                             <div class="col-md-4">
-                                <label class="form-label info-label">New IS PSNO *</label>
-                                <input asp-for="NewISPsno" type="text" class="form-control form-control-sm" placeholder="PSNO, Name, Email" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label info-label">New IS Name *</label>
-                                <input asp-for="NewISName" type="text" class="form-control form-control-sm" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label info-label">New IS Email *</label>
-                                <input asp-for="NewISEmail" type="email" class="form-control form-control-sm" />
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label info-label">IC Head *</label>
-                                <select asp-for="ICHead" class="form-select form-select-sm">
+                                <label class="form-label">IC Head <span class="text-danger">*</span></label>
+                                <select asp-for="ICHead" class="form-select">
                                     <option value="">Select</option>
                                     <option value="S. N. Subrahmanyan">S. N. Subrahmanyan</option>
                                     <option value="R. Shankar Raman">R. Shankar Raman</option>
                                 </select>
+                                <span asp-validation-for="ICHead" class="field-validation-error"></span>
                             </div>
-
-                            <div class="col-md-8">
-                                <label class="form-label info-label">Remarks *</label>
-                                <input asp-for="Remarks" type="text" class="form-control form-control-sm" />
-                            </div>
-
-                        </div>
-
-                        <div class="d-flex justify-content-center gap-3 mt-5 mb-5 pb-4">
-                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-light px-4 py-2" style="border-radius: 20px; font-weight: 500; border: 1px solid #ced4da;">
-                                Cancel
-                            </a>
-                            <button type="button" class="btn btn-outline-primary px-4 py-2" style="border-radius: 20px; font-weight: 500;">
-                                <i class="far fa-save me-1"></i> Save As Draft
-                            </button>
-                            <button type="submit" class="btn btn-success px-4 py-2" style="border-radius: 20px; font-weight: 500; background-color: #28a745; border: none;">
-                                <i class="far fa-paper-plane me-1"></i> Send For Approval
-                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- 4. New IS Details -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-user-tie" style="color:var(--accent);"></i> New Immediate Supervisor Details
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">PSNO</label>
+                                <input asp-for="NewISPsno" type="text" class="form-control" placeholder="Employee PSNO" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Name</label>
+                                <input asp-for="NewISName" type="text" class="form-control" placeholder="Full name" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input asp-for="NewISEmail" type="email" class="form-control" placeholder="Work email" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Remarks -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-comment-alt" style="color:var(--accent);"></i> Remarks
+                    </div>
+                    <div class="section-body">
+                        <textarea asp-for="Remarks" class="form-control" rows="3"
+                                  placeholder="Add any additional context or reason for this transfer request…"></textarea>
+                        <span asp-validation-for="Remarks" class="field-validation-error"></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-3 mt-2">
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-cancel">Cancel</a>
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-paper-plane me-2"></i> Send For Approval
+                    </button>
+                </div>
+
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         var typeSelect = document.getElementById('toTypeDropdown');
-        var locSelect = document.getElementById('toLocationDropdown');
-
-        // Clone all options on page load
+        var locSelect  = document.getElementById('toLocationDropdown');
         var allOptions = Array.from(locSelect.options).filter(o => o.value !== "");
 
-        typeSelect.addEventListener('change', function() {
-            var selectedType = this.value;
-
-            // Clear current locations
+        typeSelect.addEventListener('change', function () {
+            var selected = this.value;
             locSelect.innerHTML = '<option value="">Select Location</option>';
-
-            if (selectedType) {
-                // Re-add only the options that match Domestic/International
+            if (selected) {
                 allOptions.forEach(opt => {
-                    if (opt.getAttribute('data-type') === selectedType) {
+                    if (opt.getAttribute('data-type') === selected)
                         locSelect.appendChild(opt.cloneNode(true));
-                    }
                 });
             }
         });
 
-        // Trigger it once in case form validation failed and reloaded the page
         typeSelect.dispatchEvent(new Event('change'));
     });
 </script>

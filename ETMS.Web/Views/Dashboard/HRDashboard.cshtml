@@ -292,7 +292,9 @@
                                                 <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
                                                 <span class="text-muted small">@req.TargetDepartment</span>
                                             </td>
-                                            <td class="text-dark fw-medium">@req.ActionedOn.ToString("dd MMM, yyyy")</td>
+                                            <td class="text-dark fw-medium">
+                                                @(req.ActionedOn.Year > 1 ? req.ActionedOn.ToString("dd MMM, yyyy") : "—")
+                                            </td>
                                             <td>
                                                 @{
                                                     var (badgeBg, badgeFg, statusText) = req.FinalStatus switch {

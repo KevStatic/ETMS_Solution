@@ -132,12 +132,10 @@ namespace ETMS.Infrastructure.Repositories
                 await conn.ExecuteAsync(@"
                     INSERT INTO TransferHistory
                         (EmployeeId, OldDepartmentId, NewDepartmentId,
-                         OldBranchId, NewBranchId)
+                         OldLocationId, NewLocationId, EffectiveDate)
                     SELECT tr.EmployeeId, tr.FromDepartmentId, tr.ToDepartmentId,
-                           lFrom.BranchId, lTo.BranchId
+                           tr.FromLocationId, tr.ToLocationId, GETDATE()
                     FROM TransferRequests tr
-                    INNER JOIN Locations lFrom ON lFrom.LocationId = tr.FromLocationId
-                    INNER JOIN Locations lTo   ON lTo.LocationId   = tr.ToLocationId
                     WHERE tr.TransferRequestId = @Id;",
                     new { Id = requestId }, tx);
 

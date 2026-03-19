@@ -682,10 +682,24 @@
                                         }
                                     </td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-eye text-secondary"></i></button>
+                                        <!-- Eye → links to TransferController.View -->
+                                        <a asp-controller="Transfer" asp-action="View" asp-route-id="@req.TransferRequestId"
+                                           class="btn btn-light btn-sm mx-1 rounded-circle" title="View details">
+                                            <i class="far fa-eye text-secondary"></i>
+                                        </a>
+
+                                        <!-- Delete → only for Pending requests -->
                                         @if (req.Status == "Pending")
                                         {
-                                            <button class="btn btn-light btn-sm mx-1 rounded-circle"><i class="far fa-trash-alt text-danger"></i></button>
+                                            <form asp-controller="Transfer" asp-action="Delete" asp-route-id="@req.TransferRequestId"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-light btn-sm mx-1 rounded-circle"
+                                                        title="Delete request"
+                                                        onclick="return confirm('Delete this transfer request? This cannot be undone.')">
+                                                    <i class="far fa-trash-alt text-danger"></i>
+                                                </button>
+                                            </form>
                                         }
                                     </td>
                                 </tr>
