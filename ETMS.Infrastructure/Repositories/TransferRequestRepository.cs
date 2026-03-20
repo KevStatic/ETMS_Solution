@@ -242,28 +242,28 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
         public async Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId)
         {
             var metricsSql = @"
-        SELECT 
-            COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS ActiveRequests,
-            COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS PendingApprovals,
-            COUNT(CASE WHEN Status = 'Rejected' THEN 1 END) AS Rejected,
-            ISNULL(AVG(CASE WHEN ta.ActionDate IS NOT NULL 
-                THEN DATEDIFF(day, tr.RequestDate, ta.ActionDate) 
-                ELSE NULL END), 0) AS AvgApprovalDays,
+                SELECT 
+                    COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS ActiveRequests,
+                    COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS PendingApprovals,
+                    COUNT(CASE WHEN Status = 'Rejected' THEN 1 END) AS Rejected,
+                    ISNULL(AVG(CASE WHEN ta.ActionDate IS NOT NULL 
+                        THEN DATEDIFF(day, tr.RequestDate, ta.ActionDate) 
+                        ELSE NULL END), 0) AS AvgApprovalDays,
             
-            -- Now reads from the REAL Open Positions table
-            (SELECT ISNULL(SUM(VacancyCount), 0) FROM OpenPositions) AS TotalOpenPositions
-        FROM TransferRequests tr
-        LEFT JOIN TransferApprovals ta ON tr.TransferRequestId = ta.TransferRequestId
-        WHERE tr.EmployeeId = @EmployeeId AND tr.IsActive = 1;
-    ";
+                    -- Now reads from the REAL Open Positions table
+                    (SELECT COUNT(*) FROM OpenPositions) AS TotalOpenPositions
+                FROM TransferRequests tr
+                LEFT JOIN TransferApprovals ta ON tr.TransferRequestId = ta.TransferRequestId
+                WHERE tr.EmployeeId = @EmployeeId AND tr.IsActive = 1;
+            ";
 
             // Now reads exactly what HR puts into the database
             var locationsSql = @"
-        SELECT TOP 4 LocationName AS [Key], SUM(VacancyCount) AS [Value]
-        FROM OpenPositions
-        GROUP BY LocationName
-        ORDER BY [Value] DESC;
-    ";
+                SELECT TOP 4 LocationName AS [Key], COUNT(*) AS [Value]
+                FROM OpenPositions
+                GROUP BY LocationName
+                ORDER BY [Value] DESC;
+            ";
 
             using var connection = _context.CreateConnection();
 

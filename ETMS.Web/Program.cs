@@ -6,6 +6,8 @@ using ETMS.Infrastructure.Repositories;
 using ETMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,7 @@ try
     builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
     builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository>();
     builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+    builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
     // ── Email Service ─────────────────────────────────────────────────────────
     builder.Services.AddScoped<IEmailService>(_ =>
@@ -80,6 +83,10 @@ try
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Account}/{action=Login}/{id?}");
+
+    // Ensure letters directory exists on startup
+    var lettersPath = Path.Combine(app.Environment.WebRootPath, "letters");
+    Directory.CreateDirectory(lettersPath); // does nothing if already exists
 
     app.Run();
 }

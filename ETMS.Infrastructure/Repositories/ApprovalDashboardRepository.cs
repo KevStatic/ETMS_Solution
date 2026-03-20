@@ -265,7 +265,7 @@ namespace ETMS.Infrastructure.Repositories
                     ta.ActionDate                      AS ActionedOn,
                     ta.Comments,
                     tr.Status                          AS FinalStatus,
-                    tr.LetterType                      AS LetterPath
+                    tr.LetterPath                      AS LetterPath
                 FROM TransferApprovals ta
                 INNER JOIN TransferRequests tr ON tr.TransferRequestId = ta.TransferRequestId
                 INNER JOIN Employee e           ON e.EmployeeId = tr.EmployeeId

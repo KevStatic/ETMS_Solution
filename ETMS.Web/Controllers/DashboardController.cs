@@ -60,7 +60,9 @@ namespace ETMS.Web.Controllers
         public async Task<IActionResult> Index(
             string searchTerm = null,
             string sortOrder = null,
-            string filterType = "Active")
+            string filterType = "Active",
+            string locationFilter = null,
+            string deptFilter = null)
         {
             var (employeeId, role) = GetCurrentUser();
             if (employeeId == 0)
@@ -71,7 +73,7 @@ namespace ETMS.Web.Controllers
                 "HR" => await BuildHRDashboard(employeeId, searchTerm, sortOrder, filterType),
                 "HOD" => await BuildHODDashboard(employeeId),
                 "Manager" => await BuildManagerDashboard(employeeId),
-                _ => await BuildEmployeeDashboard(employeeId, searchTerm, sortOrder, filterType)
+                _ => await BuildEmployeeDashboard(employeeId, searchTerm, sortOrder, filterType, locationFilter, deptFilter)
             };
         }
 
@@ -80,13 +82,12 @@ namespace ETMS.Web.Controllers
         // ─────────────────────────────────────────────────────────────────
 
         private async Task<IActionResult> BuildEmployeeDashboard(
-    int employeeId, string searchTerm, string sortOrder, string filterType)
+    int employeeId, string searchTerm, string sortOrder, string filterType, string locationFilter, string deptFilter)
         {
             var emp = await _empRepo.GetByIdAsync(employeeId);
             var metrics = await _transferRepo.GetDashboardMetricsAsync(employeeId);
             var all = await _transferRepo.GetByEmployeeIdAsync(employeeId);
 
-            // map — note ToLocation/ToDepartment (not TargetLocation/TargetDepartment)
             var items = all.Select(r => new DashboardRequestItem
             {
                 TransferRequestId = r.TransferRequestId,
@@ -96,15 +97,39 @@ namespace ETMS.Web.Controllers
                 Status = r.Status
             });
 
+            // filter by tab
             var filtered = filterType == "Active"
                 ? items.Where(r => r.Status != "Rejected" && r.Status != "Cancelled")
                 : items;
 
+            // search
             if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
                 filtered = filtered.Where(r =>
-                    r.TransferRequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    r.Status.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    r.TransferRequestId.ToString("D5").Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    r.TransferRequestId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (r.TargetLocation != null && r.TargetLocation.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (r.TargetDepartment != null && r.TargetDepartment.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (r.Status != null && r.Status.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    r.RequestDate.ToString("dd MMM, yyyy").Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    r.RequestDate.ToString("yyyy").Contains(term, StringComparison.OrdinalIgnoreCase)
+                );
+            }
 
+            // location filter
+            if (!string.IsNullOrWhiteSpace(locationFilter))
+                filtered = filtered.Where(r =>
+                    r.TargetLocation != null &&
+                    r.TargetLocation.Contains(locationFilter, StringComparison.OrdinalIgnoreCase));
+
+            // dept filter
+            if (!string.IsNullOrWhiteSpace(deptFilter))
+                filtered = filtered.Where(r =>
+                    r.TargetDepartment != null &&
+                    r.TargetDepartment.Contains(deptFilter, StringComparison.OrdinalIgnoreCase));
+
+            // sort
             filtered = sortOrder switch
             {
                 "date_asc" => filtered.OrderBy(r => r.RequestDate),
@@ -115,14 +140,14 @@ namespace ETMS.Web.Controllers
 
             ViewBag.CurrentFilter = filterType ?? "Active";
             ViewBag.CurrentSearch = searchTerm;
+            ViewBag.CurrentLocation = locationFilter;
+            ViewBag.CurrentDept = deptFilter;
             ViewBag.DateSort = sortOrder == "date_desc" ? "date_asc" : "date_desc";
             ViewBag.StatusSort = sortOrder == "status" ? "status_desc" : "status";
 
             var vm = new DashboardViewModel
             {
-                UserLocationName = emp?.Location != null
-                         ? $"{emp.Location.City}, {emp.Location.State}"
-                         : "",
+                UserLocationName = emp?.Location != null ? $"{emp.Location.City}, {emp.Location.State}" : "",
                 UserDepartmentName = emp?.Department?.DepartmentName ?? "",
                 Metrics = metrics,
                 Requests = filtered.ToList(),

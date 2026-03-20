@@ -600,23 +600,49 @@
                 </ul>
 
                 <div class="d-flex gap-2 align-items-center">
-                    <form asp-action="Index" method="get" class="d-flex gap-2 mb-0">
+                    <form asp-controller="Dashboard" asp-action="Index" method="get" class="d-flex gap-2 mb-0">
                         <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
 
                         <div class="input-group" style="width: 250px;">
-                            <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0 filter-input" placeholder="Search ID or Status...">
+                            <span class="input-group-text bg-light border-end-0 filter-input">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch"
+                                   class="form-control bg-light border-start-0 filter-input"
+                                   placeholder="Search ID or Status...">
                         </div>
 
-                        <select class="form-select filter-input" style="width: 170px;" asp-items="Model.Locations">
+                        <select name="locationFilter" class="form-select filter-input" style="width: 170px;">
                             <option value="">Filter by Location</option>
+                            @foreach (var loc in Model.Locations)
+                            {
+                                <option value="@loc.Text"
+                                        selected="@(ViewBag.CurrentLocation == loc.Text ? "selected" : null)">
+                                    @loc.Text
+                                </option>
+                            }
                         </select>
-                        <select class="form-select filter-input" style="width: 190px;" asp-items="Model.Departments">
+
+                        <select name="deptFilter" class="form-select filter-input" style="width: 190px;">
                             <option value="">Filter by Dept</option>
+                            @foreach (var dept in Model.Departments)
+                            {
+                                <option value="@dept.Text"
+                                        selected="@(ViewBag.CurrentDept == dept.Text ? "selected" : null)">
+                                    @dept.Text
+                                </option>
+                            }
                         </select>
+
+                        <button type="submit" class="btn text-white fw-bold px-3"
+                                style="background-color: #66D2CE; border-radius: 8px;">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </form>
 
-                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 8px;">
+                    <a asp-controller="Transfer" asp-action="Create"
+                           class="btn text-white fw-bold px-4 py-2 text-nowrap"
+                           style="background-color: #66D2CE; border-radius: 8px;">
                         + New Transfer Request
                     </a>
                 </div>
