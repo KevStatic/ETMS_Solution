@@ -15,15 +15,18 @@ namespace ETMS.Web.Controllers
         private readonly IApprovalService _approvalSvc;
         private readonly IApprovalDashboardRepository _repo;
         private readonly IWebHostEnvironment _env;
+        private readonly IUrlEncryptionService _enc;
 
         public ApprovalController(
             IApprovalService approvalSvc,
             IApprovalDashboardRepository repo,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IUrlEncryptionService enc)
         {
             _approvalSvc = approvalSvc;
             _repo = repo;
             _env = env;
+            _enc = enc;
         }
 
         private (int employeeId, string role) GetCurrentUser()
@@ -40,10 +43,17 @@ namespace ETMS.Web.Controllers
         {
             var (approverId, role) = GetCurrentUser();
 
+            var realId = _enc.Decrypt(model.TransferRequestId);
+            if (realId == -1)
+            {
+                TempData["SuccessMessage"] = "Invalid or tampered request.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
             if (role == "HR")
             {
                 string letterPath = await _approvalSvc.FinaliseAndGenerateLetterAsync(
-    model.TransferRequestId, approverId, model.Comments, _env.WebRootPath);
+                    realId, approverId, model.Comments, _env.WebRootPath);
 
                 TempData["SuccessMessage"] = letterPath != null
                     ? "Transfer approved. Letter generated successfully."
@@ -52,7 +62,7 @@ namespace ETMS.Web.Controllers
             else
             {
                 bool ok = await _approvalSvc.ProcessApprovalAsync(
-                    model.TransferRequestId, approverId, role, "Approved", model.Comments);
+                    realId, approverId, role, "Approved", model.Comments);
 
                 TempData["SuccessMessage"] = ok
                     ? "Request approved and forwarded to the next stage."
@@ -68,8 +78,15 @@ namespace ETMS.Web.Controllers
         {
             var (approverId, role) = GetCurrentUser();
 
+            var realId = _enc.Decrypt(model.TransferRequestId);
+            if (realId == -1)
+            {
+                TempData["SuccessMessage"] = "Invalid or tampered request.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
             bool ok = await _approvalSvc.ProcessApprovalAsync(
-                model.TransferRequestId, approverId, role, "Rejected", model.Comments);
+                realId, approverId, role, "Rejected", model.Comments);
 
             TempData["SuccessMessage"] = ok
                 ? "Request rejected."
@@ -100,14 +117,17 @@ namespace ETMS.Web.Controllers
 
         // ── Download Letter — accessible by all roles ─────────────────
         [Authorize(Roles = "Manager,HOD,HR,Employee")]
-        public IActionResult DownloadLetter(int id)
+        public IActionResult DownloadLetter(string id)
         {
+            var realId = _enc.Decrypt(id);
+            if (realId == -1) return BadRequest("Invalid or tampered request.");
+
             var letterDir = Path.Combine(_env.WebRootPath, "letters");
 
             if (!Directory.Exists(letterDir))
                 return NotFound("Letters directory not found.");
 
-            var files = Directory.GetFiles(letterDir, $"TL_*_{id}_*.pdf");
+            var files = Directory.GetFiles(letterDir, $"TL_*_{realId}_*.pdf");
 
             if (!files.Any())
                 return NotFound("Letter not yet generated for this request.");

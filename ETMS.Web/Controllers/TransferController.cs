@@ -1,5 +1,6 @@
 ﻿using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
+using ETMS.Web.Controllers;
 using ETMS.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,17 +19,20 @@ namespace ETMS.Web.Controllers
         private readonly ILocationRepository _locationRepo;
         private readonly IDepartmentRepository _deptRepo;
         private readonly IEmployeeRepository _employeeRepo;
+        private readonly IUrlEncryptionService _enc;
 
         public TransferController(
             ITransferRequestRepository transferRepo,
             ILocationRepository locationRepo,
             IDepartmentRepository deptRepo,
-            IEmployeeRepository employeeRepo)
+            IEmployeeRepository employeeRepo,
+            IUrlEncryptionService enc)
         {
             _transferRepo = transferRepo;
             _locationRepo = locationRepo;
             _deptRepo = deptRepo;
             _employeeRepo = employeeRepo;
+            _enc = enc;
         }
 
         [HttpGet]
@@ -137,20 +141,36 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> View(int id)
+        public async Task<IActionResult> View(string id)
         {
-            var request = await _transferRepo.GetByIdAsync(id);
+            var realId = _enc.Decrypt(id);
+            if (realId == -1) return BadRequest("Invalid or tampered request.");
 
-            if (request == null)
-                return NotFound();
+            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(employeeIdClaim, out int empId);
+
+            var request = await _transferRepo.GetByIdAsync(realId);
+            if (request == null || request.EmployeeId != empId)
+                return NotFound("Request not found or access denied.");
 
             return View("ViewTransfer", request);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
-            await _transferRepo.DeleteAsync(id);
+            var realId = _enc.Decrypt(id);
+            if (realId == -1) return BadRequest("Invalid or tampered request.");
+
+            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(employeeIdClaim, out int empId);
+
+            var request = await _transferRepo.GetByIdAsync(realId);
+            if (request == null || request.EmployeeId != empId)
+                return NotFound("Request not found or access denied.");
+
+            await _transferRepo.DeleteAsync(realId);
+            TempData["SuccessMessage"] = "Transfer request deleted.";
             return RedirectToAction("Index", "Dashboard");
         }
 

@@ -59,7 +59,7 @@ namespace ETMS.Application.DTOs.Approval
     // Posted from approve/reject modal forms
     public class ApprovalActionDto
     {
-        public int TransferRequestId { get; set; }
+        public string TransferRequestId { get; set; }
         public string Decision { get; set; }  // "Approved" | "Rejected"
         public string Comments { get; set; }
     }

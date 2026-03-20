@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Manager Dashboard";
 }
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
 <style>
@@ -188,10 +190,10 @@
                                     </td>
                                     <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
                                     <td class="text-end pe-3">
-                                        <!-- View details -->
                                         <button class="btn btn-light btn-sm mx-1 rounded-circle"
                                                 data-bs-toggle="modal" data-bs-target="#detailModal"
                                                 data-reqid="@req.TransferRequestId"
+                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
                                                 data-name="@req.EmployeeName"
                                                 data-from="@req.FromLocation / @req.FromDepartment"
                                                 data-to="@req.TargetLocation / @req.TargetDepartment"
@@ -199,20 +201,18 @@
                                                 title="View details">
                                             <i class="far fa-eye text-secondary"></i>
                                         </button>
-                                        <!-- Approve -->
                                         <button class="btn btn-sm rounded-circle mx-1"
                                                 style="background:#e8f5e9;"
                                                 data-bs-toggle="modal" data-bs-target="#approveModal"
-                                                data-reqid="@req.TransferRequestId"
+                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
                                                 data-name="@req.EmployeeName"
                                                 title="Approve">
                                             <i class="fas fa-check text-success"></i>
                                         </button>
-                                        <!-- Reject -->
                                         <button class="btn btn-sm rounded-circle mx-1"
                                                 style="background:#ffebee;"
                                                 data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                                data-reqid="@req.TransferRequestId"
+                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
                                                 data-name="@req.EmployeeName"
                                                 title="Reject">
                                             <i class="fas fa-times text-danger"></i>
@@ -379,14 +379,14 @@
     // Approve modal
     document.querySelectorAll('[data-bs-target="#approveModal"]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('approveReqId').value      = btn.dataset.reqid;
+            document.getElementById('approveReqId').value         = btn.dataset.encid;
             document.getElementById('approveEmpName').textContent = btn.dataset.name;
         });
     });
     // Reject modal
     document.querySelectorAll('[data-bs-target="#rejectModal"]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('rejectReqId').value      = btn.dataset.reqid;
+            document.getElementById('rejectReqId').value         = btn.dataset.encid;
             document.getElementById('rejectEmpName').textContent = btn.dataset.name;
         });
     });

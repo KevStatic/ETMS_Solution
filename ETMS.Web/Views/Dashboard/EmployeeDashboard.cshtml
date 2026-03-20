@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Employee Dashboard";
 }
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -708,16 +709,16 @@
                                         }
                                     </td>
                                     <td class="text-end pe-3">
-                                        <!-- Eye → links to TransferController.View -->
-                                        <a asp-controller="Transfer" asp-action="View" asp-route-id="@req.TransferRequestId"
+                                        <a asp-controller="Transfer" asp-action="View"
+                                           asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
                                            class="btn btn-light btn-sm mx-1 rounded-circle" title="View details">
                                             <i class="far fa-eye text-secondary"></i>
                                         </a>
 
-                                        <!-- Delete → only for Pending requests -->
                                         @if (req.Status == "Pending")
                                         {
-                                            <form asp-controller="Transfer" asp-action="Delete" asp-route-id="@req.TransferRequestId"
+                                            <form asp-controller="Transfer" asp-action="Delete"
+                                                  asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
                                                   method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-light btn-sm mx-1 rounded-circle"

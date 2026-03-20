@@ -5,6 +5,7 @@ using ETMS.Infrastructure.Context;
 using ETMS.Infrastructure.Repositories;
 using ETMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+DotNetEnv.Env.Load();
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -18,6 +19,7 @@ try
     // ── Repository Layer ───────────────────────────────────────────────────
     builder.Services.AddScoped<IApprovalDashboardRepository, ApprovalDashboardRepository>();
     builder.Services.AddScoped<IApprovalService, ApprovalService>();
+    builder.Services.AddScoped<IUrlEncryptionService, UrlEncryptionService>();
 
     // ── Infrastructure Layer ──────────────────────────────────────────────────
     builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
