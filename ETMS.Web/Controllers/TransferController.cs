@@ -112,6 +112,8 @@ namespace ETMS.Web.Controllers
                 IsActive = true,
 
                 // --- MAPPING NEW L&T FIELDS ---
+                ExpectedRelievingDate = model.ExpectedRelievingDate,
+                ExpectedJoiningDate = model.ExpectedJoiningDate,
                 LetterType = model.TransferType,
                 WithinCity = model.WithinCity,
                 RelocationStatus = model.RelocationStatus,
@@ -131,6 +133,24 @@ namespace ETMS.Web.Controllers
 
             // Set the exact success message requested to trigger the Javascript toast
             TempData["SuccessMessage"] = "Transfer request sent for approval";
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> View(int id)
+        {
+            var request = await _transferRepo.GetByIdAsync(id);
+
+            if (request == null)
+                return NotFound();
+
+            return View("ViewTransfer", request);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _transferRepo.DeleteAsync(id);
             return RedirectToAction("Index", "Dashboard");
         }
 

@@ -1,0 +1,481 @@
+@model ETMS.Web.Models.HODDashboardViewModel
+@{
+    ViewData["Title"] = "HOD Dashboard";
+    var locationGroups = Model.AllOpenPositions
+        .GroupBy(p => p.LocationName)
+        .OrderBy(g => g.Key)
+        .ToList();
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<style>
+    body { background-color: #f8fafc; }
+    .metric-card { border-radius: 12px; transition: transform 0.2s; border: none; }
+    .metric-card:hover { transform: translateY(-3px); }
+    .icon-box { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .filter-input { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; font-size: 0.9rem; color: #495057; }
+    .position-pill { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; border: 1px solid #d0e0ff; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; font-weight: 500; color: #1a3a6e; margin: 3px; }
+    .position-pill .remove-btn { cursor: pointer; color: #aaa; transition: color .15s; font-size: .75rem; }
+    .position-pill .remove-btn:hover { color: #dc3545; }
+</style>
+
+<div class="container-fluid mt-4 mb-5 pb-5" style="max-width:1400px;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="toastSuccess" class="alert alert-success shadow-sm border-0 position-fixed"
+             style="top:20px;right:20px;z-index:9999;border-radius:8px;transition:opacity 0.5s;">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        </div>
+        <script>
+            setTimeout(() => {
+                var el = document.getElementById('toastSuccess');
+                if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }
+            }, 3000);
+        </script>
+    }
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark d-flex align-items-center mb-1">
+                <i class="fas fa-building text-primary me-2"></i> Department Head Dashboard
+            </h3>
+            <p class="text-muted mb-0">Manage transfer approvals and control open positions in your department.</p>
+        </div>
+        <div class="text-end">
+            <div class="bg-white px-3 py-2 border shadow-sm text-muted" style="border-radius:8px;font-size:.85rem;font-weight:500;">
+                <i class="fas fa-building me-2"></i> @Model.UserLocationName | @Model.UserDepartmentName
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Banner -->
+    <div class="alert border-0 mb-4 d-flex align-items-center gap-3 flex-wrap" style="background:#f0f4ff;border-radius:10px;">
+        <span class="fw-semibold text-primary small"><i class="fas fa-route me-1"></i> Approval Workflow:</span>
+        @{
+            var wfStages = new[] {
+                ("Employee Submits","fas fa-paper-plane","#6c757d"),
+                ("Manager Approved","fas fa-user-check","#198754"),
+                ("You Review","fas fa-building","#0d6efd"),
+                ("HR Final","fas fa-shield-alt","#6c757d"),
+                ("Letter Issued","fas fa-file-pdf","#6c757d")
+            };
+        }
+        @foreach (var (lbl, ico, col) in wfStages)
+        {
+            <span class="d-flex align-items-center gap-1 small fw-medium" style="color:@col;">
+                <i class="@ico"></i> @lbl
+            </span>
+            @if (lbl != "Letter Issued") { <i class="fas fa-chevron-right text-muted" style="font-size:.65rem;"></i> }
+        }
+    </div>
+
+    <!-- Metrics (identical layout to Employee dashboard) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background:#e8f5e9;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size:.95rem;">Actioned</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background:#fff8e1;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="fw-bold text-dark" style="font-size:.95rem;">Pending Approvals</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3" style="background:#ffebee;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
+                    <div class="fw-bold text-dark" style="font-size:.95rem;">Rejected</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
+                    <div class="fw-bold text-dark" style="font-size:.95rem;">Avg Approval Time</div>
+                </div>
+                <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size:1rem;" class="text-muted fw-normal">days</span></h2>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-12">
+            <div class="card metric-card shadow-sm h-100 p-3 bg-white" style="border:1px solid #e9ecef;">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box text-white me-2" style="background-color:#5c9bba !important;border-radius:8px;"><i class="fas fa-bullseye"></i></div>
+                        <div class="fw-bold text-dark" style="font-size:1rem;">Open Positions</div>
+                    </div>
+                    <h2 class="fw-normal mb-0 text-muted" style="font-size:2rem;line-height:1;">@Model.Metrics.TotalOpenPositions</h2>
+                </div>
+                <ul class="list-unstyled mb-0 mt-2 ms-1">
+                    @foreach (var pos in Model.Metrics.OpenPositionsByLocation)
+                    {
+                        <li class="d-flex align-items-center mb-1 text-muted" style="font-size:.8rem;">
+                            <i class="fas fa-circle me-2" style="font-size:.35rem;color:#6c757d;"></i>
+                            <span class="flex-grow-1">@pos.Key:</span>
+                            <span>@pos.Value pos.</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT: Approval queue -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0 text-dark">
+                            Pending Approvals
+                            @if (Model.PendingApprovals.Any())
+                            {
+                                <span class="badge ms-2 rounded-pill" style="background:#fff8e1;color:#856404;font-size:.75rem;">@Model.PendingApprovals.Count() awaiting</span>
+                            }
+                        </h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-white text-muted text-uppercase small" style="border-bottom:2px solid #e9ecef;">
+                                <tr>
+                                    <th class="py-3 ps-3 border-0 fw-bold">Transfer ID</th>
+                                    <th class="py-3 border-0 fw-bold">Employee</th>
+                                    <th class="py-3 border-0 fw-bold">Target Posting</th>
+                                    <th class="py-3 border-0 fw-bold">Mgr Decision</th>
+                                    <th class="py-3 border-0 fw-bold">Requested</th>
+                                    <th class="py-3 text-end pe-4 border-0 fw-bold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.PendingApprovals.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+                                            No requests waiting for your approval.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var req in Model.PendingApprovals)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
+                                            <td>
+                                                <span class="d-block fw-bold text-dark">@req.EmployeeName</span>
+                                                <span class="text-muted small">@req.EmployeeCode</span>
+                                            </td>
+                                            <td>
+                                                <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
+                                                <span class="text-muted small">@req.TargetDepartment</span>
+                                            </td>
+                                            <td>
+                                                @if (req.ManagerDecision == "Approved")
+                                                { <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill small">✓ Approved</span> }
+                                                else
+                                                { <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1 rounded-pill small">Pending</span> }
+                                            </td>
+                                            <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
+                                            <td class="text-end pe-3">
+                                                <button class="btn btn-light btn-sm mx-1 rounded-circle"
+                                                        data-bs-toggle="modal" data-bs-target="#detailModal"
+                                                        data-reqid="@req.TransferRequestId"
+                                                        data-name="@req.EmployeeName"
+                                                        data-from="@req.FromLocation / @req.FromDepartment"
+                                                        data-to="@req.TargetLocation / @req.TargetDepartment"
+                                                        data-reason="@req.Reason">
+                                                    <i class="far fa-eye text-secondary"></i>
+                                                </button>
+                                                <button class="btn btn-sm rounded-circle mx-1" style="background:#e8f5e9;"
+                                                        data-bs-toggle="modal" data-bs-target="#approveModal"
+                                                        data-reqid="@req.TransferRequestId" data-name="@req.EmployeeName">
+                                                    <i class="fas fa-check text-success"></i>
+                                                </button>
+                                                <button class="btn btn-sm rounded-circle mx-1" style="background:#ffebee;"
+                                                        data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                                        data-reqid="@req.TransferRequestId" data-name="@req.EmployeeName">
+                                                    <i class="fas fa-times text-danger"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recently Actioned (condensed) -->
+            @if (Model.RecentlyActioned.Any())
+            {
+                <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-3 text-dark">Recently Actioned</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white text-muted text-uppercase small" style="border-bottom:2px solid #e9ecef;">
+                                    <tr>
+                                        <th class="py-2 ps-3 border-0 fw-bold">ID</th>
+                                        <th class="py-2 border-0 fw-bold">Employee</th>
+                                        <th class="py-2 border-0 fw-bold">Target</th>
+                                        <th class="py-2 border-0 fw-bold">Your Decision</th>
+                                        <th class="py-2 border-0 fw-bold">Overall Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var r in Model.RecentlyActioned)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 small fw-bold text-dark">TR-@r.TransferRequestId.ToString("D5")</td>
+                                            <td class="small fw-medium">@r.EmployeeName</td>
+                                            <td class="small">
+                                                <span class="d-block fw-bold">@r.TargetLocation</span>
+                                                <span class="text-muted">@r.TargetDepartment</span>
+                                            </td>
+                                            <td>
+                                                @if (r.Decision == "Approved")
+                                                { <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 py-1 small">Approved</span> }
+                                                else
+                                                { <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 py-1 small">Rejected</span> }
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var statusLabel = r.FinalStatus switch {
+                                                        "Approved"    => ("bg-success","text-success","Fully Approved"),
+                                                        "Rejected"    => ("bg-danger","text-danger","Rejected"),
+                                                        "HODApproved" => ("bg-primary","text-primary","With HR"),
+                                                        _             => ("bg-warning","text-warning","In Progress")
+                                                    };
+                                                }
+                                                <span class="badge @statusLabel.Item1 bg-opacity-10 @statusLabel.Item2 border rounded-pill px-2 py-1 small">@statusLabel.Item3</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- RIGHT: Open Positions Management -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-door-open text-primary me-2"></i>Open Positions</h5>
+                        <button class="btn btn-sm text-white fw-bold px-3"
+                                style="background:#66D2CE;border-radius:8px;"
+                                data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                            <i class="fas fa-plus me-1"></i> Add
+                        </button>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        These positions are visible to employees when submitting a transfer request.
+                        Removing a position closes it from new applications.
+                    </p>
+
+                    @if (!Model.AllOpenPositions.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                            <p class="small">No open positions currently listed.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var grp in locationGroups)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-map-marker-alt text-muted" style="font-size:.8rem;"></i>
+                                    <span class="fw-semibold text-dark small text-uppercase" style="letter-spacing:.5px;">@grp.Key</span>
+                                    <span class="badge bg-light text-muted border" style="font-size:.7rem;">@grp.Count()</span>
+                                </div>
+                                <div class="ps-3">
+                                    @foreach (var pos in grp)
+                                    {
+                                        <span class="position-pill">
+                                            <i class="fas fa-briefcase" style="font-size:.7rem;color:#5c9bba;"></i>
+                                            @pos.DepartmentName
+                                            <form asp-controller="Approval" asp-action="RemovePosition"
+                                                  method="post" class="d-inline mb-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="positionId" value="@pos.PositionId" />
+                                                <button type="submit" class="remove-btn border-0 bg-transparent p-0"
+                                                        title="Remove this position"
+                                                        onclick="return confirm('Remove this open position?')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modals ─────────────────────────────────────────────────────────── -->
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Transfer Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <dl class="row mb-0" style="font-size:.9rem;">
+                    <dt class="col-4 text-muted">Request ID</dt><dd class="col-8 fw-bold" id="d-id"></dd>
+                    <dt class="col-4 text-muted">Employee</dt><dd class="col-8" id="d-name"></dd>
+                    <dt class="col-4 text-muted">From</dt><dd class="col-8" id="d-from"></dd>
+                    <dt class="col-4 text-muted">To</dt><dd class="col-8" id="d-to"></dd>
+                    <dt class="col-4 text-muted">Reason</dt><dd class="col-8 text-muted" id="d-reason"></dd>
+                </dl>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-success"><i class="fas fa-check-circle me-2"></i>Approve & Forward to HR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Approval" asp-action="Approve" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Approving for <strong id="approveEmpName"></strong>. Request moves to HR for final approval.</p>
+                    <input type="hidden" name="TransferRequestId" id="approveReqId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Comments <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea name="Comments" class="form-control filter-input" rows="3" placeholder="Remarks for HR…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white rounded-pill px-4" style="background:#66D2CE;">Approve & Forward to HR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger"><i class="fas fa-times-circle me-2"></i>Reject Transfer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Approval" asp-action="Reject" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Rejecting for <strong id="rejectEmpName"></strong>.</p>
+                    <input type="hidden" name="TransferRequestId" id="rejectReqId" />
+                    <textarea name="Comments" class="form-control filter-input" rows="3" required placeholder="Reason required…"></textarea>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Position Modal -->
+<div class="modal fade" id="addPositionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle text-primary me-2"></i>Add Open Position</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Approval" asp-action="AddPosition" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">This position will appear in the employee transfer form as an available destination.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Location</label>
+                        <select name="LocationName" class="form-select filter-input" required>
+                            <option value="">— Select Location —</option>
+                            @foreach (var loc in Model.Locations)
+                            {
+                                <option value="@loc.Text">@loc.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Department</label>
+                        <select name="DepartmentName" class="form-select filter-input" required>
+                            <option value="">— Select Department —</option>
+                            @foreach (var dept in Model.Departments)
+                            {
+                                <option value="@dept.Text">@dept.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white rounded-pill px-4" style="background:#66D2CE;">Add Position</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('[data-bs-target="#detailModal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('d-id').textContent     = 'TR-' + String(btn.dataset.reqid).padStart(5,'0');
+            document.getElementById('d-name').textContent   = btn.dataset.name;
+            document.getElementById('d-from').textContent   = btn.dataset.from;
+            document.getElementById('d-to').textContent     = btn.dataset.to;
+            document.getElementById('d-reason').textContent = btn.dataset.reason;
+        });
+    });
+    document.querySelectorAll('[data-bs-target="#approveModal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('approveReqId').value       = btn.dataset.reqid;
+            document.getElementById('approveEmpName').textContent = btn.dataset.name;
+        });
+    });
+    document.querySelectorAll('[data-bs-target="#rejectModal"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('rejectReqId').value       = btn.dataset.reqid;
+            document.getElementById('rejectEmpName').textContent = btn.dataset.name;
+        });
+    });
+</script>
+}

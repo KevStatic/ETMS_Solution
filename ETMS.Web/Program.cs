@@ -13,6 +13,10 @@ try
     builder.Services.AddSingleton<DapperContext>();
     builder.Services.AddMemoryCache();
 
+    // ── Repository Layer ───────────────────────────────────────────────────
+    builder.Services.AddScoped<IApprovalDashboardRepository, ApprovalDashboardRepository>();
+    builder.Services.AddScoped<IApprovalService, ApprovalService>();
+
     // ── Infrastructure Layer ──────────────────────────────────────────────────
     builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
     builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();

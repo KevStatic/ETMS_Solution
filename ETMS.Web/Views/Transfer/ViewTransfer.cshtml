@@ -1,0 +1,157 @@
+﻿@model ETMS.Domain.Entities.TransferRequest
+@{
+    ViewData["Title"] = "Transfer Request Details";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<div class="container-fluid mt-4 mb-5" style="max-width:800px;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="fas fa-file-alt text-primary me-2"></i>
+                Transfer Request — TR-@Model.TransferRequestId.ToString("D5")
+            </h3>
+            <p class="text-muted mb-0">Read-only view of your submitted transfer request.</p>
+        </div>
+        <a asp-controller="Dashboard" asp-action="Index"
+               class="btn btn-light border rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="alert border-0 mb-4 d-flex align-items-center gap-3"
+         style="border-radius:12px;
+        background:@(Model.Status == "Approved" ? "#e8f5e9" :
+                                              Model.Status == "Rejected" ? "#ffebee" : "#fff8e1");">
+        <i class="fas @(Model.Status == "Approved" ? "fa-check-circle text-success" :
+                                           Model.Status == "Rejected" ? "fa-times-circle text-danger" :
+                                                                         "fa-hourglass-half text-warning") fa-lg"></i>
+        <div>
+            <div class="fw-bold">@Model.Status</div>
+            <div class="small text-muted">
+                @(Model.Status == "Approved" ? "Your transfer has been fully approved." :
+                  Model.Status == "Rejected" ? "Your transfer request was rejected." :
+                  Model.Status == "ManagerApproved" ? "Approved by Manager — awaiting HOD review." :
+                  Model.Status == "HODApproved" ? "Approved by HOD — awaiting HR final approval." :
+                                                      "Awaiting Manager approval.")
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Request Details</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="text-muted small fw-semibold mb-1">Transfer Type</div>
+                    <div class="fw-medium">@Model.TransferType</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small fw-semibold mb-1">Request Date</div>
+                    <div class="fw-medium">@Model.RequestDate.ToString("dd MMM, yyyy")</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small fw-semibold mb-1">Expected Relieving Date</div>
+                    <div class="fw-medium">@(Model.ExpectedRelievingDate?.ToString("dd MMM, yyyy") ?? "—")</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted small fw-semibold mb-1">Expected Joining Date</div>
+                    <div class="fw-medium">@(Model.ExpectedJoiningDate?.ToString("dd MMM, yyyy") ?? "—")</div>
+                </div>
+                <div class="col-12">
+                    <div class="text-muted small fw-semibold mb-1">Reason</div>
+                    <div class="fw-medium">@Model.Reason</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- L&T Specific Fields -->
+    @if (!string.IsNullOrEmpty(Model.ProjectName) || !string.IsNullOrEmpty(Model.NewBU))
+    {
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Additional Details</h5>
+                <div class="row g-3">
+                    @if (!string.IsNullOrEmpty(Model.LetterType))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">Letter Type</div>
+                            <div class="fw-medium">@Model.LetterType</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.WithinCity))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">Within City</div>
+                            <div class="fw-medium">@Model.WithinCity</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.RelocationStatus))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">Relocation Status</div>
+                            <div class="fw-medium">@Model.RelocationStatus</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ProjectName))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">Project Name</div>
+                            <div class="fw-medium">@Model.ProjectName</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.NewVertical))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">New Vertical</div>
+                            <div class="fw-medium">@Model.NewVertical</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.NewBU))
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">New BU</div>
+                            <div class="fw-medium">@Model.NewBU</div>
+                        </div>
+                    }
+                    @if (Model.StartDate.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">Start Date</div>
+                            <div class="fw-medium">@Model.StartDate.Value.ToString("dd MMM, yyyy")</div>
+                        </div>
+                    }
+                    @if (Model.EndDate.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="text-muted small fw-semibold mb-1">End Date</div>
+                            <div class="fw-medium">@Model.EndDate.Value.ToString("dd MMM, yyyy")</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Remarks))
+                    {
+                        <div class="col-12">
+                            <div class="text-muted small fw-semibold mb-1">Remarks</div>
+                            <div class="fw-medium">@Model.Remarks</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Back Button -->
+    <div class="text-center">
+        <a asp-controller="Dashboard" asp-action="Index"
+               class="btn text-white px-5 py-2 fw-semibold"
+               style="background:#66D2CE;border-radius:10px;">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+</div>

@@ -20,5 +20,6 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
         Task<int> AddAsync(TransferRequest request);
         Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId);
+        Task DeleteAsync(int id);
     }
 }

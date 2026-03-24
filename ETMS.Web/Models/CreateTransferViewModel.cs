@@ -65,6 +65,15 @@ namespace ETMS.Web.Models
         public string NewVertical { get; set; } = string.Empty;
         [Required]
         public int ToDepartmentId { get; set; }
+
+        [Required(ErrorMessage = "Please enter expected relieving date")]
+        [DataType(DataType.Date)]
+        public DateTime? ExpectedRelievingDate { get; set; }
+
+        [Required(ErrorMessage = "Please enter expected joining date")]
+        [DataType(DataType.Date)]
+        public DateTime? ExpectedJoiningDate { get; set; }
+
         [Required]
         public string NewBU { get; set; } = string.Empty;
 
