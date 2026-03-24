@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="~/ETMS.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Home.css" />
     <link rel="stylesheet" href="~/css/content-scroll.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chatbot.css" />
     <style>
         .dropdown-toggle-no-caret::after {
             display: none !important;
@@ -173,5 +174,40 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <!-- ── ETMS Chatbot ── -->
+    <div id="chat-bubble" onclick="toggleChat()">
+        <span>💬</span>
+        <div class="chat-unread" id="chat-unread">1</div>
+    </div>
+
+    <div id="chat-window">
+        <div id="chat-header">
+            <div class="chat-header-left">
+                <div class="chat-avatar">🤖</div>
+                <div>
+                    <div class="chat-bot-name">ETMS Assistant</div>
+                    <div class="chat-status">
+                        <div class="chat-dot"></div>
+                        <span>Online · Always here to help</span>
+                    </div>
+                </div>
+            </div>
+            <button id="chat-close-btn" onclick="toggleChat()">✕</button>
+        </div>
+
+        <div id="chat-messages">
+            <div class="msg bot">
+                👋 Hi! I'm your <b>ETMS Assistant</b>.<br>
+                Ask me anything about transfers, profile, or the system!
+            </div>
+        </div>
+
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask me anything..." />
+            <button id="chat-send-btn" onclick="chatHandleSend()">➤</button>
+        </div>
+    </div>
+
+    <script src="~/js/chatbot.js"></script>
 </body>
 </html>

@@ -100,25 +100,32 @@ namespace ETMS.Infrastructure.Repositories
                 sql, new { UserAccountId = userAccountId });
         }
 
+        
         public async Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto)
         {
             const string sql = @"
-                UPDATE e SET
-                    e.Grade      = @Grade,
-                    e.SBU        = @SBU,
-                    e.CostCenter = @CostCenter,
-                    e.Company    = @Company
-                FROM Employee e
-                INNER JOIN UserAccounts ua ON ua.EmployeeId = e.EmployeeId
-                WHERE ua.UserAccountId = @UserAccountId";
+        UPDATE e SET
+            e.FirstName  = @FirstName,
+            e.LastName   = @LastName,
+            e.Grade      = @Grade,
+            e.SBU        = @SBU,
+            e.CostCenter = @CostCenter,
+            e.Company    = @Company,
+            e.HRBP       = @HRBP
+        FROM Employee e
+        INNER JOIN UserAccounts ua ON ua.EmployeeId = e.EmployeeId
+        WHERE ua.UserAccountId = @UserAccountId";
 
             using var connection = _context.CreateConnection();
             var rows = await connection.ExecuteAsync(sql, new
             {
+                dto.FirstName,
+                dto.LastName,
                 dto.Grade,
                 dto.SBU,
                 dto.CostCenter,
                 dto.Company,
+                dto.HRBP,
                 UserAccountId = userAccountId
             });
             return rows > 0;
