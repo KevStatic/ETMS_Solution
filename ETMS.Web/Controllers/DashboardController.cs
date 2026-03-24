@@ -98,9 +98,20 @@ namespace ETMS.Web.Controllers
             });
 
             // filter by tab
-            var filtered = filterType == "Active"
-                ? items.Where(r => r.Status != "Rejected" && r.Status != "Cancelled")
-                : items;
+            var filtered = filterType switch
+            {
+                "Active" => items.Where(r =>
+                    r.Status == "Pending" ||
+                    r.Status == "ManagerApproved" ||
+                    r.Status == "HODApproved"),
+                "All" => items.Where(r =>
+                    r.Status != "Rejected" &&
+                    r.Status != "Cancelled"),
+                _ => items.Where(r =>
+                    r.Status == "Pending" ||
+                    r.Status == "ManagerApproved" ||
+                    r.Status == "HODApproved")
+            };
 
             // search
             if (!string.IsNullOrWhiteSpace(searchTerm))
