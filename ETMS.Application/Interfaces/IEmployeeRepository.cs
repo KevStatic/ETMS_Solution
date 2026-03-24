@@ -8,7 +8,9 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<Employee>> GetAllEmployeesAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task<Employee?> GetEmployeeByCodeAsync(string employeeCode);
-        Task GetByIdAsync(int currentEmployeeId);
+
+        // ? FIXED: was Task (void), now Task<Employee?>
+        Task<Employee?> GetByIdAsync(int currentEmployeeId);
 
         // Profile methods
         Task<EmployeeProfileDto?> GetProfileByUserAccountIdAsync(int userAccountId);
