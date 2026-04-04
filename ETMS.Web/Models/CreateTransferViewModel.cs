@@ -105,5 +105,6 @@ namespace ETMS.Web.Models
     {
         public string LocationName { get; set; } = string.Empty;
         public string DepartmentName { get; set; } = string.Empty;
+        public int OpenSlotCount { get; set; }
     }
 }

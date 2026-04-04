@@ -277,10 +277,15 @@ namespace ETMS.Web.Controllers
                 model.Departments = departments.Select(d => new SelectListItem { Value = d.DepartmentId.ToString(), Text = d.DepartmentName });
                 model.RequesterRoleLabel = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
                 model.SuggestedOpenPositions = (await _approvalRepo.GetAllOpenPositionsAsync())
-                    .Select(p => new OpenPositionSuggestionItem
+                    .GroupBy(p => new { p.LocationName, p.DepartmentName })
+                    .OrderByDescending(g => g.Count())
+                    .ThenBy(g => g.Key.LocationName)
+                    .ThenBy(g => g.Key.DepartmentName)
+                    .Select(g => new OpenPositionSuggestionItem
                     {
-                        LocationName = p.LocationName,
-                        DepartmentName = p.DepartmentName
+                        LocationName = g.Key.LocationName,
+                        DepartmentName = g.Key.DepartmentName,
+                        OpenSlotCount = g.Count()
                     })
                     .ToList();
             }
