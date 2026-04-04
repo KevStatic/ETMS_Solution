@@ -13,6 +13,7 @@ namespace ETMS.Web.Models
 
         public IEnumerable<PendingApprovalDto> PendingApprovals { get; set; } = [];
         public IEnumerable<ActionedRequestDto> RecentlyActioned { get; set; } = [];
+        public IEnumerable<DashboardRequestItem> MyRequests { get; set; } = [];
 
         // For filter dropdowns (reuse existing SelectListItem pattern)
         public IEnumerable<SelectListItem> Locations { get; set; } = [];
@@ -29,6 +30,7 @@ namespace ETMS.Web.Models
 
         public IEnumerable<PendingApprovalDto> PendingApprovals { get; set; } = [];
         public IEnumerable<ActionedRequestDto> RecentlyActioned { get; set; } = [];
+        public IEnumerable<DashboardRequestItem> MyRequests { get; set; } = [];
         public IEnumerable<OpenPositionDto> AllOpenPositions { get; set; } = [];
 
         public IEnumerable<SelectListItem> Locations { get; set; } = [];

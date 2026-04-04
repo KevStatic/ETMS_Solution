@@ -39,17 +39,32 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(string? copyFrom = null)
         {
             var model = new CreateTransferViewModel();
 
             var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
 
             if (int.TryParse(employeeIdClaim, out int employeeId))
             {
-                // This calls our new helper method below to load all the left-panel data and dropdowns
                 await PopulateEmployeeDisplayDataAsync(model, employeeId);
+
+                if (!string.IsNullOrWhiteSpace(copyFrom))
+                {
+                    var sourceRequestId = _enc.Decrypt(copyFrom);
+                    if (sourceRequestId != -1)
+                    {
+                        var sourceRequest = await _transferRepo.GetByIdAsync(sourceRequestId);
+                        if (sourceRequest != null && sourceRequest.EmployeeId == employeeId)
+                        {
+                            ApplyExistingRequestToModel(model, sourceRequest);
+                        }
+                    }
+                }
             }
+
+            model.RequesterRoleLabel = role;
 
             return View(model);
         }
@@ -183,6 +198,8 @@ namespace ETMS.Web.Controllers
             ViewBag.FromDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.FromDepartmentId)?.DepartmentName ?? "—";
             ViewBag.ToDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.ToDepartmentId)?.DepartmentName ?? "—";
             ViewBag.UserRole = roleClaim;
+            ViewBag.CanResubmit = request.EmployeeId == currentEmpId && (request.Status == "Rejected" || request.Status == "Cancelled");
+            ViewBag.CanDownloadLetter = request.Status == "Approved";
 
             // Fetch approval trail
             ViewBag.ApprovalTrail = await _approvalRepo.GetApprovalTrailAsync(realId);
@@ -258,7 +275,38 @@ namespace ETMS.Web.Controllers
                 model.RawLocations = locations;
                 model.Locations = locations.Select(l => new SelectListItem { Value = l.LocationId.ToString(), Text = l.City });
                 model.Departments = departments.Select(d => new SelectListItem { Value = d.DepartmentId.ToString(), Text = d.DepartmentName });
+                model.RequesterRoleLabel = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
+                model.SuggestedOpenPositions = (await _approvalRepo.GetAllOpenPositionsAsync())
+                    .Select(p => new OpenPositionSuggestionItem
+                    {
+                        LocationName = p.LocationName,
+                        DepartmentName = p.DepartmentName
+                    })
+                    .ToList();
             }
+        }
+
+        private static void ApplyExistingRequestToModel(CreateTransferViewModel model, TransferRequest request)
+        {
+            model.ToLocationId = request.ToLocationId;
+            model.ToDepartmentId = request.ToDepartmentId;
+            model.ExpectedRelievingDate = request.ExpectedRelievingDate;
+            model.ExpectedJoiningDate = request.ExpectedJoiningDate;
+            model.TransferType = request.LetterType ?? request.TransferType;
+            model.TransferTypeAuto = request.TransferType;
+            model.WithinCity = string.IsNullOrWhiteSpace(request.WithinCity) ? model.WithinCity : request.WithinCity;
+            model.RelocationStatus = string.IsNullOrWhiteSpace(request.RelocationStatus) ? model.RelocationStatus : request.RelocationStatus;
+            model.StartDate = request.StartDate;
+            model.EndDate = request.EndDate;
+            model.ProjectName = request.ProjectName ?? string.Empty;
+            model.NewVertical = request.NewVertical ?? string.Empty;
+            model.NewBU = request.NewBU ?? string.Empty;
+            model.NewISPsno = request.NewISPsno ?? string.Empty;
+            model.NewISName = request.NewISName ?? string.Empty;
+            model.NewISEmail = request.NewISEmail ?? string.Empty;
+            model.ICHead = request.ICHead ?? string.Empty;
+            model.Remarks = request.Remarks ?? request.Reason;
+            model.PrefilledFromRequestId = request.TransferRequestId;
         }
     }
 }

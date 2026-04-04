@@ -54,6 +54,30 @@ namespace ETMS.Web.Controllers
                 new SelectListItem(d.DepartmentName, d.DepartmentId.ToString())).ToList();
         }
 
+        private static List<DashboardRequestItem> MapDashboardRequests(IEnumerable<ETMS.Application.DTOs.Transfer.TransferRequestListItemDto> requests)
+        {
+            return requests.Select(r => new DashboardRequestItem
+            {
+                TransferRequestId = r.TransferRequestId,
+                FromLocation = r.FromLocation,
+                FromDepartment = r.FromDepartment,
+                TargetLocation = r.ToLocation,
+                TargetDepartment = r.ToDepartment,
+                RequestDate = r.RequestDate,
+                Status = r.Status,
+                TransferType = r.TransferType
+            }).ToList();
+        }
+
+        private async Task<List<DashboardRequestItem>> GetMyRequestsAsync(int employeeId, int take = 5)
+        {
+            var requests = await _transferRepo.GetByEmployeeIdAsync(employeeId);
+            return MapDashboardRequests(requests)
+                .OrderByDescending(r => r.RequestDate)
+                .Take(take)
+                .ToList();
+        }
+
         // ═════════════════════════════════════════════════════════════════
         // INDEX — single entry point, routes by role
         // ═════════════════════════════════════════════════════════════════
@@ -88,14 +112,7 @@ namespace ETMS.Web.Controllers
             var metrics = await _transferRepo.GetDashboardMetricsAsync(employeeId);
             var all = await _transferRepo.GetByEmployeeIdAsync(employeeId);
 
-            var items = all.Select(r => new DashboardRequestItem
-            {
-                TransferRequestId = r.TransferRequestId,
-                TargetLocation = r.ToLocation,
-                TargetDepartment = r.ToDepartment,
-                RequestDate = r.RequestDate,
-                Status = r.Status
-            });
+            var items = MapDashboardRequests(all);
 
             // filter by tab
             var filtered = filterType switch
@@ -186,6 +203,7 @@ namespace ETMS.Web.Controllers
                 Metrics = await _approvalRepo.GetManagerMetricsAsync(managerId),
                 PendingApprovals = await _approvalRepo.GetPendingForManagerAsync(managerId),
                 RecentlyActioned = await _approvalRepo.GetActionedByManagerAsync(managerId),
+                MyRequests = await GetMyRequestsAsync(managerId),
                 Locations = await GetLocationItemsAsync(),
                 Departments = await GetDeptItemsAsync()
             };
@@ -210,6 +228,7 @@ namespace ETMS.Web.Controllers
                 Metrics = await _approvalRepo.GetHODMetricsAsync(hodEmployeeId),
                 PendingApprovals = await _approvalRepo.GetPendingForHODAsync(hodEmployeeId),
                 RecentlyActioned = await _approvalRepo.GetActionedByHODAsync(hodEmployeeId),
+                MyRequests = await GetMyRequestsAsync(hodEmployeeId),
                 AllOpenPositions = await _approvalRepo.GetAllOpenPositionsAsync(),
                 Locations = await GetLocationItemsAsync(),
                 Departments = await GetDeptItemsAsync()

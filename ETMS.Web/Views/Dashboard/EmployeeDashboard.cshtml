@@ -727,6 +727,15 @@
                                             <i class="far fa-eye text-secondary"></i>
                                         </a>
 
+                                        @if (req.Status == "Rejected" || req.Status == "Cancelled")
+                                        {
+                                            <a asp-controller="Transfer" asp-action="Create"
+                                               asp-route-copyFrom="@Enc.Encrypt(req.TransferRequestId)"
+                                               class="btn btn-light btn-sm mx-1 rounded-circle" title="Create similar request">
+                                                <i class="fas fa-copy text-primary"></i>
+                                            </a>
+                                        }
+
                                         @if (req.Status == "Pending")
                                         {
                                             <form asp-controller="Transfer" asp-action="Delete"

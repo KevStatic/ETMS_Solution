@@ -1,8 +1,27 @@
 ﻿@model ETMS.Domain.Entities.TransferRequest
 @using ETMS.Application.DTOs.Approval
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 @{
     ViewData["Title"] = "Transfer Request Details";
     var trail = ViewBag.ApprovalTrail as IEnumerable<ApprovalTrailDto> ?? [];
+    var stages = new[]
+    {
+        ("Submitted", "Employee has created the request."),
+        ("Manager Review", "Waiting for reporting manager approval."),
+        ("HOD Review", "Waiting for department head approval."),
+        ("HR Finalisation", "Waiting for HR to approve and issue the letter."),
+        ("Letter Ready", "Transfer is fully approved.")
+    };
+    var currentStage = Model.Status switch
+    {
+        "Pending" => 1,
+        "ManagerApproved" => 2,
+        "HODApproved" => 3,
+        "Approved" => 4,
+        _ => 0
+    };
+    var canResubmit = ViewBag.CanResubmit is true;
+    var canDownloadLetter = ViewBag.CanDownloadLetter is true;
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -18,10 +37,26 @@
             </h3>
             <p class="text-muted mb-0">Read-only view of this transfer request.</p>
         </div>
-        <a asp-controller="Dashboard" asp-action="Index"
+        <div class="d-flex gap-2 flex-wrap">
+            @if (canResubmit)
+            {
+                <a asp-controller="Transfer" asp-action="Create" asp-route-copyFrom="@Enc.Encrypt(Model.TransferRequestId)"
+                   class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-rotate-right me-2"></i> Resubmit With Details
+                </a>
+            }
+            @if (canDownloadLetter)
+            {
+                <a asp-controller="Approval" asp-action="DownloadLetter" asp-route-id="@Enc.Encrypt(Model.TransferRequestId)"
+                   class="btn btn-danger rounded-pill px-4">
+                    <i class="fas fa-file-pdf me-2"></i> Download Letter
+                </a>
+            }
+            <a asp-controller="Dashboard" asp-action="Index"
                class="btn btn-light border rounded-pill px-4">
-            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-        </a>
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Status Banner -->
@@ -52,6 +87,36 @@
                     "HODApproved" => "Approved by HOD — awaiting HR final approval.",
                     _ => "Awaiting Manager approval."
                 })
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-route text-primary me-2"></i>Request Progress</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                    Stage @(Math.Min(currentStage + 1, stages.Length)) of @stages.Length
+                </span>
+            </div>
+            <div class="row g-3">
+                @for (var i = 0; i < stages.Length; i++)
+                {
+                    var isComplete = i < currentStage;
+                    var isCurrent = i == currentStage;
+                    var bg = isComplete ? "#e8f5e9" : isCurrent ? "#eef2ff" : "#f8fafc";
+                    var border = isComplete ? "#22c55e" : isCurrent ? "#4F7EFF" : "#e9ecef";
+                    var icon = isComplete ? "fa-check" : isCurrent ? "fa-circle-dot" : "fa-circle";
+                    <div class="col-lg-4 col-md-6">
+                        <div class="h-100 p-3 rounded" style="background:@bg;border:1px solid @border;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="fas @icon" style="color:@(isComplete ? "#16a34a" : isCurrent ? "#4F7EFF" : "#9ca3af");"></i>
+                                <span class="fw-bold text-dark">@stages[i].Item1</span>
+                            </div>
+                            <div class="text-muted small">@stages[i].Item2</div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>

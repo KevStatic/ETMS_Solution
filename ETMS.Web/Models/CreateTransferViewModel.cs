@@ -94,5 +94,16 @@ namespace ETMS.Web.Models
 
         // Transfer Type
         public string TransferType { get; set; } = "Permanent"; // Usually read-only/auto-selected
+
+        // UX helpers
+        public string RequesterRoleLabel { get; set; } = "Employee";
+        public int? PrefilledFromRequestId { get; set; }
+        public IEnumerable<OpenPositionSuggestionItem> SuggestedOpenPositions { get; set; } = [];
+    }
+
+    public class OpenPositionSuggestionItem
+    {
+        public string LocationName { get; set; } = string.Empty;
+        public string DepartmentName { get; set; } = string.Empty;
     }
 }
