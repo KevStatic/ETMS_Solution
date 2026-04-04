@@ -1,5 +1,5 @@
 using ETMS.Domain.Entities;
-using ETMS.Application.DTOs;
+using ETMS.Application.DTOs.Dashboard;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +20,6 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<TransferRequest>> GetAllPendingAsync();
         Task<int> AddAsync(TransferRequest request);
         Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId);
-        Task DeleteAsync(int id);
+        Task CancelAsync(int id, int employeeId, CancellationToken cancellationToken = default);
     }
 }

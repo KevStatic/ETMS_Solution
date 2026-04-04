@@ -25,5 +25,7 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<OpenPositionDto>> GetAllOpenPositionsAsync();
         Task AddOpenPositionAsync(string locationName, string departmentName);
         Task RemoveOpenPositionAsync(int positionId);
+
+        Task<IEnumerable<ApprovalTrailDto>> GetApprovalTrailAsync(int transferRequestId);
     }
 }

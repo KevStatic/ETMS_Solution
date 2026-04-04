@@ -1,10 +1,11 @@
 using Dapper;
-using ETMS.Application.DTOs;
+using ETMS.Application.DTOs.Dashboard;
 using ETMS.Application.DTOs.Transfer;
 using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -241,39 +242,49 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
 
         public async Task<DashboardMetrics> GetDashboardMetricsAsync(int employeeId)
         {
-            var metricsSql = @"
-                SELECT 
-                    COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS ActiveRequests,
-                    COUNT(CASE WHEN Status = 'Pending' THEN 1 END) AS PendingApprovals,
-                    COUNT(CASE WHEN Status = 'Rejected' THEN 1 END) AS Rejected,
-                    ISNULL(AVG(CASE WHEN ta.ActionDate IS NOT NULL 
-                        THEN DATEDIFF(day, tr.RequestDate, ta.ActionDate) 
-                        ELSE NULL END), 0) AS AvgApprovalDays,
-            
-                    -- Now reads from the REAL Open Positions table
-                    (SELECT COUNT(*) FROM OpenPositions) AS TotalOpenPositions
+            const string sql = @"
+                SELECT
+                    COUNT(CASE WHEN tr.Status IN ('Pending', 'ManagerApproved', 'HODApproved') THEN 1 END) AS ActiveRequests,
+                    COUNT(CASE WHEN tr.Status IN ('Pending', 'ManagerApproved', 'HODApproved') THEN 1 END) AS PendingApprovals,
+                    COUNT(CASE WHEN tr.Status = 'Rejected' THEN 1 END) AS Rejected
                 FROM TransferRequests tr
-                LEFT JOIN TransferApprovals ta ON tr.TransferRequestId = ta.TransferRequestId
                 WHERE tr.EmployeeId = @EmployeeId AND tr.IsActive = 1;
-            ";
 
-            // Now reads exactly what HR puts into the database
-            var locationsSql = @"
+                SELECT
+                    AVG(CAST(DATEDIFF(day, tr.RequestDate, latest.ActionDate) AS FLOAT)) AS AvgApprovalDays
+                FROM TransferRequests tr
+                CROSS APPLY
+                (
+                    SELECT MAX(ta.ActionDate) AS ActionDate
+                    FROM TransferApprovals ta
+                    WHERE ta.TransferRequestId = tr.TransferRequestId
+                      AND ta.ActionDate IS NOT NULL
+                ) latest
+                WHERE tr.EmployeeId = @EmployeeId
+                  AND tr.IsActive = 1
+                  AND latest.ActionDate IS NOT NULL;
+
+                SELECT COUNT(*) AS TotalOpenPositions
+                FROM OpenPositions;
+
                 SELECT TOP 4 LocationName AS [Key], COUNT(*) AS [Value]
                 FROM OpenPositions
                 GROUP BY LocationName
-                ORDER BY [Value] DESC;
-            ";
+                ORDER BY [Value] DESC, LocationName ASC;";
 
             using var connection = _context.CreateConnection();
+            using var multi = await connection.QueryMultipleAsync(sql, new { EmployeeId = employeeId });
 
-            var metrics = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(metricsSql, new { EmployeeId = employeeId })
-                          ?? new DashboardMetrics();
+            var counts = await multi.ReadFirstOrDefaultAsync<DashboardMetrics>() ?? new DashboardMetrics();
+            var avgApprovalDays = await multi.ReadFirstOrDefaultAsync<double?>();
+            var totalOpenPositions = await multi.ReadFirstOrDefaultAsync<int>();
+            var positionsList = await multi.ReadAsync<KeyValuePair<string, int>>();
 
-            var positionsList = await connection.QueryAsync<KeyValuePair<string, int>>(locationsSql);
-            metrics.OpenPositionsByLocation = positionsList.AsList();
+            counts.AvgApprovalDays = avgApprovalDays ?? 0;
+            counts.TotalOpenPositions = totalOpenPositions;
+            counts.OpenPositionsByLocation = positionsList.ToDictionary(x => x.Key, x => x.Value);
 
-            return metrics;
+            return counts;
         }
         public async Task<TransferRequest?> GetByIdAsync(int id)
         {
@@ -282,12 +293,21 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
             using var connection = _context.CreateConnection();
             return await connection.QueryFirstOrDefaultAsync<TransferRequest>(query, new { Id = id });
         }
-        public async Task DeleteAsync(int id)
+        public async Task CancelAsync(int id, int employeeId, CancellationToken cancellationToken = default)
         {
-            var query = "DELETE FROM TransferRequests WHERE TransferRequestId = @Id";
+            const string query = @"
+UPDATE TransferRequests
+SET Status = 'Cancelled',
+    IsActive = 0
+WHERE TransferRequestId = @Id
+  AND EmployeeId = @EmployeeId
+  AND Status = 'Pending';";
 
             using var connection = _context.CreateConnection();
-            await connection.ExecuteAsync(query, new { Id = id });
+            await connection.ExecuteAsync(new CommandDefinition(
+                query,
+                new { Id = id, EmployeeId = employeeId },
+                cancellationToken: cancellationToken));
         }
 
     }

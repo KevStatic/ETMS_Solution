@@ -19,28 +19,28 @@ namespace ETMS.Infrastructure.Repositories
         {
             using var conn = _ctx.CreateConnection();
 
-            // Pending = requests from manager's direct reports awaiting Stage-1
             const string sql = @"
                 SELECT
-                    COUNT(CASE WHEN ta.ApprovalStatus = 'Pending'  AND ta.ApproverRole = 'Manager'
-                               AND e.ReportingManagerId = @ManagerId THEN 1 END) AS PendingApprovals,
-                    COUNT(CASE WHEN ta.ApprovalStatus = 'Approved' AND ta.ApproverRole = 'Manager'
-                               AND ta.ApproverId = @ManagerId THEN 1 END)        AS ActiveRequests,
-                    COUNT(CASE WHEN ta.ApprovalStatus = 'Rejected' AND ta.ApproverRole = 'Manager'
-                               AND ta.ApproverId = @ManagerId THEN 1 END)        AS Rejected
-                FROM TransferApprovals ta
-                INNER JOIN TransferRequests tr ON tr.TransferRequestId = ta.TransferRequestId
-                INNER JOIN Employee e          ON e.EmployeeId = tr.EmployeeId;
+                    COUNT(CASE WHEN e.ReportingManagerId = @ManagerId
+                                   AND tr.Status = 'Pending' THEN 1 END) AS PendingApprovals,
+                    COUNT(CASE WHEN ta.ApproverId = @ManagerId
+                                   AND ta.ApproverRole = 'Manager'
+                                   AND ta.ApprovalStatus = 'Approved' THEN 1 END) AS ActiveRequests,
+                    COUNT(CASE WHEN ta.ApproverId = @ManagerId
+                                   AND ta.ApproverRole = 'Manager'
+                                   AND ta.ApprovalStatus = 'Rejected' THEN 1 END) AS Rejected
+                FROM TransferRequests tr
+                INNER JOIN Employee e ON e.EmployeeId = tr.EmployeeId
+                LEFT JOIN TransferApprovals ta ON ta.TransferRequestId = tr.TransferRequestId;
 
                 SELECT AVG(CAST(DATEDIFF(day, tr.RequestDate, ta.ActionDate) AS FLOAT)) AS AvgDays
                 FROM TransferApprovals ta
                 INNER JOIN TransferRequests tr ON tr.TransferRequestId = ta.TransferRequestId
                 WHERE ta.ApproverId = @ManagerId AND ta.ApprovalStatus = 'Approved';
 
-                SELECT l.LocationName, COUNT(*) AS Cnt
+                SELECT op.LocationName, COUNT(*) AS Cnt
                 FROM OpenPositions op
-                INNER JOIN Locations l ON l.LocationName = op.LocationName
-                GROUP BY l.LocationName;
+                GROUP BY op.LocationName;
 
                 SELECT COUNT(*) FROM OpenPositions;";
 
@@ -318,6 +318,8 @@ namespace ETMS.Infrastructure.Repositories
             {
                 "date_asc" => "tr.RequestDate ASC",
                 "name" => "e.FirstName ASC",
+                "status" => "tr.Status ASC",
+                "status_desc" => "tr.Status DESC",
                 _ => "tr.RequestDate DESC"
             };
 
@@ -331,7 +333,7 @@ namespace ETMS.Infrastructure.Repositories
                     hr_ta.ActionDate                   AS ActionedOn,
                     hr_ta.Comments,
                     tr.Status                          AS FinalStatus,
-                    tr.LetterType                      AS LetterPath
+                    tr.LetterPath                      AS LetterPath
                 FROM TransferRequests tr
                 INNER JOIN Employee    e   ON e.EmployeeId    = tr.EmployeeId
                 INNER JOIN Locations   lTo ON lTo.LocationId  = tr.ToLocationId
@@ -370,6 +372,23 @@ namespace ETMS.Infrastructure.Repositories
             await conn.ExecuteAsync(
                 "DELETE FROM OpenPositions WHERE PositionId = @PositionId;",
                 new { PositionId = positionId });
+        }
+
+        public async Task<IEnumerable<ApprovalTrailDto>> GetApprovalTrailAsync(int transferRequestId)
+        {
+            using var conn = _ctx.CreateConnection();
+            return await conn.QueryAsync<ApprovalTrailDto>(@"
+        SELECT
+            ta.ApproverRole,
+            CONCAT(e.FirstName, ' ', e.LastName) AS ApproverName,
+            ta.ApprovalStatus,
+            ta.Comments,
+            ta.ActionDate
+        FROM TransferApprovals ta
+        INNER JOIN Employee e ON e.EmployeeId = ta.ApproverId
+        WHERE ta.TransferRequestId = @Id
+        ORDER BY ta.ActionDate ASC;",
+                new { Id = transferRequestId });
         }
     }
 }
