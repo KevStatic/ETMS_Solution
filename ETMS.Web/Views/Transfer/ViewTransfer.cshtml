@@ -22,6 +22,58 @@
     };
     var canResubmit = ViewBag.CanResubmit is true;
     var canDownloadLetter = ViewBag.CanDownloadLetter is true;
+    var statusHeadline = Model.Status switch
+    {
+        "Approved" => "Fully Approved",
+        "Rejected" => "Rejected",
+        "Cancelled" => "Cancelled",
+        "ManagerApproved" => "With HOD",
+        "HODApproved" => "With HR",
+        _ => "Pending Manager Approval"
+    };
+    var statusMessage = Model.Status switch
+    {
+        "Approved" => "Transfer has been fully approved. Letter has been generated.",
+        "Rejected" => "This transfer request was rejected. You can review the trail below and submit an improved request.",
+        "Cancelled" => "This transfer request was cancelled before approval was completed.",
+        "ManagerApproved" => "Approved by Manager and now waiting for HOD review.",
+        "HODApproved" => "Approved by HOD and now waiting for HR final approval.",
+        _ => "Awaiting the reporting manager's decision."
+    };
+    var bannerBackground = Model.Status switch
+    {
+        "Approved" => "#e8f5e9",
+        "Rejected" => "#ffebee",
+        "Cancelled" => "#f8fafc",
+        "ManagerApproved" or "HODApproved" => "#eef2ff",
+        _ => "#fff8e1"
+    };
+    var bannerIcon = Model.Status switch
+    {
+        "Approved" => "fa-check-circle text-success",
+        "Rejected" => "fa-times-circle text-danger",
+        "Cancelled" => "fa-ban text-secondary",
+        "ManagerApproved" or "HODApproved" => "fa-route text-primary",
+        _ => "fa-hourglass-half text-warning"
+    };
+    var nextAction = Model.Status switch
+    {
+        "Approved" => "Download the final transfer letter or return to your dashboard.",
+        "Rejected" => "Use the resubmit action to create a new request with updated details.",
+        "Cancelled" => "Create a fresh transfer request whenever you are ready.",
+        "ManagerApproved" => "Department head review is pending.",
+        "HODApproved" => "HR finalisation is pending.",
+        _ => "Manager review is pending."
+    };
+    var stageLabel = Model.Status switch
+    {
+        "Approved" => "Letter Ready",
+        "Rejected" => "Closed",
+        "Cancelled" => "Closed",
+        "ManagerApproved" => "HOD Review",
+        "HODApproved" => "HR Finalisation",
+        _ => "Manager Review"
+    };
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -61,33 +113,11 @@
 
     <!-- Status Banner -->
     <div class="alert border-0 mb-4 d-flex align-items-center gap-3"
-         style="border-radius:12px;
-        background:@(Model.Status == "Approved" ? "#e8f5e9" :
-                                              Model.Status == "Rejected" ? "#ffebee" : "#fff8e1");">
-        <i class="fas @(Model.Status == "Approved"        ? "fa-check-circle text-success" :
-                                           Model.Status == "Rejected" ? "fa-times-circle text-danger" :
-                                                                               "fa-hourglass-half text-warning") fa-lg"></i>
+         style="border-radius:12px;background:@bannerBackground;">
+        <i class="fas @bannerIcon fa-lg"></i>
         <div>
-            <div class="fw-bold">
-                @(Model.Status switch
-                {
-                    "Approved" => "Fully Approved",
-                    "Rejected" => "Rejected",
-                    "ManagerApproved" => "With HOD",
-                    "HODApproved" => "With HR",
-                    _ => "Pending Manager Approval"
-                })
-            </div>
-            <div class="small text-muted">
-                @(Model.Status switch
-                {
-                    "Approved" => "Transfer has been fully approved. Letter has been generated.",
-                    "Rejected" => "This transfer request was rejected.",
-                    "ManagerApproved" => "Approved by Manager — awaiting HOD review.",
-                    "HODApproved" => "Approved by HOD — awaiting HR final approval.",
-                    _ => "Awaiting Manager approval."
-                })
-            </div>
+            <div class="fw-bold">@statusHeadline</div>
+            <div class="small text-muted">@statusMessage</div>
         </div>
     </div>
 
@@ -117,6 +147,35 @@
                         </div>
                     </div>
                 }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Current Stage</div>
+                    <div class="fw-bold text-dark fs-5">@stageLabel</div>
+                    <div class="text-muted small mt-2">Status updates here mirror the approver workflow.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Requested On</div>
+                    <div class="fw-bold text-dark fs-5">@Model.RequestDate.ToString("dd MMM, yyyy")</div>
+                    <div class="text-muted small mt-2">Submitted into the workflow on this date.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Next Step</div>
+                    <div class="fw-bold text-dark">@nextAction</div>
+                </div>
             </div>
         </div>
     </div>
