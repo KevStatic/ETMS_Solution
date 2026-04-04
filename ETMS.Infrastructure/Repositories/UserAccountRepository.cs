@@ -47,5 +47,34 @@ namespace ETMS.Infrastructure.Repositories
             using var connection = _context.CreateConnection();
             await connection.ExecuteAsync(sql, new { HashedPassword = hashedPassword, Email = email });
         }
+
+        // ✅ New Profile Methods
+        public async Task<UserAccount?> GetByUserAccountIdAsync(int userAccountId)
+        {
+            const string sql = @"
+                SELECT UserAccountId, EmployeeId, Username, Password, Role, IsActive
+                FROM UserAccounts
+                WHERE UserAccountId = @UserAccountId AND IsActive = 1;";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<UserAccount>(
+                sql, new { UserAccountId = userAccountId });
+        }
+
+        public async Task<bool> UpdatePasswordByIdAsync(int userAccountId, string newPassword)
+        {
+            const string sql = @"
+                UPDATE UserAccounts
+                SET Password = @Password
+                WHERE UserAccountId = @UserAccountId AND IsActive = 1;";
+
+            using var connection = _context.CreateConnection();
+            var rows = await connection.ExecuteAsync(sql, new
+            {
+                Password = newPassword,
+                UserAccountId = userAccountId
+            });
+            return rows > 0;
+        }
     }
 }

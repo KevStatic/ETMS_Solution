@@ -1,0 +1,338 @@
+﻿@model ETMS.Application.DTOs.Profile.UserSettingsDto
+@{
+    ViewData["Title"] = "Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/profile.css" />
+
+<div class="profile-wrapper">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-x-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="settings-layout">
+
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <div class="settings-nav-item active" onclick="showSection('account', this)">
+                🔐 Account & Security
+            </div>
+            <div class="settings-nav-item" onclick="showSection('notifications', this)">
+                🔔 Notifications
+            </div>
+            <div class="settings-nav-item" onclick="showSection('appearance', this)">
+                🎨 Appearance
+            </div>
+            <div class="settings-nav-item" onclick="showSection('privacy', this)">
+                🛡️ Privacy
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="settings-content">
+
+            <!-- Account & Security -->
+            <div id="section-account" class="settings-section">
+                <div class="profile-card mb-4">
+                    <div class="profile-card-title">🔑 Change Password</div>
+                    <form asp-action="ChangePassword" method="post">
+                        <div class="info-row">
+                            <label>Current Password</label>
+                            <input type="password" class="form-control"
+                                   name="CurrentPassword" placeholder="••••••••" required />
+                        </div>
+                        <div class="info-row">
+                            <label>New Password</label>
+                            <input type="password" class="form-control"
+                                   name="NewPassword" placeholder="••••••••" required />
+                        </div>
+                        <div class="info-row">
+                            <label>Confirm New Password</label>
+                            <input type="password" class="form-control"
+                                   name="ConfirmNewPassword" placeholder="••••••••" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+
+                <div class="profile-card mb-4">
+                    <div class="profile-card-title">🛡️ Two-Factor Authentication</div>
+                    <form asp-action="SaveSettings" method="post">
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Enable 2FA</div>
+                                <div class="toggle-desc">Secure your account with OTP on login</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.TwoFactorEnabled)
+                                {
+                                    <input type="checkbox" name="TwoFactorEnabled" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="TwoFactorEnabled" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div id="section-notifications" class="settings-section" style="display:none;">
+                <div class="profile-card mb-4">
+                    <div class="profile-card-title">🔔 Notification Preferences</div>
+                    <form asp-action="SaveSettings" method="post">
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+                        <p class="settings-group-label">Email Notifications</p>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Leave Approvals</div>
+                                <div class="toggle-desc">Notified when leave is approved/rejected</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.EmailLeaveNotif)
+                                {
+                                    <input type="checkbox" name="EmailLeaveNotif" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="EmailLeaveNotif" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Attendance Alerts</div>
+                                <div class="toggle-desc">Daily attendance summary via email</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.EmailAttendanceNotif)
+                                {
+                                    <input type="checkbox" name="EmailAttendanceNotif" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="EmailAttendanceNotif" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Payroll Updates</div>
+                                <div class="toggle-desc">Salary slip and payroll notifications</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.EmailPayrollNotif)
+                                {
+                                    <input type="checkbox" name="EmailPayrollNotif" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="EmailPayrollNotif" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <p class="settings-group-label mt-4">Push Notifications</p>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">In-App Alerts</div>
+                                <div class="toggle-desc">Real-time alerts within ETMS</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.PushInAppAlerts)
+                                {
+                                    <input type="checkbox" name="PushInAppAlerts" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="PushInAppAlerts" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Appearance -->
+            <div id="section-appearance" class="settings-section" style="display:none;">
+                <div class="profile-card mb-4">
+                    <div class="profile-card-title">🎨 Appearance & Display</div>
+                    <form asp-action="SaveSettings" method="post">
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+                        <div class="info-row">
+                            <label>Theme</label>
+                            <div class="theme-options">
+                                <div class="theme-btn @(Model.Theme == "Light" ? "active" : "")"
+                                     onclick="setTheme('Light', this)">
+                                    ☀️ Light
+                                </div>
+                                <div class="theme-btn @(Model.Theme == "Dark" ? "active" : "")"
+                                     onclick="setTheme('Dark', this)">
+                                    🌙 Dark
+                                </div>
+                                <div class="theme-btn @(Model.Theme == "System" ? "active" : "")"
+                                     onclick="setTheme('System', this)">
+                                    💻 System
+                                </div>
+                            </div>
+                            <input type="hidden" name="Theme" id="themeInput" value="@Model.Theme" />
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <label>Language</label>
+                                    <select class="form-select" name="Language">
+                                        @foreach (var lang in new[] { "English", "Hindi", "Marathi" })
+                                        {
+                                            if (Model.Language == lang)
+                                            {
+                                                <option value="@lang" selected>@lang</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@lang">@lang</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-row">
+                                    <label>Timezone</label>
+                                    @{
+                                        var tzOptions = new[]
+                                        {
+                                                                        new { Value = "IST", Label = "IST (UTC+5:30)" },
+                                                                        new { Value = "UTC", Label = "UTC" }
+                                                                        };
+                                    }
+                                    <select class="form-select" name="Timezone">
+                                        @foreach (var tz in tzOptions)
+                                        {
+                                            if (Model.Timezone == tz.Value)
+                                            {
+                                                <option value="@tz.Value" selected>@tz.Label</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@tz.Value">@tz.Label</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Privacy -->
+            <div id="section-privacy" class="settings-section" style="display:none;">
+                <div class="profile-card mb-4">
+                    <div class="profile-card-title">🛡️ Privacy Settings</div>
+                    <form asp-action="SaveSettings" method="post">
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Profile Visibility</div>
+                                <div class="toggle-desc">Allow other employees to see your profile</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.ProfileVisible)
+                                {
+                                    <input type="checkbox" name="ProfileVisible" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="ProfileVisible" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Show Online Status</div>
+                                <div class="toggle-desc">Let others know when you're active</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.ShowOnlineStatus)
+                                {
+                                    <input type="checkbox" name="ShowOnlineStatus" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="ShowOnlineStatus" />
+                                }
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="profile-card danger-zone">
+                    <div class="profile-card-title" style="color:#ef4444;">⚠️ Danger Zone</div>
+                    <p class="text-muted" style="font-size:13px;">
+                        These actions cannot be undone. Please proceed carefully.
+                    </p>
+                    <button class="btn btn-outline-danger btn-sm">
+                        Request Account Deletion
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showSection(name, el) {
+            document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('section-' + name).style.display = 'block';
+            el.classList.add('active');
+        }
+
+        function setTheme(val, el) {
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('themeInput').value = val;
+        }
+    </script>
+}

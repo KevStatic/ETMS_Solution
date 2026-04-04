@@ -1,5 +1,4 @@
 ﻿using ETMS.Domain.Entities;
-using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
 {
@@ -7,6 +6,10 @@ namespace ETMS.Application.Interfaces
     {
         Task<UserAccount?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
         Task<bool> EmailExistsAsync(string email);
-        Task UpdatePasswordAsync(string email, string hashedPassword);  // removed channel + phone
+        Task UpdatePasswordAsync(string email, string hashedPassword);
+
+        // Profile methods
+        Task<UserAccount?> GetByUserAccountIdAsync(int userAccountId);
+        Task<bool> UpdatePasswordByIdAsync(int userAccountId, string newPassword);
     }
 }

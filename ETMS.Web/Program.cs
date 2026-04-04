@@ -28,7 +28,12 @@ try
     builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
     builder.Services.AddScoped<ITransferRequestRepository, TransferRequestRepository>();
     builder.Services.AddScoped<IOtpRepository, OtpRepository>();
-    builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+    // Repositories
+    builder.Services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+
+    // Services
+    builder.Services.AddScoped<IProfileService, ProfileService>();
+    builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
     // ── Email Service ─────────────────────────────────────────────────────────
     builder.Services.AddScoped<IEmailService>(_ =>

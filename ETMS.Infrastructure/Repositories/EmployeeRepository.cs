@@ -1,4 +1,5 @@
 using Dapper;
+using ETMS.Application.DTOs.Profile;
 using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
 using ETMS.Infrastructure.Context;
@@ -23,7 +24,6 @@ namespace ETMS.Infrastructure.Repositories
 
         public async Task<Employee?> GetEmployeeByIdAsync(int id)
         {
-            // ? Fixed: splitOn uses correct column names
             const string query = @"
                 SELECT 
                     e.*,
@@ -37,7 +37,6 @@ namespace ETMS.Infrastructure.Repositories
                 WHERE e.EmployeeId = @Id";
 
             using var connection = _context.CreateConnection();
-
             var result = await connection.QueryAsync<Employee, Department, Location, Employee, Employee>(
                 query,
                 (emp, dept, loc, manager) =>
@@ -48,9 +47,8 @@ namespace ETMS.Infrastructure.Repositories
                     return emp;
                 },
                 new { Id = id },
-                splitOn: "DepartmentId, LocationId, EmployeeId"  // ? Fixed splitOn
+                splitOn: "DepartmentId,LocationId,EmployeeId"
             );
-
             return result.FirstOrDefault();
         }
 
@@ -65,6 +63,72 @@ namespace ETMS.Infrastructure.Repositories
         public Task<Employee?> GetByIdAsync(int currentEmployeeId)
         {
             return GetEmployeeByIdAsync(currentEmployeeId);
+        }
+
+        // ? Profile Methods
+        public async Task<EmployeeProfileDto?> GetProfileByUserAccountIdAsync(int userAccountId)
+        {
+            const string sql = @"
+                SELECT
+                    e.EmployeeId,
+                    e.EmployeeCode,
+                    e.FirstName,
+                    e.LastName,
+                    e.DateOfJoining,
+                    e.EmploymentType,
+                    e.Grade,
+                    e.SBU,
+                    e.CostCenter,
+                    e.Company,
+                    e.HRBP,
+                    d.DepartmentName        AS Department,
+                    des.Title               AS Designation,
+                    b.BranchName            AS Branch,
+                    ISNULL(m.FirstName + ' ' + m.LastName, '') AS ReportingManager,
+                    ua.Username,
+                    ua.Role
+                FROM Employee e
+                LEFT JOIN Departments  d   ON e.DepartmentId       = d.DepartmentId
+                LEFT JOIN Designations des ON e.DesignationId      = des.DesignationId
+                LEFT JOIN Branches     b   ON e.BranchId           = b.BranchId
+                LEFT JOIN Employee     m   ON e.ReportingManagerId = m.EmployeeId
+                INNER JOIN UserAccounts ua ON ua.EmployeeId        = e.EmployeeId
+                WHERE ua.UserAccountId = @UserAccountId";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<EmployeeProfileDto>(
+                sql, new { UserAccountId = userAccountId });
+        }
+
+        
+        public async Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto)
+        {
+            const string sql = @"
+        UPDATE e SET
+            e.FirstName  = @FirstName,
+            e.LastName   = @LastName,
+            e.Grade      = @Grade,
+            e.SBU        = @SBU,
+            e.CostCenter = @CostCenter,
+            e.Company    = @Company,
+            e.HRBP       = @HRBP
+        FROM Employee e
+        INNER JOIN UserAccounts ua ON ua.EmployeeId = e.EmployeeId
+        WHERE ua.UserAccountId = @UserAccountId";
+
+            using var connection = _context.CreateConnection();
+            var rows = await connection.ExecuteAsync(sql, new
+            {
+                dto.FirstName,
+                dto.LastName,
+                dto.Grade,
+                dto.SBU,
+                dto.CostCenter,
+                dto.Company,
+                dto.HRBP,
+                UserAccountId = userAccountId
+            });
+            return rows > 0;
         }
     }
 }

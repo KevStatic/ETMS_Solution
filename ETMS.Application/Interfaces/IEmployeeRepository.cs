@@ -1,6 +1,5 @@
+using ETMS.Application.DTOs.Profile;
 using ETMS.Domain.Entities;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ETMS.Application.Interfaces
 {
@@ -9,6 +8,12 @@ namespace ETMS.Application.Interfaces
         Task<IEnumerable<Employee>> GetAllEmployeesAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task<Employee?> GetEmployeeByCodeAsync(string employeeCode);
-        Task<Employee?> GetByIdAsync(int id);
+
+        // ? FIXED: was Task (void), now Task<Employee?>
+        Task<Employee?> GetByIdAsync(int currentEmployeeId);
+
+        // Profile methods
+        Task<EmployeeProfileDto?> GetProfileByUserAccountIdAsync(int userAccountId);
+        Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto);
     }
 }
