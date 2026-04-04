@@ -4,6 +4,8 @@
 }
 @inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
 <style>
@@ -72,7 +74,7 @@
 
     <!-- Metrics -->
     <div class="row g-3 mb-4">
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#e8f5e9;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
@@ -81,7 +83,7 @@
                 <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#fff8e1;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
@@ -90,7 +92,7 @@
                 <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#ffebee;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
@@ -99,7 +101,7 @@
                 <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
@@ -108,7 +110,7 @@
                 <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size:1rem;" class="text-muted fw-normal">days</span></h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-12">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white" style="border:1px solid #e9ecef;">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="d-flex align-items-center">
@@ -190,17 +192,11 @@
                                     </td>
                                     <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-light btn-sm mx-1 rounded-circle"
-                                                data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                data-reqid="@req.TransferRequestId"
-                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
-                                                data-name="@req.EmployeeName"
-                                                data-from="@req.FromLocation / @req.FromDepartment"
-                                                data-to="@req.TargetLocation / @req.TargetDepartment"
-                                                data-reason="@req.Reason"
-                                                title="View details">
+                                        <a asp-controller="Transfer" asp-action="View"
+                                           asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
+                                           class="btn btn-light btn-sm mx-1 rounded-circle" title="View details">
                                             <i class="far fa-eye text-secondary"></i>
-                                        </button>
+                                        </a>
                                         <button class="btn btn-sm rounded-circle mx-1"
                                                 style="background:#e8f5e9;"
                                                 data-bs-toggle="modal" data-bs-target="#approveModal"

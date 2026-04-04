@@ -20,19 +20,22 @@ namespace ETMS.Web.Controllers
         private readonly IDepartmentRepository _deptRepo;
         private readonly IEmployeeRepository _employeeRepo;
         private readonly IUrlEncryptionService _enc;
+        private readonly IApprovalDashboardRepository _approvalRepo;
 
         public TransferController(
             ITransferRequestRepository transferRepo,
             ILocationRepository locationRepo,
             IDepartmentRepository deptRepo,
             IEmployeeRepository employeeRepo,
-            IUrlEncryptionService enc)
+            IUrlEncryptionService enc,
+            IApprovalDashboardRepository approvalRepo)
         {
             _transferRepo = transferRepo;
             _locationRepo = locationRepo;
             _deptRepo = deptRepo;
             _employeeRepo = employeeRepo;
             _enc = enc;
+            _approvalRepo = approvalRepo;
         }
 
         [HttpGet]
@@ -146,12 +149,43 @@ namespace ETMS.Web.Controllers
             var realId = _enc.Decrypt(id);
             if (realId == -1) return BadRequest("Invalid or tampered request.");
 
-            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int.TryParse(employeeIdClaim, out int empId);
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
+            int.TryParse(idClaim, out int currentEmpId);
 
             var request = await _transferRepo.GetByIdAsync(realId);
-            if (request == null || request.EmployeeId != empId)
-                return NotFound("Request not found or access denied.");
+            if (request == null) return NotFound("Request not found.");
+
+            // Access control per role
+            if (roleClaim == "Employee")
+            {
+                // Employee can only see their own
+                if (request.EmployeeId != currentEmpId)
+                    return NotFound("Request not found or access denied.");
+            }
+            else if (roleClaim == "Manager")
+            {
+                // Manager can only see direct reports' requests
+                var employee = await _employeeRepo.GetEmployeeByIdAsync(request.EmployeeId);
+                if (employee == null || employee.ReportingManagerId != currentEmpId)
+                    return NotFound("Request not found or access denied.");
+            }
+            // HOD and HR can see all requests — no extra check needed
+
+            // Fetch location and department names
+            var locations = await _locationRepo.GetAllAsync();
+            var departments = await _deptRepo.GetAllAsync();
+
+            ViewBag.FromLocation = locations.FirstOrDefault(l => l.LocationId == request.FromLocationId)
+                                     is var fl && fl != null ? $"{fl.City}, {fl.State}" : "—";
+            ViewBag.ToLocation = locations.FirstOrDefault(l => l.LocationId == request.ToLocationId)
+                                     is var tl && tl != null ? $"{tl.City}, {tl.State}" : "—";
+            ViewBag.FromDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.FromDepartmentId)?.DepartmentName ?? "—";
+            ViewBag.ToDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.ToDepartmentId)?.DepartmentName ?? "—";
+            ViewBag.UserRole = roleClaim;
+
+            // Fetch approval trail
+            ViewBag.ApprovalTrail = await _approvalRepo.GetApprovalTrailAsync(realId);
 
             return View("ViewTransfer", request);
         }
@@ -169,8 +203,11 @@ namespace ETMS.Web.Controllers
             if (request == null || request.EmployeeId != empId)
                 return NotFound("Request not found or access denied.");
 
-            await _transferRepo.DeleteAsync(realId);
-            TempData["SuccessMessage"] = "Transfer request deleted.";
+            if (request.Status != "Pending")
+                return BadRequest("Only pending transfer requests can be cancelled.");
+
+            await _transferRepo.CancelAsync(realId, empId);
+            TempData["SuccessMessage"] = "Transfer request cancelled.";
             return RedirectToAction("Index", "Dashboard");
         }
 

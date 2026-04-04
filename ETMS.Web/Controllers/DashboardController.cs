@@ -82,7 +82,7 @@ namespace ETMS.Web.Controllers
         // ─────────────────────────────────────────────────────────────────
 
         private async Task<IActionResult> BuildEmployeeDashboard(
-    int employeeId, string searchTerm, string sortOrder, string filterType, string locationFilter, string deptFilter)
+            int employeeId, string searchTerm, string sortOrder, string filterType, string locationFilter, string deptFilter)
         {
             var emp = await _empRepo.GetByIdAsync(employeeId);
             var metrics = await _transferRepo.GetDashboardMetricsAsync(employeeId);
@@ -104,9 +104,7 @@ namespace ETMS.Web.Controllers
                     r.Status == "Pending" ||
                     r.Status == "ManagerApproved" ||
                     r.Status == "HODApproved"),
-                "All" => items.Where(r =>
-                    r.Status != "Rejected" &&
-                    r.Status != "Cancelled"),
+                "All" => items,
                 _ => items.Where(r =>
                     r.Status == "Pending" ||
                     r.Status == "ManagerApproved" ||
@@ -146,6 +144,7 @@ namespace ETMS.Web.Controllers
                 "date_asc" => filtered.OrderBy(r => r.RequestDate),
                 "date_desc" => filtered.OrderByDescending(r => r.RequestDate),
                 "status" => filtered.OrderBy(r => r.Status),
+                "status_desc" => filtered.OrderByDescending(r => r.Status),
                 _ => filtered.OrderByDescending(r => r.RequestDate)
             };
 
@@ -153,6 +152,7 @@ namespace ETMS.Web.Controllers
             ViewBag.CurrentSearch = searchTerm;
             ViewBag.CurrentLocation = locationFilter;
             ViewBag.CurrentDept = deptFilter;
+            ViewBag.CurrentSort = sortOrder;
             ViewBag.DateSort = sortOrder == "date_desc" ? "date_asc" : "date_desc";
             ViewBag.StatusSort = sortOrder == "status" ? "status_desc" : "status";
 
