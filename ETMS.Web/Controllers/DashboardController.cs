@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace ETMS.Web.Controllers
 {
     [Authorize]
+    [Route("portal")]
     public class DashboardController : Controller
     {
         private readonly ITransferRequestRepository _transferRepo;

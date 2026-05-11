@@ -610,7 +610,7 @@
                             </span>
                             <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch"
                                    class="form-control bg-light border-start-0 filter-input"
-                                   placeholder="Search ID or Status...">
+                                   placeholder="Search ID, status, location, or date...">
                         </div>
 
                         <select name="locationFilter" class="form-select filter-input" style="width: 170px;">
@@ -639,6 +639,20 @@
                                 style="background-color: #66D2CE; border-radius: 8px;">
                             <i class="fas fa-search"></i>
                         </button>
+
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.CurrentSearch?.ToString())
+|| !string.IsNullOrWhiteSpace(ViewBag.CurrentLocation?.ToString())
+|| !string.IsNullOrWhiteSpace(ViewBag.CurrentDept?.ToString())
+|| ViewBag.CurrentFilter?.ToString() != "Active")
+                        {
+                            <a href="@Url.Action("Index")"
+                                   class="btn btn-light border fw-bold px-3"
+                                   style="border-radius: 8px;">
+                                <i class="fas fa-rotate-left me-1"></i>
+                                Reset
+                            </a>
+                        }
+
                     </form>
 
                     <a asp-controller="Transfer" asp-action="Create"
