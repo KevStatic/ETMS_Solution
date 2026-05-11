@@ -34,6 +34,7 @@ try
     // Services
     builder.Services.AddScoped<IProfileService, ProfileService>();
     builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+    builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
     // ── Email Service ─────────────────────────────────────────────────────────
     builder.Services.AddScoped<IEmailService>(_ =>
