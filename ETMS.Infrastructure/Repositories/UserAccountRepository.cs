@@ -61,6 +61,18 @@ namespace ETMS.Infrastructure.Repositories
                 sql, new { UserAccountId = userAccountId });
         }
 
+        public async Task<UserAccount?> GetByEmployeeIdAsync(int employeeId)
+        {
+            const string sql = @"
+                SELECT UserAccountId, EmployeeId, Username, Password, Role, IsActive
+                FROM UserAccounts
+                WHERE EmployeeId = @EmployeeId AND IsActive = 1;";
+
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<UserAccount>(
+                sql, new { EmployeeId = employeeId });
+        }
+
         public async Task<bool> UpdatePasswordByIdAsync(int userAccountId, string newPassword)
         {
             const string sql = @"
@@ -73,6 +85,22 @@ namespace ETMS.Infrastructure.Repositories
             {
                 Password = newPassword,
                 UserAccountId = userAccountId
+            });
+            return rows > 0;
+        }
+
+        public async Task<bool> UpdatePasswordByEmployeeIdAsync(int employeeId, string newPassword)
+        {
+            const string sql = @"
+                UPDATE UserAccounts
+                SET Password = @Password
+                WHERE EmployeeId = @EmployeeId AND IsActive = 1;";
+
+            using var connection = _context.CreateConnection();
+            var rows = await connection.ExecuteAsync(sql, new
+            {
+                Password = newPassword,
+                EmployeeId = employeeId
             });
             return rows > 0;
         }

@@ -66,7 +66,7 @@ namespace ETMS.Infrastructure.Repositories
         }
 
         // ? Profile Methods
-        public async Task<EmployeeProfileDto?> GetProfileByUserAccountIdAsync(int userAccountId)
+        public async Task<EmployeeProfileDto?> GetProfileByEmployeeIdAsync(int employeeId)
         {
             const string sql = @"
                 SELECT
@@ -93,15 +93,15 @@ namespace ETMS.Infrastructure.Repositories
                 LEFT JOIN Branches     b   ON e.BranchId           = b.BranchId
                 LEFT JOIN Employee     m   ON e.ReportingManagerId = m.EmployeeId
                 INNER JOIN UserAccounts ua ON ua.EmployeeId        = e.EmployeeId
-                WHERE ua.UserAccountId = @UserAccountId";
+                WHERE e.EmployeeId = @EmployeeId";
 
             using var connection = _context.CreateConnection();
             return await connection.QueryFirstOrDefaultAsync<EmployeeProfileDto>(
-                sql, new { UserAccountId = userAccountId });
+                sql, new { EmployeeId = employeeId });
         }
 
         
-        public async Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto)
+        public async Task<bool> UpdateProfileAsync(int employeeId, UpdateProfileDto dto)
         {
             const string sql = @"
         UPDATE e SET
@@ -114,7 +114,7 @@ namespace ETMS.Infrastructure.Repositories
             e.HRBP       = @HRBP
         FROM Employee e
         INNER JOIN UserAccounts ua ON ua.EmployeeId = e.EmployeeId
-        WHERE ua.UserAccountId = @UserAccountId";
+        WHERE e.EmployeeId = @EmployeeId";
 
             using var connection = _context.CreateConnection();
             var rows = await connection.ExecuteAsync(sql, new
@@ -126,7 +126,7 @@ namespace ETMS.Infrastructure.Repositories
                 dto.CostCenter,
                 dto.Company,
                 dto.HRBP,
-                UserAccountId = userAccountId
+                EmployeeId = employeeId
             });
             return rows > 0;
         }

@@ -82,13 +82,14 @@
                             <label class="toggle-switch">
                                 @if (Model.TwoFactorEnabled)
                                 {
-                                    <input type="checkbox" name="TwoFactorEnabled" checked />
+                                    <input type="checkbox" name="TwoFactorEnabled" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="TwoFactorEnabled" />
+                                    <input type="checkbox" name="TwoFactorEnabled" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="TwoFactorEnabled" value="false" />
                             </label>
                         </div>
                         <div class="text-end mt-3">
@@ -113,13 +114,14 @@
                             <label class="toggle-switch">
                                 @if (Model.EmailLeaveNotif)
                                 {
-                                    <input type="checkbox" name="EmailLeaveNotif" checked />
+                                    <input type="checkbox" name="EmailLeaveNotif" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="EmailLeaveNotif" />
+                                    <input type="checkbox" name="EmailLeaveNotif" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="EmailLeaveNotif" value="false" />
                             </label>
                         </div>
                         <div class="toggle-row">
@@ -130,13 +132,14 @@
                             <label class="toggle-switch">
                                 @if (Model.EmailAttendanceNotif)
                                 {
-                                    <input type="checkbox" name="EmailAttendanceNotif" checked />
+                                    <input type="checkbox" name="EmailAttendanceNotif" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="EmailAttendanceNotif" />
+                                    <input type="checkbox" name="EmailAttendanceNotif" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="EmailAttendanceNotif" value="false" />
                             </label>
                         </div>
                         <div class="toggle-row">
@@ -147,13 +150,14 @@
                             <label class="toggle-switch">
                                 @if (Model.EmailPayrollNotif)
                                 {
-                                    <input type="checkbox" name="EmailPayrollNotif" checked />
+                                    <input type="checkbox" name="EmailPayrollNotif" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="EmailPayrollNotif" />
+                                    <input type="checkbox" name="EmailPayrollNotif" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="EmailPayrollNotif" value="false" />
                             </label>
                         </div>
 
@@ -166,13 +170,14 @@
                             <label class="toggle-switch">
                                 @if (Model.PushInAppAlerts)
                                 {
-                                    <input type="checkbox" name="PushInAppAlerts" checked />
+                                    <input type="checkbox" name="PushInAppAlerts" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="PushInAppAlerts" />
+                                    <input type="checkbox" name="PushInAppAlerts" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="PushInAppAlerts" value="false" />
                             </label>
                         </div>
                         <div class="text-end mt-3">
@@ -272,13 +277,14 @@
                             <label class="toggle-switch">
                                 @if (Model.ProfileVisible)
                                 {
-                                    <input type="checkbox" name="ProfileVisible" checked />
+                                    <input type="checkbox" name="ProfileVisible" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="ProfileVisible" />
+                                    <input type="checkbox" name="ProfileVisible" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="ProfileVisible" value="false" />
                             </label>
                         </div>
                         <div class="toggle-row">
@@ -289,13 +295,14 @@
                             <label class="toggle-switch">
                                 @if (Model.ShowOnlineStatus)
                                 {
-                                    <input type="checkbox" name="ShowOnlineStatus" checked />
+                                    <input type="checkbox" name="ShowOnlineStatus" value="true" checked />
                                 }
                                 else
                                 {
-                                    <input type="checkbox" name="ShowOnlineStatus" />
+                                    <input type="checkbox" name="ShowOnlineStatus" value="true" />
                                 }
                                 <span class="toggle-slider"></span>
+                                <input type="hidden" name="ShowOnlineStatus" value="false" />
                             </label>
                         </div>
                         <div class="text-end mt-3">

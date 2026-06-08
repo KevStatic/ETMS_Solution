@@ -13,7 +13,7 @@ namespace ETMS.Application.Interfaces
         Task<Employee?> GetByIdAsync(int currentEmployeeId);
 
         // Profile methods
-        Task<EmployeeProfileDto?> GetProfileByUserAccountIdAsync(int userAccountId);
-        Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto);
+        Task<EmployeeProfileDto?> GetProfileByEmployeeIdAsync(int employeeId);
+        Task<bool> UpdateProfileAsync(int employeeId, UpdateProfileDto dto);
     }
 }

@@ -14,28 +14,28 @@ namespace ETMS.Application.Services
             _userRepo = userRepo;
         }
 
-        public async Task<EmployeeProfileDto> GetProfileAsync(int userAccountId)
+        public async Task<EmployeeProfileDto> GetProfileAsync(int employeeId)
         {
-            var profile = await _empRepo.GetProfileByUserAccountIdAsync(userAccountId);
+            var profile = await _empRepo.GetProfileByEmployeeIdAsync(employeeId);
             return profile ?? new EmployeeProfileDto();
         }
 
-        public async Task<bool> UpdateProfileAsync(int userAccountId, UpdateProfileDto dto)
+        public async Task<bool> UpdateProfileAsync(int employeeId, UpdateProfileDto dto)
         {
-            return await _empRepo.UpdateProfileAsync(userAccountId, dto);
+            return await _empRepo.UpdateProfileAsync(employeeId, dto);
         }
 
-        public async Task<bool> ChangePasswordAsync(int userAccountId, ChangePasswordDto dto)
+        public async Task<bool> ChangePasswordAsync(int employeeId, ChangePasswordDto dto)
         {
             if (dto.NewPassword != dto.ConfirmNewPassword) return false;
 
-            var user = await _userRepo.GetByUserAccountIdAsync(userAccountId);
+            var user = await _userRepo.GetByEmployeeIdAsync(employeeId);
             if (user == null) return false;
 
             // Plain text comparison (use BCrypt if you hash passwords)
             if (user.Password != dto.CurrentPassword) return false;
 
-            return await _userRepo.UpdatePasswordByIdAsync(userAccountId, dto.NewPassword!);
+            return await _userRepo.UpdatePasswordByEmployeeIdAsync(employeeId, dto.NewPassword!);
         }
     }
 }

@@ -10,6 +10,8 @@ namespace ETMS.Application.Interfaces
 
         // Profile methods
         Task<UserAccount?> GetByUserAccountIdAsync(int userAccountId);
+        Task<UserAccount?> GetByEmployeeIdAsync(int employeeId);
         Task<bool> UpdatePasswordByIdAsync(int userAccountId, string newPassword);
+        Task<bool> UpdatePasswordByEmployeeIdAsync(int employeeId, string newPassword);
     }
 }
