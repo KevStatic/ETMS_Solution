@@ -25,24 +25,30 @@ namespace ETMS.Web.Controllers
 
         // GET: /Account/Login
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+
             return View();
         }
 
         // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginRequestDto model)
+        public async Task<IActionResult> Login(LoginRequestDto model, string? returnUrl = null)
         {
             if (!ModelState.IsValid)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(model);
+            }
 
             var result = await _authService.AuthenticateAsync(model);
 
             if (result == null || !result.Success)
             {
                 ModelState.AddModelError(string.Empty, result?.ErrorMessage ?? "Invalid login attempt.");
+                ViewData["ReturnUrl"] = returnUrl;
                 return View(model);
             }
 
@@ -58,7 +64,7 @@ namespace ETMS.Web.Controllers
 
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = true,
+                IsPersistent = model.RememberMe,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
             };
 
@@ -66,6 +72,11 @@ namespace ETMS.Web.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
 
             return RedirectToAction("Index", "Dashboard");
         }

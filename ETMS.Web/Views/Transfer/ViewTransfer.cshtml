@@ -1,11 +1,84 @@
 ﻿@model ETMS.Domain.Entities.TransferRequest
+@using ETMS.Application.DTOs.Approval
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 @{
     ViewData["Title"] = "Transfer Request Details";
+    var trail = ViewBag.ApprovalTrail as IEnumerable<ApprovalTrailDto> ?? [];
+    var stages = new[]
+    {
+        ("Submitted", "Employee has created the request."),
+        ("Manager Review", "Waiting for reporting manager approval."),
+        ("HOD Review", "Waiting for department head approval."),
+        ("HR Finalisation", "Waiting for HR to approve and issue the letter."),
+        ("Letter Ready", "Transfer is fully approved.")
+    };
+    var currentStage = Model.Status switch
+    {
+        "Pending" => 1,
+        "ManagerApproved" => 2,
+        "HODApproved" => 3,
+        "Approved" => 4,
+        _ => 0
+    };
+    var canResubmit = ViewBag.CanResubmit is true;
+    var canDownloadLetter = ViewBag.CanDownloadLetter is true;
+    var statusHeadline = Model.Status switch
+    {
+        "Approved" => "Fully Approved",
+        "Rejected" => "Rejected",
+        "Cancelled" => "Cancelled",
+        "ManagerApproved" => "With HOD",
+        "HODApproved" => "With HR",
+        _ => "Pending Manager Approval"
+    };
+    var statusMessage = Model.Status switch
+    {
+        "Approved" => "Transfer has been fully approved. Letter has been generated.",
+        "Rejected" => "This transfer request was rejected. You can review the trail below and submit an improved request.",
+        "Cancelled" => "This transfer request was cancelled before approval was completed.",
+        "ManagerApproved" => "Approved by Manager and now waiting for HOD review.",
+        "HODApproved" => "Approved by HOD and now waiting for HR final approval.",
+        _ => "Awaiting the reporting manager's decision."
+    };
+    var bannerBackground = Model.Status switch
+    {
+        "Approved" => "#e8f5e9",
+        "Rejected" => "#ffebee",
+        "Cancelled" => "#f8fafc",
+        "ManagerApproved" or "HODApproved" => "#eef2ff",
+        _ => "#fff8e1"
+    };
+    var bannerIcon = Model.Status switch
+    {
+        "Approved" => "fa-check-circle text-success",
+        "Rejected" => "fa-times-circle text-danger",
+        "Cancelled" => "fa-ban text-secondary",
+        "ManagerApproved" or "HODApproved" => "fa-route text-primary",
+        _ => "fa-hourglass-half text-warning"
+    };
+    var nextAction = Model.Status switch
+    {
+        "Approved" => "Download the final transfer letter or return to your dashboard.",
+        "Rejected" => "Use the resubmit action to create a new request with updated details.",
+        "Cancelled" => "Create a fresh transfer request whenever you are ready.",
+        "ManagerApproved" => "Department head review is pending.",
+        "HODApproved" => "HR finalisation is pending.",
+        _ => "Manager review is pending."
+    };
+    var stageLabel = Model.Status switch
+    {
+        "Approved" => "Letter Ready",
+        "Rejected" => "Closed",
+        "Cancelled" => "Closed",
+        "ManagerApproved" => "HOD Review",
+        "HODApproved" => "HR Finalisation",
+        _ => "Manager Review"
+    };
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<div class="container-fluid mt-4 mb-5" style="max-width:800px;">
+<div class="container-fluid mt-4 mb-5" style="max-width:860px;">
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,35 +87,126 @@
                 <i class="fas fa-file-alt text-primary me-2"></i>
                 Transfer Request — TR-@Model.TransferRequestId.ToString("D5")
             </h3>
-            <p class="text-muted mb-0">Read-only view of your submitted transfer request.</p>
+            <p class="text-muted mb-0">Read-only view of this transfer request.</p>
         </div>
-        <a asp-controller="Dashboard" asp-action="Index"
+        <div class="d-flex gap-2 flex-wrap">
+            @if (canResubmit)
+            {
+                <a asp-controller="Transfer" asp-action="Create" asp-route-copyFrom="@Enc.Encrypt(Model.TransferRequestId)"
+                   class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-rotate-right me-2"></i> Resubmit With Details
+                </a>
+            }
+            @if (canDownloadLetter)
+            {
+                <a asp-controller="Approval" asp-action="DownloadLetter" asp-route-id="@Enc.Encrypt(Model.TransferRequestId)"
+                   class="btn btn-danger rounded-pill px-4">
+                    <i class="fas fa-file-pdf me-2"></i> Download Letter
+                </a>
+            }
+            <a asp-controller="Dashboard" asp-action="Index"
                class="btn btn-light border rounded-pill px-4">
-            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-        </a>
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Status Banner -->
     <div class="alert border-0 mb-4 d-flex align-items-center gap-3"
-         style="border-radius:12px;
-        background:@(Model.Status == "Approved" ? "#e8f5e9" :
-                                              Model.Status == "Rejected" ? "#ffebee" : "#fff8e1");">
-        <i class="fas @(Model.Status == "Approved" ? "fa-check-circle text-success" :
-                                           Model.Status == "Rejected" ? "fa-times-circle text-danger" :
-                                                                         "fa-hourglass-half text-warning") fa-lg"></i>
+         style="border-radius:12px;background:@bannerBackground;">
+        <i class="fas @bannerIcon fa-lg"></i>
         <div>
-            <div class="fw-bold">@Model.Status</div>
-            <div class="small text-muted">
-                @(Model.Status == "Approved" ? "Your transfer has been fully approved." :
-                  Model.Status == "Rejected" ? "Your transfer request was rejected." :
-                  Model.Status == "ManagerApproved" ? "Approved by Manager — awaiting HOD review." :
-                  Model.Status == "HODApproved" ? "Approved by HOD — awaiting HR final approval." :
-                                                      "Awaiting Manager approval.")
+            <div class="fw-bold">@statusHeadline</div>
+            <div class="small text-muted">@statusMessage</div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-route text-primary me-2"></i>Request Progress</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                    Stage @(Math.Min(currentStage + 1, stages.Length)) of @stages.Length
+                </span>
+            </div>
+            <div class="row g-3">
+                @for (var i = 0; i < stages.Length; i++)
+                {
+                    var isComplete = i < currentStage;
+                    var isCurrent = i == currentStage;
+                    var bg = isComplete ? "#e8f5e9" : isCurrent ? "#eef2ff" : "#f8fafc";
+                    var border = isComplete ? "#22c55e" : isCurrent ? "#4F7EFF" : "#e9ecef";
+                    var icon = isComplete ? "fa-check" : isCurrent ? "fa-circle-dot" : "fa-circle";
+                    <div class="col-lg-4 col-md-6">
+                        <div class="h-100 p-3 rounded" style="background:@bg;border:1px solid @border;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="fas @icon" style="color:@(isComplete ? "#16a34a" : isCurrent ? "#4F7EFF" : "#9ca3af");"></i>
+                                <span class="fw-bold text-dark">@stages[i].Item1</span>
+                            </div>
+                            <div class="text-muted small">@stages[i].Item2</div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 
-    <!-- Details Card -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Current Stage</div>
+                    <div class="fw-bold text-dark fs-5">@stageLabel</div>
+                    <div class="text-muted small mt-2">Status updates here mirror the approver workflow.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Requested On</div>
+                    <div class="fw-bold text-dark fs-5">@Model.RequestDate.ToString("dd MMM, yyyy")</div>
+                    <div class="text-muted small mt-2">Submitted into the workflow on this date.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+                <div class="card-body p-4">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Next Step</div>
+                    <div class="fw-bold text-dark">@nextAction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Route -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Transfer Route</h5>
+            <div class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e9ecef;">
+                        <div class="text-muted small fw-semibold mb-1">FROM</div>
+                        <div class="fw-bold text-dark">@ViewBag.FromLocation</div>
+                        <div class="text-muted small">@ViewBag.FromDepartment</div>
+                    </div>
+                </div>
+                <div class="col-md-2 text-center">
+                    <i class="fas fa-arrow-right text-primary fa-lg"></i>
+                </div>
+                <div class="col-md-5">
+                    <div class="p-3 rounded" style="background:#eef2ff;border:2px solid #4F7EFF;">
+                        <div class="text-muted small fw-semibold mb-1">TO</div>
+                        <div class="fw-bold text-dark">@ViewBag.ToLocation</div>
+                        <div class="text-muted small">@ViewBag.ToDepartment</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Details -->
     <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Request Details</h5>
@@ -71,20 +235,13 @@
         </div>
     </div>
 
-    <!-- L&T Specific Fields -->
+    <!-- Additional Details -->
     @if (!string.IsNullOrEmpty(Model.ProjectName) || !string.IsNullOrEmpty(Model.NewBU))
     {
         <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Additional Details</h5>
                 <div class="row g-3">
-                    @if (!string.IsNullOrEmpty(Model.LetterType))
-                    {
-                        <div class="col-md-6">
-                            <div class="text-muted small fw-semibold mb-1">Letter Type</div>
-                            <div class="fw-medium">@Model.LetterType</div>
-                        </div>
-                    }
                     @if (!string.IsNullOrEmpty(Model.WithinCity))
                     {
                         <div class="col-md-6">
@@ -146,12 +303,69 @@
         </div>
     }
 
-    <!-- Back Button -->
-    <div class="text-center">
-        <a asp-controller="Dashboard" asp-action="Index"
-               class="btn text-white px-5 py-2 fw-semibold"
-               style="background:#66D2CE;border-radius:10px;">
-            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
-        </a>
+    <!-- Approval Trail -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">
+                <i class="fas fa-route text-primary me-2"></i>Approval Trail
+            </h5>
+            @if (!trail.Any())
+            {
+                <p class="text-muted small mb-0">No approvals recorded yet.</p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var step in trail)
+                    {
+                        var isApproved = step.ApprovalStatus == "Approved";
+                        var isRejected = step.ApprovalStatus == "Rejected";
+                        <div class="d-flex gap-3 align-items-start">
+                            <div class="flex-shrink-0 mt-1">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                                     style="width:36px;height:36px;
+                                    background:@(isApproved ? "#22c55e" : isRejected ? "#ef4444" : "#f59e0b");">
+                                    <i class="fas @(isApproved ? "fa-check" : isRejected ? "fa-times" : "fa-clock")"
+                                       style="font-size:.8rem;"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 p-3 rounded" style="background:#f8fafc;border:1px solid #e9ecef;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div>
+                                        <span class="fw-bold text-dark">@step.ApproverRole</span>
+                                        <span class="text-muted small ms-2">@step.ApproverName</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge px-2 py-1 rounded-pill"
+                                              style="font-size:.7rem;
+                                            background:@(isApproved ? "#e8f5e9" : isRejected ? "#ffebee" : "#fff8e1");
+                                            color:@(isApproved ? "#16a34a" : isRejected ? "#dc2626" : "#b45309");">
+                                            @step.ApprovalStatus
+                                        </span>
+                                        @if (step.ActionDate.HasValue)
+                                        {
+                                            <span class="text-muted" style="font-size:.75rem;">
+                                                @step.ActionDate.Value.ToString("dd MMM, yyyy HH:mm")
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(step.Comments))
+                                {
+                                    <div class="text-muted small mt-1">
+                                        <i class="fas fa-comment-alt me-1 opacity-50"></i>
+                                        @step.Comments
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-muted small mt-1 opacity-50">No comments left.</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>

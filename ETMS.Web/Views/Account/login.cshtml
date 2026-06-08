@@ -355,7 +355,10 @@
                     </div>
                 }
 
-                <form method="post" action="/Account/Login">
+                <form method="post"
+                      asp-controller="Account"
+                      asp-action="Login"
+                      asp-route-returnUrl="@ViewData["ReturnUrl"]">
                     @Html.AntiForgeryToken()
 
                     <div class="field">
@@ -379,7 +382,9 @@
 
                     <div class="opts">
                         <label class="remember">
-                            <input type="checkbox" name="RememberMe" /> Remember me
+                            <input type="checkbox" name="RememberMe" value="true"/> Remember me
+                            <input type="hidden" name="RememberMe", 
+value="false" />
                         </label>
                         <a href="/Account/ForgotPassword" class="fp">Forgot password?</a>
                     </div>

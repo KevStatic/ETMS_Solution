@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Employee Dashboard";
 }
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -516,7 +517,7 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #e8f5e9;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
@@ -525,7 +526,7 @@
                 <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #fff8e1;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
@@ -534,7 +535,7 @@
                 <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background-color: #ffebee;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
@@ -543,7 +544,7 @@
                 <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
@@ -552,7 +553,7 @@
                 <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size: 1rem;" class="text-muted fw-normal">days</span></h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-12">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white" style="border: 1px solid #e9ecef;">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="d-flex align-items-center">
@@ -586,37 +587,77 @@
             <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-3">
                 <ul class="nav nav-pills border-0 mb-2 mb-md-0">
                     <li class="nav-item">
-                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
-                           href="@Url.Action("Index", new { filterType = "Active" })">
+                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "Active" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "Active", searchTerm = ViewBag.CurrentSearch, locationFilter = ViewBag.CurrentLocation, deptFilter = ViewBag.CurrentDept, sortOrder = ViewBag.CurrentSort })">
                             Active
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
-                           href="@Url.Action("Index", new { filterType = "All" })">
+                            <a class="nav-link fw-bold @(ViewBag.CurrentFilter == "All" ? "active-tab" : "text-muted")"
+                           href="@Url.Action("Index", new { filterType = "All", searchTerm = ViewBag.CurrentSearch, locationFilter = ViewBag.CurrentLocation, deptFilter = ViewBag.CurrentDept, sortOrder = ViewBag.CurrentSort })">
                             All Requests
                         </a>
                     </li>
                 </ul>
 
                 <div class="d-flex gap-2 align-items-center">
-                    <form asp-action="Index" method="get" class="d-flex gap-2 mb-0">
+                    <form asp-controller="Dashboard" asp-action="Index" method="get" class="d-flex gap-2 mb-0">
                         <input type="hidden" name="filterType" value="@ViewBag.CurrentFilter" />
 
                         <div class="input-group" style="width: 250px;">
-                            <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control bg-light border-start-0 filter-input" placeholder="Search ID or Status...">
+                            <span class="input-group-text bg-light border-end-0 filter-input">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch"
+                                   class="form-control bg-light border-start-0 filter-input"
+                                   placeholder="Search ID, status, location, or date...">
                         </div>
 
-                        <select class="form-select filter-input" style="width: 170px;" asp-items="Model.Locations">
+                        <select name="locationFilter" class="form-select filter-input" style="width: 170px;">
                             <option value="">Filter by Location</option>
+                            @foreach (var loc in Model.Locations)
+                            {
+                                <option value="@loc.Text"
+                                        selected="@(ViewBag.CurrentLocation == loc.Text ? "selected" : null)">
+                                    @loc.Text
+                                </option>
+                            }
                         </select>
-                        <select class="form-select filter-input" style="width: 190px;" asp-items="Model.Departments">
+
+                        <select name="deptFilter" class="form-select filter-input" style="width: 190px;">
                             <option value="">Filter by Dept</option>
+                            @foreach (var dept in Model.Departments)
+                            {
+                                <option value="@dept.Text"
+                                        selected="@(ViewBag.CurrentDept == dept.Text ? "selected" : null)">
+                                    @dept.Text
+                                </option>
+                            }
                         </select>
+
+                        <button type="submit" class="btn text-white fw-bold px-3"
+                                style="background-color: #66D2CE; border-radius: 8px;">
+                            <i class="fas fa-search"></i>
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(ViewBag.CurrentSearch?.ToString())
+|| !string.IsNullOrWhiteSpace(ViewBag.CurrentLocation?.ToString())
+|| !string.IsNullOrWhiteSpace(ViewBag.CurrentDept?.ToString())
+|| ViewBag.CurrentFilter?.ToString() != "Active")
+                        {
+                            <a href="@Url.Action("Index")"
+                                   class="btn btn-light border fw-bold px-3"
+                                   style="border-radius: 8px;">
+                                <i class="fas fa-rotate-left me-1"></i>
+                                Reset
+                            </a>
+                        }
+
                     </form>
 
-                    <a asp-controller="Transfer" asp-action="Create" class="btn text-white fw-bold px-4 py-2 text-nowrap" style="background-color: #66D2CE; border-radius: 8px;">
+                    <a asp-controller="Transfer" asp-action="Create"
+                           class="btn text-white fw-bold px-4 py-2 text-nowrap"
+                           style="background-color: #66D2CE; border-radius: 8px;">
                         + New Transfer Request
                     </a>
                 </div>
@@ -630,12 +671,12 @@
                             <th class="py-3 ps-3 border-0 fw-bold">TransferId</th>
                             <th class="py-3 border-0 fw-bold">Target Posting</th>
                             <th class="py-3 border-0 fw-bold">
-                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch, locationFilter = ViewBag.CurrentLocation, deptFilter = ViewBag.CurrentDept })" class="text-decoration-none text-muted">
                                     Date <i class="fas fa-sort ms-1"></i>
                                 </a>
                             </th>
                             <th class="py-3 border-0 fw-bold">
-                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch })" class="text-decoration-none text-muted">
+                                <a href="@Url.Action("Index", new { sortOrder = ViewBag.StatusSort, filterType = ViewBag.CurrentFilter, searchTerm = ViewBag.CurrentSearch, locationFilter = ViewBag.CurrentLocation, deptFilter = ViewBag.CurrentDept })" class="text-decoration-none text-muted">
                                     Status <i class="fas fa-sort ms-1"></i>
                                 </a>
                             </th>
@@ -672,9 +713,21 @@
                                         {
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">Approved</span>
                                         }
-                                        else if (req.Status == "Rejected" || req.Status == "Cancelled")
+                                        else if (req.Status == "Rejected")
                                         {
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill">@req.Status</span>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill">Rejected</span>
+                                        }
+                                        else if (req.Status == "Cancelled")
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2 rounded-pill">Cancelled</span>
+                                        }
+                                        else if (req.Status == "ManagerApproved")
+                                        {
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info px-3 py-2 rounded-pill">With HOD</span>
+                                        }
+                                        else if (req.Status == "HODApproved")
+                                        {
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill">With HR</span>
                                         }
                                         else
                                         {
@@ -682,21 +735,30 @@
                                         }
                                     </td>
                                     <td class="text-end pe-3">
-                                        <!-- Eye → links to TransferController.View -->
-                                        <a asp-controller="Transfer" asp-action="View" asp-route-id="@req.TransferRequestId"
+                                        <a asp-controller="Transfer" asp-action="View"
+                                           asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
                                            class="btn btn-light btn-sm mx-1 rounded-circle" title="View details">
                                             <i class="far fa-eye text-secondary"></i>
                                         </a>
 
-                                        <!-- Delete → only for Pending requests -->
+                                        @if (req.Status == "Rejected" || req.Status == "Cancelled")
+                                        {
+                                            <a asp-controller="Transfer" asp-action="Create"
+                                               asp-route-copyFrom="@Enc.Encrypt(req.TransferRequestId)"
+                                               class="btn btn-light btn-sm mx-1 rounded-circle" title="Create similar request">
+                                                <i class="fas fa-copy text-primary"></i>
+                                            </a>
+                                        }
+
                                         @if (req.Status == "Pending")
                                         {
-                                            <form asp-controller="Transfer" asp-action="Delete" asp-route-id="@req.TransferRequestId"
+                                            <form asp-controller="Transfer" asp-action="Delete"
+                                                  asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
                                                   method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-light btn-sm mx-1 rounded-circle"
-                                                        title="Delete request"
-                                                        onclick="return confirm('Delete this transfer request? This cannot be undone.')">
+                                                        title="Cancel request"
+                                                        onclick="return confirm('Cancel this transfer request?')">
                                                     <i class="far fa-trash-alt text-danger"></i>
                                                 </button>
                                             </form>

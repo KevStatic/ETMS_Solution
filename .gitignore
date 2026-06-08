@@ -362,5 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# ENV files
+# Encryption files for ASP.NET Core Data Protection API
+*.env
 .env

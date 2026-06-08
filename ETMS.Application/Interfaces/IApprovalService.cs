@@ -7,6 +7,6 @@
             string decision, string comments);
 
         Task<string> FinaliseAndGenerateLetterAsync(
-            int requestId, int hrEmployeeId, string comments);
+            int requestId, int hrEmployeeId, string comments, string wwwRootPath);
     }
 }

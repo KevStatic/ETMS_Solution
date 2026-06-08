@@ -1,4 +1,5 @@
 @model ETMS.Web.Models.HRDashboardViewModel
+@inject ETMS.Application.Interfaces.IUrlEncryptionService Enc
 @{
     ViewData["Title"] = "HR Dashboard";
     var locationGroups = Model.AllOpenPositions
@@ -18,7 +19,11 @@
     .position-pill { display: inline-flex; align-items: center; gap: 6px; background: #f0f4ff; border: 1px solid #d0e0ff; border-radius: 20px; padding: 4px 12px; font-size: .8rem; font-weight: 500; color: #1a3a6e; margin: 3px; }
     .position-pill .remove-btn { cursor: pointer; color: #aaa; transition: color .15s; font-size: .75rem; }
     .position-pill .remove-btn:hover { color: #dc3545; }
-    .approval-priority { border-left: 3px solid #66D2CE; }
+    .pending-row { background: #fffdf0 !important; }
+    .pending-row td:first-child { border-left: 3px solid #f59e0b; }
+    .action-required-row td { background: #fffbeb; }
+    .action-required-row td:first-child { border-left: 3px solid #f59e0b; }
+    .separator-row td { background: #f0f4ff; border-top: 2px dashed #c7d7ff; padding: 8px 16px; }
 </style>
 
 <div class="container-fluid mt-4 mb-5 pb-5" style="max-width:1400px;">
@@ -75,7 +80,7 @@
 
     <!-- Metrics -->
     <div class="row g-3 mb-4">
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#e8f5e9;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-success text-white me-2"><i class="fas fa-check-circle"></i></div>
@@ -84,7 +89,7 @@
                 <h2 class="fw-bold mb-0 text-success ms-1">@Model.Metrics.ActiveRequests</h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#fff8e1;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-warning text-white me-2"><i class="fas fa-hourglass-half"></i></div>
@@ -93,7 +98,7 @@
                 <h2 class="fw-bold mb-0 text-warning ms-1">@Model.Metrics.PendingApprovals</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3" style="background:#ffebee;">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-danger text-white me-2"><i class="fas fa-times-circle"></i></div>
@@ -102,7 +107,7 @@
                 <h2 class="fw-bold mb-0 text-danger ms-1">@Model.Metrics.Rejected</h2>
             </div>
         </div>
-        <div class="col-md-2 col-sm-6">
+        <div class="col-lg-2 col-md-4 col-sm-6">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white">
                 <div class="d-flex align-items-center mb-2">
                     <div class="icon-box bg-primary text-white me-2"><i class="fas fa-clock"></i></div>
@@ -111,7 +116,7 @@
                 <h2 class="fw-bold mb-0 text-dark ms-1">@Model.Metrics.AvgApprovalDays <span style="font-size:1rem;" class="text-muted fw-normal">days</span></h2>
             </div>
         </div>
-        <div class="col-md-3 col-sm-12">
+        <div class="col-lg-4 col-md-8 col-sm-12">
             <div class="card metric-card shadow-sm h-100 p-3 bg-white" style="border:1px solid #e9ecef;">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="d-flex align-items-center">
@@ -134,37 +139,85 @@
         </div>
     </div>
 
-    <!-- ── Priority: Awaiting HR Approval ──────────────────────────────── -->
-    @if (Model.PendingHRApproval.Any())
-    {
-        <div class="card border-0 shadow-sm mb-4 approval-priority" style="border-radius:12px;">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
-                        Awaiting Your Approval
-                        <span class="badge ms-2 rounded-pill" style="background:#fff8e1;color:#856404;font-size:.75rem;">@Model.PendingHRApproval.Count() ready</span>
-                    </h4>
-                    <span class="text-muted small">Manager ✓ &nbsp; HOD ✓ &nbsp; <strong class="text-primary">HR ← You</strong></span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-white text-muted text-uppercase small" style="border-bottom:2px solid #e9ecef;">
-                            <tr>
-                                <th class="py-3 ps-3 border-0 fw-bold">Transfer ID</th>
-                                <th class="py-3 border-0 fw-bold">Employee</th>
-                                <th class="py-3 border-0 fw-bold">From</th>
-                                <th class="py-3 border-0 fw-bold">Target Posting</th>
-                                <th class="py-3 border-0 fw-bold">Trail</th>
-                                <th class="py-3 border-0 fw-bold">Requested</th>
-                                <th class="py-3 text-end pe-4 border-0 fw-bold">Actions</th>
+    <!-- ── Full Width Transfer Requests Table ──────────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0 text-dark">
+                    All Transfer Requests
+                    @if (Model.PendingHRApproval.Any())
+                    {
+                        <span class="badge ms-2 rounded-pill" style="background:#fff8e1;color:#856404;font-size:.75rem;">
+                            @Model.PendingHRApproval.Count() awaiting your action
+                        </span>
+                    }
+                </h4>
+            </div>
+
+            <!-- Filters -->
+            <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-3">
+                <ul class="nav nav-pills border-0 mb-2 mb-md-0">
+                    @foreach (var tab in new[] { ("All","All"), ("Pending","Pending"), ("Approved","Approved"), ("Rejected","Rejected") })
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold @(Model.CurrentFilter == tab.Item1 ? "active-tab" : "text-muted")"
+                               href="@Url.Action("Index", "Dashboard", new { filterType = tab.Item1 })">
+                                @tab.Item2
+                            </a>
+                        </li>
+                    }
+                </ul>
+                <form asp-controller="Dashboard" asp-action="Index" method="get" class="d-flex gap-2 mb-0">
+                    <input type="hidden" name="filterType" value="@Model.CurrentFilter" />
+                    <div class="input-group" style="width:240px;">
+                        <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="searchTerm" value="@Model.CurrentSearch"
+                               class="form-control bg-light border-start-0 filter-input"
+                               placeholder="Search employee, location…">
+                    </div>
+                    <select name="sortOrder" class="form-select filter-input" style="width:150px;">
+                        <option value="" selected="@(Model.CurrentSort == null)">Newest First</option>
+                        <option value="date_asc" selected="@(Model.CurrentSort == "date_asc")">Oldest First</option>
+                        <option value="name" selected="@(Model.CurrentSort == "name")">By Name</option>
+                    </select>
+                    <button type="submit" class="btn text-white fw-bold px-3" style="background:#66D2CE;border-radius:8px;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="text-muted text-uppercase small" style="background:#f8fafc;border-bottom:2px solid #e9ecef;">
+                        <tr>
+                            <th class="py-3 border-0 fw-bold">Transfer ID</th>
+                            <th class="py-3 border-0 fw-bold">Employee</th>
+                            <th class="py-3 border-0 fw-bold">Current Posting</th>
+                            <th class="py-3 border-0 fw-bold">Target Posting</th>
+                            <th class="py-3 border-0 fw-bold">Date</th>
+                            <th class="py-3 border-0 fw-bold">Last Active</th>
+                            <th class="py-3 border-0 fw-bold">Status</th>
+                            <th class="py-3 border-0 fw-bold text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @* ── PINNED: Awaiting HR Approval ── *@
+                        @if (Model.PendingHRApproval.Any())
+                        {
+                            <tr class="action-required-row">
+                                <td colspan="8" class="py-2">
+                                    <span class="fw-bold text-warning small">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        Awaiting Your Approval
+                                    </span>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
+
                             @foreach (var req in Model.PendingHRApproval)
                             {
-                                <tr>
-                                    <td class="ps-3 fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
+                                <tr class="pending-row">
+                                    <td class="fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
                                     <td>
                                         <span class="d-block fw-bold text-dark">@req.EmployeeName</span>
                                         <span class="text-muted small">@req.EmployeeCode</span>
@@ -177,220 +230,181 @@
                                         <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
                                         <span class="text-muted small">@req.TargetDepartment</span>
                                     </td>
+                                    <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
                                     <td>
-                                        <div class="d-flex gap-1">
+                                        <div class="d-flex gap-1 flex-wrap">
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill" style="font-size:.65rem;">Mgr ✓</span>
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill" style="font-size:.65rem;">HOD ✓</span>
                                         </div>
                                     </td>
-                                    <td class="text-dark fw-medium">@req.RequestDate.ToString("dd MMM, yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-2 rounded-pill">Awaiting HR</span>
+                                    </td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-light btn-sm mx-1 rounded-circle"
-                                                data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                data-reqid="@req.TransferRequestId"
-                                                data-name="@req.EmployeeName"
-                                                data-from="@req.FromLocation / @req.FromDepartment"
-                                                data-to="@req.TargetLocation / @req.TargetDepartment"
-                                                data-reason="@req.Reason">
+                                        <a asp-controller="Transfer" asp-action="View"
+                                           asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
+                                           class="btn btn-light btn-sm mx-1 rounded-circle" title="View details">
                                             <i class="far fa-eye text-secondary"></i>
-                                        </button>
+                                        </a>
                                         <button class="btn btn-sm rounded-circle mx-1" style="background:#e8f5e9;"
                                                 data-bs-toggle="modal" data-bs-target="#approveModal"
-                                                data-reqid="@req.TransferRequestId"
+                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
                                                 data-name="@req.EmployeeName"
-                                                data-to="@req.TargetLocation / @req.TargetDepartment">
+                                                data-to="@req.TargetLocation / @req.TargetDepartment"
+                                                title="Approve & Generate Letter">
                                             <i class="fas fa-check text-success"></i>
                                         </button>
                                         <button class="btn btn-sm rounded-circle mx-1" style="background:#ffebee;"
                                                 data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                                data-reqid="@req.TransferRequestId"
-                                                data-name="@req.EmployeeName">
+                                                data-encid="@Enc.Encrypt(req.TransferRequestId)"
+                                                data-name="@req.EmployeeName"
+                                                title="Reject">
                                             <i class="fas fa-times text-danger"></i>
                                         </button>
                                     </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
 
-    <!-- ── All Requests + Open Positions ───────────────────────────────── -->
-    <div class="row g-4">
-        <div class="col-xl-8">
-            <div class="card border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold mb-0 text-dark">All Transfer Requests</h4>
-                    </div>
+                            @* Separator *@
+                            <tr class="separator-row">
+                                <td colspan="8">
+                                    <span class="text-muted small fw-semibold">
+                                        <i class="fas fa-list me-1"></i> All Other Requests
+                                    </span>
+                                </td>
+                            </tr>
+                        }
 
-                    <!-- Filters (same pattern as Employee dashboard) -->
-                    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 border-bottom pb-3">
-                        <ul class="nav nav-pills border-0 mb-2 mb-md-0">
-                            @foreach (var tab in new[] { ("All","All"), ("Pending","Pending"), ("Approved","Approved"), ("Rejected","Rejected") })
+                        @* ── ALL OTHER REQUESTS ── *@
+                        @if (!Model.AllRequests.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
+                                    No transfer requests found.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var req in Model.AllRequests)
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link fw-bold @(Model.CurrentFilter == tab.Item1 ? "active-tab" : "text-muted")"
-                                       href="@Url.Action("Index", "Dashboard", new { filterType = tab.Item1 })">
-                                        @tab.Item2
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-                        <form asp-controller="Dashboard" asp-action="Index" method="get" class="d-flex gap-2 mb-0">
-                            <input type="hidden" name="filterType" value="@Model.CurrentFilter" />
-                            <div class="input-group" style="width:220px;">
-                                <span class="input-group-text bg-light border-end-0 filter-input"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" name="searchTerm" value="@Model.CurrentSearch"
-                                       class="form-control bg-light border-start-0 filter-input"
-                                       placeholder="Search employee, location…">
-                            </div>
-                            <select name="sortOrder" class="form-select filter-input" style="width:150px;">
-                                <option value="" selected="@(Model.CurrentSort == null)">Newest First</option>
-                                <option value="date_asc" selected="@(Model.CurrentSort == "date_asc")">Oldest First</option>
-                                <option value="name" selected="@(Model.CurrentSort == "name")">By Name</option>
-                            </select>
-                            <button type="submit" class="btn text-white fw-bold px-3" style="background:#66D2CE;border-radius:8px;">Filter</button>
-                        </form>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-white text-muted text-uppercase small" style="border-bottom:2px solid #e9ecef;">
-                                <tr>
-                                    <th class="py-3 ps-3 border-0 fw-bold">Transfer ID</th>
-                                    <th class="py-3 border-0 fw-bold">Employee</th>
-                                    <th class="py-3 border-0 fw-bold">Target Posting</th>
-                                    <th class="py-3 border-0 fw-bold">
-                                        <a href="@Url.Action("Index", "Dashboard", new { sortOrder = ViewBag.DateSort, filterType = Model.CurrentFilter, searchTerm = Model.CurrentSearch })"
-                                           class="text-decoration-none text-muted">Date <i class="fas fa-sort ms-1"></i></a>
-                                    </th>
-                                    <th class="py-3 border-0 fw-bold">Status</th>
-                                    <th class="py-3 text-end pe-4 border-0 fw-bold">Letter</th>
+                                <tr style="border-bottom:1px solid #f0f0f0;">
+                                    <td class="fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
+                                    <td class="fw-medium text-dark">@req.EmployeeName</td>
+                                    <td class="text-muted small">—</td>
+                                    <td>
+                                        <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
+                                        <span class="text-muted small">@req.TargetDepartment</span>
+                                    </td>
+                                    <td class="text-dark fw-medium">
+                                        @(req.ActionedOn.Year > 1 ? req.ActionedOn.ToString("dd MMM, yyyy") : "—")
+                                    </td>
+                                    <td class="text-muted small">—</td>
+                                    <td>
+                                        @{
+                                            var (badgeBg, badgeFg, statusText) = req.FinalStatus switch {
+                                                "Approved"        => ("bg-success","text-success","Approved"),
+                                                "Rejected"        => ("bg-danger","text-danger","Rejected"),
+                                                "HODApproved"     => ("bg-primary","text-primary","With HR"),
+                                                "ManagerApproved" => ("bg-info","text-info","With HOD"),
+                                                _                 => ("bg-warning","text-warning","Pending")
+                                            };
+                                        }
+                                        <span class="badge @badgeBg bg-opacity-10 @badgeFg border px-3 py-2 rounded-pill">@statusText</span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        @if (!string.IsNullOrEmpty(req.LetterPath))
+                                        {
+                                            <a asp-controller="Approval" asp-action="DownloadLetter"
+                                               asp-route-id="@Enc.Encrypt(req.TransferRequestId)"
+                                               class="btn btn-light btn-sm rounded-circle mx-1" title="Download Letter">
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="btn btn-light btn-sm rounded-circle mx-1 disabled" title="No letter yet">
+                                                <i class="fas fa-file-pdf text-muted opacity-25"></i>
+                                            </span>
+                                        }
+                                        <button class="btn btn-light btn-sm rounded-circle mx-1 disabled" title="Edit — coming soon">
+                                            <i class="fas fa-pen text-muted opacity-50"></i>
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @if (!Model.AllRequests.Any())
-                                {
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
-                                            <i class="fas fa-inbox fa-2x mb-3 d-block opacity-25"></i>
-                                            No transfer requests found.
-                                        </td>
-                                    </tr>
-                                }
-                                else
-                                {
-                                    @foreach (var req in Model.AllRequests)
-                                    {
-                                        <tr>
-                                            <td class="ps-3 fw-bold text-dark py-3">TR-@req.TransferRequestId.ToString("D5")</td>
-                                            <td class="fw-medium text-dark">@req.EmployeeName</td>
-                                            <td>
-                                                <span class="d-block fw-bold text-dark">@req.TargetLocation</span>
-                                                <span class="text-muted small">@req.TargetDepartment</span>
-                                            </td>
-                                            <td class="text-dark fw-medium">
-                                                @(req.ActionedOn.Year > 1 ? req.ActionedOn.ToString("dd MMM, yyyy") : "—")
-                                            </td>
-                                            <td>
-                                                @{
-                                                    var (badgeBg, badgeFg, statusText) = req.FinalStatus switch {
-                                                        "Approved"        => ("bg-success","text-success","Approved"),
-                                                        "Rejected"        => ("bg-danger","text-danger","Rejected"),
-                                                        "HODApproved"     => ("bg-primary","text-primary","With HR"),
-                                                        "ManagerApproved" => ("bg-info","text-info","With HOD"),
-                                                        _                 => ("bg-warning","text-warning","Pending")
-                                                    };
-                                                }
-                                                <span class="badge @badgeBg bg-opacity-10 @badgeFg border px-3 py-2 rounded-pill">@statusText</span>
-                                            </td>
-                                            <td class="text-end pe-3">
-                                                @if (!string.IsNullOrEmpty(req.LetterPath))
-                                                {
-                                                    <a asp-controller="Approval" asp-action="DownloadLetter"
-                                                       asp-route-id="@req.TransferRequestId"
-                                                       class="btn btn-light btn-sm rounded-circle" title="Download Letter">
-                                                        <i class="fas fa-file-pdf text-danger"></i>
-                                                    </a>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted small">—</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <!-- Open Positions (HR can manage ALL) -->
-        <div class="col-xl-4">
-            <div class="card border-0 shadow-sm" style="border-radius:12px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-door-open text-primary me-2"></i>Open Positions</h5>
-                        <button class="btn btn-sm text-white fw-bold px-3"
-                                style="background:#66D2CE;border-radius:8px;"
-                                data-bs-toggle="modal" data-bs-target="#addPositionModal">
-                            <i class="fas fa-plus me-1"></i> Add
-                        </button>
-                    </div>
-                    <p class="text-muted small mb-3">
+    <!-- ── Open Positions Panel (full width below table) ──────────────────── -->
+    <div class="card border-0 shadow-sm" style="border-radius:12px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-door-open text-primary me-2"></i>Open Positions
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">
                         Adding a position makes it available for employee transfer requests.
                         Approving a transfer auto-removes one matching position.
                     </p>
+                </div>
+                <button class="btn text-white fw-bold px-4"
+                        style="background:#66D2CE;border-radius:8px;"
+                        data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                    <i class="fas fa-plus me-1"></i> Add Position
+                </button>
+            </div>
 
-                    @if (!Model.AllOpenPositions.Any())
+            @if (!Model.AllOpenPositions.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                    <p class="small">No open positions currently listed.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var grp in locationGroups)
                     {
-                        <div class="text-center py-4 text-muted">
-                            <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
-                            <p class="small">No open positions currently listed.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var grp in locationGroups)
-                        {
-                            <div class="mb-3">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-3 border rounded" style="border-radius:10px;background:#fafafa;">
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <i class="fas fa-map-marker-alt text-muted" style="font-size:.8rem;"></i>
                                     <span class="fw-semibold text-dark small text-uppercase" style="letter-spacing:.5px;">@grp.Key</span>
                                     <span class="badge bg-light text-muted border" style="font-size:.7rem;">@grp.Count()</span>
                                 </div>
-                                <div class="ps-3">
-                                    @foreach (var pos in grp)
-                                    {
-                                        <span class="position-pill">
-                                            <i class="fas fa-briefcase" style="font-size:.7rem;color:#5c9bba;"></i>
-                                            @pos.DepartmentName
-                                            <form asp-controller="Approval" asp-action="RemovePosition"
-                                                  method="post" class="d-inline mb-0">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="positionId" value="@pos.PositionId" />
-                                                <button type="submit" class="remove-btn border-0 bg-transparent p-0"
-                                                        title="Remove position"
-                                                        onclick="return confirm('Remove this open position?')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </form>
-                                        </span>
-                                    }
-                                </div>
+                                @foreach (var pos in grp)
+                                {
+                                    <span class="position-pill">
+                                        <i class="fas fa-briefcase" style="font-size:.7rem;color:#5c9bba;"></i>
+                                        @pos.DepartmentName
+                                        <form asp-controller="Approval" asp-action="RemovePosition"
+                                              method="post" class="d-inline mb-0">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="positionId" value="@pos.PositionId" />
+                                            <button type="submit" class="remove-btn border-0 bg-transparent p-0"
+                                                    title="Remove position"
+                                                    onclick="return confirm('Remove this open position?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </span>
+                                }
                             </div>
-                        }
+                        </div>
                     }
                 </div>
-            </div>
+            }
         </div>
     </div>
+
 </div>
 
 <!-- Detail Modal -->
@@ -410,14 +424,14 @@
                     <dt class="col-4 text-muted">Reason</dt><dd class="col-8 text-muted" id="d-reason"></dd>
                 </dl>
             </div>
-            <div class="modalals-footer border-0 pt-0 p-3">
+            <div class="modal-footer border-0 pt-0 p-3">
                 <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Approve Modal (HR = final, generates letter) -->
+<!-- Approve Modal -->
 <div class="modal fade" id="approveModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow" style="border-radius:14px;">
@@ -441,7 +455,7 @@
                             </ul>
                         </div>
                     </div>
-                    <p class="mb-3">Final approval for: <strong id="approveEmpName"></strong></p>
+                    <p class="mb-3 mt-2">Final approval for: <strong id="approveEmpName"></strong></p>
                     <input type="hidden" name="TransferRequestId" id="approveReqId" />
                     <div class="mb-3">
                         <label class="form-label fw-semibold">HR Comments <span class="text-muted fw-normal">(included in letter)</span></label>
@@ -532,19 +546,19 @@
             document.getElementById('d-name').textContent   = btn.dataset.name;
             document.getElementById('d-from').textContent   = btn.dataset.from;
             document.getElementById('d-to').textContent     = btn.dataset.to;
-            document.getElementById('d-reason').textContent = btn.dataset.reason;
+            document.getElementById('d-reason').textContent = btn.dataset.reason || '—';
         });
     });
     document.querySelectorAll('[data-bs-target="#approveModal"]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('approveReqId').value        = btn.dataset.reqid;
+            document.getElementById('approveReqId').value        = btn.dataset.encid;
             document.getElementById('approveEmpName').textContent = btn.dataset.name;
             document.getElementById('approveTarget').textContent  = btn.dataset.to || 'target posting';
         });
     });
     document.querySelectorAll('[data-bs-target="#rejectModal"]').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('rejectReqId').value        = btn.dataset.reqid;
+            document.getElementById('rejectReqId').value        = btn.dataset.encid;
             document.getElementById('rejectEmpName').textContent = btn.dataset.name;
         });
     });

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace ETMS.Web.Controllers
 {
     [Authorize]
+    [Route("portal")]
     public class DashboardController : Controller
     {
         private readonly ITransferRequestRepository _transferRepo;
@@ -54,13 +55,39 @@ namespace ETMS.Web.Controllers
                 new SelectListItem(d.DepartmentName, d.DepartmentId.ToString())).ToList();
         }
 
+        private static List<DashboardRequestItem> MapDashboardRequests(IEnumerable<ETMS.Application.DTOs.Transfer.TransferRequestListItemDto> requests)
+        {
+            return requests.Select(r => new DashboardRequestItem
+            {
+                TransferRequestId = r.TransferRequestId,
+                FromLocation = r.FromLocation,
+                FromDepartment = r.FromDepartment,
+                TargetLocation = r.ToLocation,
+                TargetDepartment = r.ToDepartment,
+                RequestDate = r.RequestDate,
+                Status = r.Status,
+                TransferType = r.TransferType
+            }).ToList();
+        }
+
+        private async Task<List<DashboardRequestItem>> GetMyRequestsAsync(int employeeId, int take = 5)
+        {
+            var requests = await _transferRepo.GetByEmployeeIdAsync(employeeId);
+            return MapDashboardRequests(requests)
+                .OrderByDescending(r => r.RequestDate)
+                .Take(take)
+                .ToList();
+        }
+
         // ═════════════════════════════════════════════════════════════════
         // INDEX — single entry point, routes by role
         // ═════════════════════════════════════════════════════════════════
         public async Task<IActionResult> Index(
             string searchTerm = null,
             string sortOrder = null,
-            string filterType = "Active")
+            string filterType = "Active",
+            string locationFilter = null,
+            string deptFilter = null)
         {
             var (employeeId, role) = GetCurrentUser();
             if (employeeId == 0)
@@ -71,7 +98,7 @@ namespace ETMS.Web.Controllers
                 "HR" => await BuildHRDashboard(employeeId, searchTerm, sortOrder, filterType),
                 "HOD" => await BuildHODDashboard(employeeId),
                 "Manager" => await BuildManagerDashboard(employeeId),
-                _ => await BuildEmployeeDashboard(employeeId, searchTerm, sortOrder, filterType)
+                _ => await BuildEmployeeDashboard(employeeId, searchTerm, sortOrder, filterType, locationFilter, deptFilter)
             };
         }
 
@@ -80,49 +107,76 @@ namespace ETMS.Web.Controllers
         // ─────────────────────────────────────────────────────────────────
 
         private async Task<IActionResult> BuildEmployeeDashboard(
-    int employeeId, string searchTerm, string sortOrder, string filterType)
+            int employeeId, string searchTerm, string sortOrder, string filterType, string locationFilter, string deptFilter)
         {
             var emp = await _empRepo.GetByIdAsync(employeeId);
             var metrics = await _transferRepo.GetDashboardMetricsAsync(employeeId);
             var all = await _transferRepo.GetByEmployeeIdAsync(employeeId);
 
-            // map — note ToLocation/ToDepartment (not TargetLocation/TargetDepartment)
-            var items = all.Select(r => new DashboardRequestItem
+            var items = MapDashboardRequests(all);
+
+            // filter by tab
+            var filtered = filterType switch
             {
-                TransferRequestId = r.TransferRequestId,
-                TargetLocation = r.ToLocation,
-                TargetDepartment = r.ToDepartment,
-                RequestDate = r.RequestDate,
-                Status = r.Status
-            });
+                "Active" => items.Where(r =>
+                    r.Status == "Pending" ||
+                    r.Status == "ManagerApproved" ||
+                    r.Status == "HODApproved"),
+                "All" => items,
+                _ => items.Where(r =>
+                    r.Status == "Pending" ||
+                    r.Status == "ManagerApproved" ||
+                    r.Status == "HODApproved")
+            };
 
-            var filtered = filterType == "Active"
-                ? items.Where(r => r.Status != "Rejected" && r.Status != "Cancelled")
-                : items;
-
+            // search
             if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
                 filtered = filtered.Where(r =>
-                    r.TransferRequestId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    r.Status.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    r.TransferRequestId.ToString("D5").Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    r.TransferRequestId.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (r.TargetLocation != null && r.TargetLocation.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (r.TargetDepartment != null && r.TargetDepartment.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (r.Status != null && r.Status.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    r.RequestDate.ToString("dd MMM, yyyy").Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    r.RequestDate.ToString("yyyy").Contains(term, StringComparison.OrdinalIgnoreCase)
+                );
+            }
 
+            // location filter
+            if (!string.IsNullOrWhiteSpace(locationFilter))
+                filtered = filtered.Where(r =>
+                    r.TargetLocation != null &&
+                    r.TargetLocation.Contains(locationFilter, StringComparison.OrdinalIgnoreCase));
+
+            // dept filter
+            if (!string.IsNullOrWhiteSpace(deptFilter))
+                filtered = filtered.Where(r =>
+                    r.TargetDepartment != null &&
+                    r.TargetDepartment.Contains(deptFilter, StringComparison.OrdinalIgnoreCase));
+
+            // sort
             filtered = sortOrder switch
             {
                 "date_asc" => filtered.OrderBy(r => r.RequestDate),
                 "date_desc" => filtered.OrderByDescending(r => r.RequestDate),
                 "status" => filtered.OrderBy(r => r.Status),
+                "status_desc" => filtered.OrderByDescending(r => r.Status),
                 _ => filtered.OrderByDescending(r => r.RequestDate)
             };
 
             ViewBag.CurrentFilter = filterType ?? "Active";
             ViewBag.CurrentSearch = searchTerm;
+            ViewBag.CurrentLocation = locationFilter;
+            ViewBag.CurrentDept = deptFilter;
+            ViewBag.CurrentSort = sortOrder;
             ViewBag.DateSort = sortOrder == "date_desc" ? "date_asc" : "date_desc";
             ViewBag.StatusSort = sortOrder == "status" ? "status_desc" : "status";
 
             var vm = new DashboardViewModel
             {
-                UserLocationName = emp?.Location != null
-                         ? $"{emp.Location.City}, {emp.Location.State}"
-                         : "",
+                UserLocationName = emp?.Location != null ? $"{emp.Location.City}, {emp.Location.State}" : "",
                 UserDepartmentName = emp?.Department?.DepartmentName ?? "",
                 Metrics = metrics,
                 Requests = filtered.ToList(),
@@ -150,6 +204,7 @@ namespace ETMS.Web.Controllers
                 Metrics = await _approvalRepo.GetManagerMetricsAsync(managerId),
                 PendingApprovals = await _approvalRepo.GetPendingForManagerAsync(managerId),
                 RecentlyActioned = await _approvalRepo.GetActionedByManagerAsync(managerId),
+                MyRequests = await GetMyRequestsAsync(managerId),
                 Locations = await GetLocationItemsAsync(),
                 Departments = await GetDeptItemsAsync()
             };
@@ -174,6 +229,7 @@ namespace ETMS.Web.Controllers
                 Metrics = await _approvalRepo.GetHODMetricsAsync(hodEmployeeId),
                 PendingApprovals = await _approvalRepo.GetPendingForHODAsync(hodEmployeeId),
                 RecentlyActioned = await _approvalRepo.GetActionedByHODAsync(hodEmployeeId),
+                MyRequests = await GetMyRequestsAsync(hodEmployeeId),
                 AllOpenPositions = await _approvalRepo.GetAllOpenPositionsAsync(),
                 Locations = await GetLocationItemsAsync(),
                 Departments = await GetDeptItemsAsync()

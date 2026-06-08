@@ -1,5 +1,6 @@
 ﻿using ETMS.Application.Interfaces;
 using ETMS.Domain.Entities;
+using ETMS.Web.Controllers;
 using ETMS.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,31 +19,52 @@ namespace ETMS.Web.Controllers
         private readonly ILocationRepository _locationRepo;
         private readonly IDepartmentRepository _deptRepo;
         private readonly IEmployeeRepository _employeeRepo;
+        private readonly IUrlEncryptionService _enc;
+        private readonly IApprovalDashboardRepository _approvalRepo;
 
         public TransferController(
             ITransferRequestRepository transferRepo,
             ILocationRepository locationRepo,
             IDepartmentRepository deptRepo,
-            IEmployeeRepository employeeRepo)
+            IEmployeeRepository employeeRepo,
+            IUrlEncryptionService enc,
+            IApprovalDashboardRepository approvalRepo)
         {
             _transferRepo = transferRepo;
             _locationRepo = locationRepo;
             _deptRepo = deptRepo;
             _employeeRepo = employeeRepo;
+            _enc = enc;
+            _approvalRepo = approvalRepo;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(string? copyFrom = null)
         {
             var model = new CreateTransferViewModel();
 
             var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
 
             if (int.TryParse(employeeIdClaim, out int employeeId))
             {
-                // This calls our new helper method below to load all the left-panel data and dropdowns
                 await PopulateEmployeeDisplayDataAsync(model, employeeId);
+
+                if (!string.IsNullOrWhiteSpace(copyFrom))
+                {
+                    var sourceRequestId = _enc.Decrypt(copyFrom);
+                    if (sourceRequestId != -1)
+                    {
+                        var sourceRequest = await _transferRepo.GetByIdAsync(sourceRequestId);
+                        if (sourceRequest != null && sourceRequest.EmployeeId == employeeId)
+                        {
+                            ApplyExistingRequestToModel(model, sourceRequest);
+                        }
+                    }
+                }
             }
+
+            model.RequesterRoleLabel = role;
 
             return View(model);
         }
@@ -137,20 +159,72 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> View(int id)
+        public async Task<IActionResult> View(string id)
         {
-            var request = await _transferRepo.GetByIdAsync(id);
+            var realId = _enc.Decrypt(id);
+            if (realId == -1) return BadRequest("Invalid or tampered request.");
 
-            if (request == null)
-                return NotFound();
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
+            int.TryParse(idClaim, out int currentEmpId);
+
+            var request = await _transferRepo.GetByIdAsync(realId);
+            if (request == null) return NotFound("Request not found.");
+
+            // Access control per role
+            if (roleClaim == "Employee")
+            {
+                // Employee can only see their own
+                if (request.EmployeeId != currentEmpId)
+                    return NotFound("Request not found or access denied.");
+            }
+            else if (roleClaim == "Manager")
+            {
+                // Manager can only see direct reports' requests
+                var employee = await _employeeRepo.GetEmployeeByIdAsync(request.EmployeeId);
+                if (employee == null || employee.ReportingManagerId != currentEmpId)
+                    return NotFound("Request not found or access denied.");
+            }
+            // HOD and HR can see all requests — no extra check needed
+
+            // Fetch location and department names
+            var locations = await _locationRepo.GetAllAsync();
+            var departments = await _deptRepo.GetAllAsync();
+
+            ViewBag.FromLocation = locations.FirstOrDefault(l => l.LocationId == request.FromLocationId)
+                                     is var fl && fl != null ? $"{fl.City}, {fl.State}" : "—";
+            ViewBag.ToLocation = locations.FirstOrDefault(l => l.LocationId == request.ToLocationId)
+                                     is var tl && tl != null ? $"{tl.City}, {tl.State}" : "—";
+            ViewBag.FromDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.FromDepartmentId)?.DepartmentName ?? "—";
+            ViewBag.ToDepartment = departments.FirstOrDefault(d => d.DepartmentId == request.ToDepartmentId)?.DepartmentName ?? "—";
+            ViewBag.UserRole = roleClaim;
+            ViewBag.CanResubmit = request.EmployeeId == currentEmpId && (request.Status == "Rejected" || request.Status == "Cancelled");
+            ViewBag.CanDownloadLetter = request.Status == "Approved";
+
+            // Fetch approval trail
+            ViewBag.ApprovalTrail = await _approvalRepo.GetApprovalTrailAsync(realId);
 
             return View("ViewTransfer", request);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
-            await _transferRepo.DeleteAsync(id);
+            var realId = _enc.Decrypt(id);
+            if (realId == -1) return BadRequest("Invalid or tampered request.");
+
+            var employeeIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(employeeIdClaim, out int empId);
+
+            var request = await _transferRepo.GetByIdAsync(realId);
+            if (request == null || request.EmployeeId != empId)
+                return NotFound("Request not found or access denied.");
+
+            if (request.Status != "Pending")
+                return BadRequest("Only pending transfer requests can be cancelled.");
+
+            await _transferRepo.CancelAsync(realId, empId);
+            TempData["SuccessMessage"] = "Transfer request cancelled.";
             return RedirectToAction("Index", "Dashboard");
         }
 
@@ -201,7 +275,43 @@ namespace ETMS.Web.Controllers
                 model.RawLocations = locations;
                 model.Locations = locations.Select(l => new SelectListItem { Value = l.LocationId.ToString(), Text = l.City });
                 model.Departments = departments.Select(d => new SelectListItem { Value = d.DepartmentId.ToString(), Text = d.DepartmentName });
+                model.RequesterRoleLabel = User.FindFirst(ClaimTypes.Role)?.Value ?? "Employee";
+                model.SuggestedOpenPositions = (await _approvalRepo.GetAllOpenPositionsAsync())
+                    .GroupBy(p => new { p.LocationName, p.DepartmentName })
+                    .OrderByDescending(g => g.Count())
+                    .ThenBy(g => g.Key.LocationName)
+                    .ThenBy(g => g.Key.DepartmentName)
+                    .Select(g => new OpenPositionSuggestionItem
+                    {
+                        LocationName = g.Key.LocationName,
+                        DepartmentName = g.Key.DepartmentName,
+                        OpenSlotCount = g.Count()
+                    })
+                    .ToList();
             }
+        }
+
+        private static void ApplyExistingRequestToModel(CreateTransferViewModel model, TransferRequest request)
+        {
+            model.ToLocationId = request.ToLocationId;
+            model.ToDepartmentId = request.ToDepartmentId;
+            model.ExpectedRelievingDate = request.ExpectedRelievingDate;
+            model.ExpectedJoiningDate = request.ExpectedJoiningDate;
+            model.TransferType = request.LetterType ?? request.TransferType;
+            model.TransferTypeAuto = request.TransferType;
+            model.WithinCity = string.IsNullOrWhiteSpace(request.WithinCity) ? model.WithinCity : request.WithinCity;
+            model.RelocationStatus = string.IsNullOrWhiteSpace(request.RelocationStatus) ? model.RelocationStatus : request.RelocationStatus;
+            model.StartDate = request.StartDate;
+            model.EndDate = request.EndDate;
+            model.ProjectName = request.ProjectName ?? string.Empty;
+            model.NewVertical = request.NewVertical ?? string.Empty;
+            model.NewBU = request.NewBU ?? string.Empty;
+            model.NewISPsno = request.NewISPsno ?? string.Empty;
+            model.NewISName = request.NewISName ?? string.Empty;
+            model.NewISEmail = request.NewISEmail ?? string.Empty;
+            model.ICHead = request.ICHead ?? string.Empty;
+            model.Remarks = request.Remarks ?? request.Reason;
+            model.PrefilledFromRequestId = request.TransferRequestId;
         }
     }
 }

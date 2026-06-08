@@ -54,6 +54,12 @@
 
     .field-validation-error { font-size:11px; color:#EF4444; margin-top:3px; display:block; }
     .input-validation-error { border-color:#EF4444 !important; }
+    .assist-note { border-radius: 12px; padding: 12px 14px; font-size: 12px; border: 1px solid transparent; }
+    .assist-note.info { background:#eef2ff; color:#3153a4; border-color:#d8e1ff; }
+    .assist-note.success { background:#ecfdf5; color:#0f766e; border-color:#c8f5df; }
+    .assist-note.hidden { display:none; }
+    .suggestion-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .suggestion-count { background:#eef2ff; color:var(--accent); border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700; }
 </style>
 
 <div class="container-fluid mt-4 mb-5" style="max-width:1360px;">
@@ -61,7 +67,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-0" style="color:var(--text);">
-                <i class="fas fa-plane-departure me-2" style="color:var(--accent);"></i> Employee Mobility Request
+                <i class="fas fa-plane-departure me-2" style="color:var(--accent);"></i> @Model.RequesterRoleLabel Mobility Request
             </h3>
             <p class="text-muted small mb-0 mt-1">Fill in the details below and submit for approval.</p>
         </div>
@@ -69,6 +75,18 @@
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
     </div>
+
+    @if (Model.PrefilledFromRequestId.HasValue)
+    {
+        <div class="alert border-0 shadow-sm mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2"
+             style="background:#eef2ff;border-radius:12px;">
+            <div class="small text-dark fw-medium">
+                <i class="fas fa-copy text-primary me-2"></i>
+                This form was prefilled from request <strong>TR-@Model.PrefilledFromRequestId.Value.ToString("D5")</strong>. Review the details before resubmitting.
+            </div>
+            <a asp-action="Create" class="btn btn-light btn-sm rounded-pill px-3">Start Fresh</a>
+        </div>
+    }
 
     <div class="row g-4">
 
@@ -144,6 +162,55 @@
         <!-- RIGHT: Form -->
         <div class="col-lg-9">
             <form asp-action="Create" method="post">
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-lightbulb" style="color:var(--accent);"></i> Smart Assist
+                    </div>
+                    <div class="section-body">
+                        <div id="draftStatusBanner" class="assist-note info hidden mb-3"></div>
+
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="fw-bold text-dark mb-1">Drafts are auto-saved in this browser</div>
+                                <div class="text-muted small">If you close the page midway, you can restore your latest draft when you come back. Prefilled requests can also be quickly adjusted and resubmitted here.</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="restoreDraftBtn" class="btn btn-light border rounded-pill px-3">Restore Draft</button>
+                                <button type="button" id="clearDraftBtn" class="btn btn-light border rounded-pill px-3">Clear Draft</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <span class="badge bg-light text-dark border rounded-pill px-3 py-2">Live vacancy suggestions</span>
+                            <span class="badge bg-light text-dark border rounded-pill px-3 py-2">Browser draft recovery</span>
+                            @if (Model.PrefilledFromRequestId.HasValue)
+                            {
+                                <span class="badge text-primary border border-primary rounded-pill px-3 py-2">Resubmission mode</span>
+                            }
+                        </div>
+
+                        @if (Model.SuggestedOpenPositions.Any())
+                        {
+                            <div class="mt-4">
+                                <div class="fw-bold text-dark mb-2">Popular Openings</div>
+                                <div class="text-muted small mb-3">Based on currently open transfer positions. Clicking a suggestion will prefill the target location and department for you.</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var position in Model.SuggestedOpenPositions.Take(8))
+                                    {
+                                        <button type="button"
+                                                class="btn btn-light border rounded-pill px-3 py-2 vacancy-suggestion"
+                                                data-location="@position.LocationName"
+                                                data-department="@position.DepartmentName">
+                                            <i class="fas fa-location-dot text-primary me-1"></i>@position.LocationName
+                                            <span class="text-muted ms-1">• @position.DepartmentName</span>
+                                            <span class="suggestion-count ms-2">@position.OpenSlotCount open</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
 
                 <!-- 1. Transfer Location -->
                 <div class="section-card">
@@ -360,9 +427,27 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
         var typeSelect = document.getElementById('toTypeDropdown');
         var locSelect  = document.getElementById('toLocationDropdown');
         var allOptions = Array.from(locSelect.options).filter(o => o.value !== "");
+        const deptSelect = document.querySelector('[name="ToDepartmentId"]');
+        const employeeCode = '@Model.EmployeeCode';
+        const draftKey = 'etms-transfer-draft-' + employeeCode;
+        const draftStatusBanner = document.getElementById('draftStatusBanner');
+        const isPrefilledRequest = @(Model.PrefilledFromRequestId.HasValue ? "true" : "false");
+
+        function showBanner(message, type) {
+            if (!draftStatusBanner) return;
+            draftStatusBanner.textContent = message;
+            draftStatusBanner.classList.remove('hidden', 'info', 'success');
+            draftStatusBanner.classList.add(type);
+        }
+
+        function hideBanner() {
+            if (!draftStatusBanner) return;
+            draftStatusBanner.classList.add('hidden');
+        }
 
         typeSelect.addEventListener('change', function () {
             var selected = this.value;
@@ -376,5 +461,91 @@
         });
 
         typeSelect.dispatchEvent(new Event('change'));
+
+        document.querySelectorAll('.vacancy-suggestion').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const locationLabel = this.dataset.location;
+                const departmentLabel = this.dataset.department;
+
+                const locationOption = Array.from(allOptions).find(opt => opt.text.startsWith(locationLabel.split(',')[0]));
+                if (locationOption) {
+                    typeSelect.value = locationOption.getAttribute('data-type') || '';
+                    typeSelect.dispatchEvent(new Event('change'));
+                    const selectedOption = Array.from(locSelect.options).find(opt => opt.value === locationOption.value);
+                    if (selectedOption) {
+                        locSelect.value = selectedOption.value;
+                    }
+                }
+
+                const deptOption = Array.from(deptSelect.options).find(opt => opt.text === departmentLabel);
+                if (deptOption) {
+                    deptSelect.value = deptOption.value;
+                }
+
+                showBanner(`Suggestion applied for ${locationLabel} - ${departmentLabel}. Review the rest of the request before submitting.`, 'success');
+            });
+        });
+
+        function collectDraft() {
+            const data = {};
+            form.querySelectorAll('input, select, textarea').forEach(field => {
+                if (!field.name || field.disabled) return;
+                if ((field.type === 'radio' || field.type === 'checkbox') && !field.checked) return;
+                data[field.name] = field.value;
+            });
+            localStorage.setItem(draftKey, JSON.stringify(data));
+            if (!isPrefilledRequest) {
+                showBanner('Draft saved in this browser. You can safely return later and restore it.', 'info');
+            }
+        }
+
+        function restoreDraft() {
+            const raw = localStorage.getItem(draftKey);
+            if (!raw) return false;
+
+            const data = JSON.parse(raw);
+            Object.entries(data).forEach(([name, value]) => {
+                const fields = form.querySelectorAll(`[name="${name}"]`);
+                fields.forEach(field => {
+                    if (field.type === 'radio' || field.type === 'checkbox') {
+                        field.checked = field.value === value;
+                    } else {
+                        field.value = value;
+                    }
+                });
+            });
+
+            typeSelect.dispatchEvent(new Event('change'));
+            if (data.ToLocationId) {
+                locSelect.value = data.ToLocationId;
+            }
+            showBanner('Saved draft restored. Double-check the dates and target posting before submitting.', 'success');
+            return true;
+        }
+
+        document.getElementById('restoreDraftBtn')?.addEventListener('click', function () {
+            if (!restoreDraft()) {
+                showBanner('No saved draft was found for this form yet.', 'info');
+            }
+        });
+
+        document.getElementById('clearDraftBtn')?.addEventListener('click', function () {
+            localStorage.removeItem(draftKey);
+            showBanner('Saved draft cleared for this request form.', 'info');
+        });
+
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('change', collectDraft);
+            field.addEventListener('input', collectDraft);
+        });
+
+        form.addEventListener('submit', function () {
+            localStorage.removeItem(draftKey);
+            hideBanner();
+        });
+
+        if (localStorage.getItem(draftKey)) {
+            showBanner('A saved draft is available for this request form. Use Restore Draft to continue from where you left off.', 'info');
+        }
     });
 </script>

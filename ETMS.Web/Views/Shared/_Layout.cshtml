@@ -2,6 +2,7 @@
 @using ETMS.Application.Interfaces
 @inject IEmployeeRepository EmployeeRepo
 @inject ITransferRequestRepository TransferRepo
+@inject INotificationRepository NotificationRepo
 
 <!DOCTYPE html>
 <html lang="en">
@@ -48,60 +49,77 @@
                                 var allMyRequests = await TransferRepo.GetByEmployeeIdAsync(empId);
                                 var recentRequests = allMyRequests.Take(3).ToList();
                                 var notifCount = recentRequests.Count;
+                                var unreadCount = await NotificationRepo.GetUnreadCountAsync(empId);
+                                var notifications = await NotificationRepo.GetUnreadAsync(empId);
 
                                 if (currentEmp != null)
                                 {
                                     <!-- Notification Bell Dropdown -->
                                     <div class="dropdown me-4 mt-1">
                                         <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle-no-caret position-relative"
-                                           id="dropdownNotifications" data-bs-toggle="dropdown" aria-expanded="false">
+                                               id="dropdownNotifications" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="far fa-bell" style="font-size: 1.3rem; color: #555;"></i>
-                                            @if (notifCount > 0)
+                                            @if (unreadCount > 0)
                                             {
                                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                                       style="font-size: 0.6rem; margin-top: 2px;">
-                                                    @notifCount
-                                                    <span class="visually-hidden">unread messages</span>
+                                                    @unreadCount
                                                 </span>
                                             }
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0"
                                             aria-labelledby="dropdownNotifications"
-                                            style="width: 320px; border-radius: 8px;">
-                                            <li><h6 class="dropdown-header fw-bold text-dark" style="font-size: 14px;">Recent Request Updates</h6></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            @if (!recentRequests.Any())
+                                            style="width: 340px; border-radius: 8px;">
+                                            <li>
+                                                <div class="d-flex justify-content-between align-items-center px-3 py-2">
+                                                    <h6 class="fw-bold text-dark mb-0" style="font-size:14px;">Notifications</h6>
+                                                    @if (unreadCount > 0)
+                                                    {
+                                                        <a href="/Notification/MarkRead" class="small text-primary text-decoration-none">
+                                                            Mark all read
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </li>
+                                            <li><hr class="dropdown-divider m-0"></li>
+                                            @if (!notifications.Any())
                                             {
-                                                <li><span class="dropdown-item-text text-muted small text-center d-block py-2">No recent updates</span></li>
+                                                <li>
+                                                    <span class="dropdown-item-text text-muted small text-center d-block py-3">
+                                                        <i class="far fa-bell-slash d-block mb-1" style="font-size:1.2rem;"></i>
+                                                        No notifications
+                                                    </span>
+                                                </li>
                                             }
                                             else
                                             {
-                                                foreach (var req in recentRequests)
+                                                foreach (var notif in notifications)
                                                 {
-                                                    string iconClass = req.Status == "Approved" ? "fa-check" : (req.Status == "Rejected" ? "fa-times" : "fa-clock");
-                                                    string bgClass = req.Status == "Approved" ? "bg-success" : (req.Status == "Rejected" ? "bg-danger" : "bg-warning");
+                                                    string iconClass = notif.Title.Contains("Approved") ? "fa-check" :
+                                                                       notif.Title.Contains("Rejected") ? "fa-times" : "fa-info";
+                                                    string bgClass = notif.Title.Contains("Approved") ? "bg-success" :
+                                                                       notif.Title.Contains("Rejected") ? "bg-danger" : "bg-primary";
+                                                    string rowBg = notif.IsRead ? "" : "background:#f0f4ff;";
+
                                                     <li>
-                                                        <a class="dropdown-item py-2 px-3" href="#">
-                                                            <div class="d-flex align-items-center">
-                                                                <div class="@bgClass text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                                                                     style="width: 35px; height: 35px; flex-shrink: 0;">
-                                                                    <i class="fas @iconClass" style="font-size: 14px;"></i>
+                                                        <a class="dropdown-item py-2 px-3"
+                                                               href="@(notif.TransferRequestId.HasValue ? $"/Transfer/View/{notif.TransferRequestId}" : "/Dashboard/Index")"
+                                                               style="@rowBg">
+                                                            <div class="d-flex align-items-start gap-2">
+                                                                <div class="@bgClass text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1"
+                                                                     style="width:32px;height:32px;">
+                                                                    <i class="fas @iconClass" style="font-size:12px;"></i>
                                                                 </div>
                                                                 <div>
-                                                                    <p class="mb-0 fw-bold" style="font-size: 13px; color: #333;">TR-@req.TransferRequestId.ToString("D5")</p>
-                                                                    <p class="mb-0 text-muted" style="font-size: 12px; white-space: normal;">Status: @req.Status</p>
+                                                                    <p class="mb-0 fw-bold" style="font-size:12px;color:#333;">@notif.Title</p>
+                                                                    <p class="mb-0 text-muted" style="font-size:11px;white-space:normal;">@notif.Message</p>
+                                                                    <p class="mb-0 text-muted" style="font-size:10px;">@notif.CreatedAt.ToString("dd MMM, HH:mm")</p>
                                                                 </div>
                                                             </div>
                                                         </a>
                                                     </li>
                                                 }
                                             }
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a asp-controller="Dashboard" asp-action="Index"
-                                                   class="dropdown-item text-center small fw-bold"
-                                                   style="color: #00d0f1;">View All Requests</a>
-                                            </li>
                                         </ul>
                                     </div>
 

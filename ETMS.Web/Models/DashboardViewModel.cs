@@ -1,5 +1,4 @@
-﻿using ETMS.Application.DTOs;
-using ETMS.Application.DTOs.Transfer;
+using ETMS.Application.DTOs.Dashboard;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ETMS.Web.Models

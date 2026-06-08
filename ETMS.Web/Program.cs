@@ -5,6 +5,9 @@ using ETMS.Infrastructure.Context;
 using ETMS.Infrastructure.Repositories;
 using ETMS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+DotNetEnv.Env.Load();
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 try
 {
@@ -16,6 +19,7 @@ try
     // ── Repository Layer ───────────────────────────────────────────────────
     builder.Services.AddScoped<IApprovalDashboardRepository, ApprovalDashboardRepository>();
     builder.Services.AddScoped<IApprovalService, ApprovalService>();
+    builder.Services.AddScoped<IUrlEncryptionService, UrlEncryptionService>();
 
     // ── Infrastructure Layer ──────────────────────────────────────────────────
     builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
@@ -30,6 +34,7 @@ try
     // Services
     builder.Services.AddScoped<IProfileService, ProfileService>();
     builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
+    builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
     // ── Email Service ─────────────────────────────────────────────────────────
     builder.Services.AddScoped<IEmailService>(_ =>
@@ -86,6 +91,10 @@ try
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Account}/{action=Login}/{id?}");
+
+    // Ensure letters directory exists on startup
+    var lettersPath = Path.Combine(app.Environment.WebRootPath, "letters");
+    Directory.CreateDirectory(lettersPath); // does nothing if already exists
 
     app.Run();
 }
