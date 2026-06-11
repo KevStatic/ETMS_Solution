@@ -60,6 +60,26 @@
     .assist-note.hidden { display:none; }
     .suggestion-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .suggestion-count { background:#eef2ff; color:var(--accent); border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700; }
+
+    /* Dark mode: the card surfaces inherit dark via the layout's CSS variables;
+       these override the few hardcoded light hex values used above. */
+    body.theme-dark .loc-from { background:#273347; border-color:#3a4860; }
+    body.theme-dark .loc-to { background:#1c3252; border-color:#3b62a8; }
+    body.theme-dark .btn-cancel { background:#1e293b; border-color:#3a4860; color:#cbd5e1; }
+    body.theme-dark .disabled-field { background:#1f2a3b !important; color:#94a3b8; }
+    body.theme-dark .assist-note.info { background:#1c3252; color:#bfdbfe; border-color:#3b62a8; }
+    body.theme-dark .assist-note.success { background:#13311f; color:#bbf7d0; border-color:#2f7d4f; }
+    body.theme-dark .suggestion-count { background:#1c3252; color:#93c5fd; }
+
+    @@media (prefers-color-scheme: dark) {
+        body.theme-system .loc-from { background:#273347; border-color:#3a4860; }
+        body.theme-system .loc-to { background:#1c3252; border-color:#3b62a8; }
+        body.theme-system .btn-cancel { background:#1e293b; border-color:#3a4860; color:#cbd5e1; }
+        body.theme-system .disabled-field { background:#1f2a3b !important; color:#94a3b8; }
+        body.theme-system .assist-note.info { background:#1c3252; color:#bfdbfe; border-color:#3b62a8; }
+        body.theme-system .assist-note.success { background:#13311f; color:#bbf7d0; border-color:#2f7d4f; }
+        body.theme-system .suggestion-count { background:#1c3252; color:#93c5fd; }
+    }
 </style>
 
 <div class="container-fluid mt-4 mb-5" style="max-width:1360px;">
