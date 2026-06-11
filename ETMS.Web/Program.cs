@@ -37,15 +37,27 @@ try
     builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
     // ── Email Service ─────────────────────────────────────────────────────────
+    // Secrets come from ETMS.Web/.env (Smtp__Username etc.) loaded by DotNetEnv above;
+    // non-secret defaults (Host/Port) live in appsettings.json.
     builder.Services.AddScoped<IEmailService>(_ =>
     {
         var smtp = builder.Configuration.GetSection("Smtp");
+
+        string Require(string key)
+        {
+            var value = smtp[key];
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidOperationException(
+                    $"Smtp:{key} is not configured. Set Smtp__{key} in ETMS.Web/.env (see .env.example).");
+            return value;
+        }
+
         return new EmailService(
-            host: smtp["Host"]!,
-            port: int.Parse(smtp["Port"]!),
-            username: smtp["Username"]!,
-            password: smtp["Password"]!,
-            fromEmail: smtp["FromEmail"]!
+            host: Require("Host"),
+            port: int.TryParse(smtp["Port"], out var port) ? port : 587,
+            username: Require("Username"),
+            password: Require("Password"),
+            fromEmail: Require("FromEmail")
         );
     });
 
@@ -105,5 +117,9 @@ catch (Exception ex)
     Console.WriteLine(ex.Message);
     Console.WriteLine(ex.InnerException?.Message);
     Console.ResetColor();
-    Console.ReadKey();
+
+    // Keep the window open only when running interactively; ReadKey throws
+    // when console input is redirected (e.g. hosted under IIS / a service).
+    if (!Console.IsInputRedirected)
+        Console.ReadKey();
 }

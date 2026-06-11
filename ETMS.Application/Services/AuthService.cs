@@ -22,7 +22,7 @@ namespace ETMS.Application.Services
             if (user == null)
                 return new LoginResultDto { Success = false, ErrorMessage = "Invalid username or password." };
 
-            bool passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
+            bool passwordValid = VerifyPassword(request.Password, user.Password);
 
             if (!passwordValid)
                 return new LoginResultDto { Success = false, ErrorMessage = "Invalid username or password." };
@@ -37,6 +37,30 @@ namespace ETMS.Application.Services
                 Role = user.Role,
                 EmployeeId = user.EmployeeId
             };
+        }
+
+        /// <summary>
+        /// Verifies a password against a stored BCrypt hash. If the stored value is not a
+        /// valid BCrypt hash (e.g. seed data that was never migrated), the credentials are
+        /// treated as invalid instead of surfacing a 500 to the login page.
+        /// </summary>
+        private static bool VerifyPassword(string plainText, string storedHash)
+        {
+            if (string.IsNullOrEmpty(storedHash))
+                return false;
+
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(plainText, storedHash);
+            }
+            catch (SaltParseException)
+            {
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
         }
     }
 }

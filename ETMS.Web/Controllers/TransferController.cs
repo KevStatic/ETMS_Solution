@@ -70,6 +70,7 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateTransferViewModel model)
         {
             // Ignore validation for the display-only fields on the left panel so they don't block submission
@@ -221,6 +222,7 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
             var realId = _enc.Decrypt(id);

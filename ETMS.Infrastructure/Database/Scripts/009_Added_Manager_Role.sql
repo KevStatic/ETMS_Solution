@@ -50,7 +50,8 @@ BEGIN
     VALUES
     ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP005'),
      'rahul_mgr',
-     'pass123',
+     -- BCrypt hash of the demo password 'pass123'
+     '$2a$12$neFWHcPZagH487DHPf7ZBeASOAoYx2mPL77lNPN5D3arVKmKTKUOy',
      'Manager',
      1);
 

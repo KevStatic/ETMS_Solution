@@ -53,9 +53,10 @@ namespace ETMS.Application.Services
             {
                 await _emailService.SendOtpEmailAsync(dto.Email, rawOtp);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return (false, $"Failed to send OTP. Please try again. Error: {ex.Message}");
+                // Don't leak SMTP/internal error details to the UI.
+                return (false, "Failed to send OTP. Please try again in a moment.");
             }
 
             return (true, "OTP sent to your email. Valid for 2 minutes.");
@@ -105,14 +106,8 @@ namespace ETMS.Application.Services
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────────
-        private static string GenerateOtp()
-        {
-            using var rng = RandomNumberGenerator.Create();
-            byte[] bytes = new byte[4];
-            rng.GetBytes(bytes);
-            int value = Math.Abs(BitConverter.ToInt32(bytes, 0)) % 1_000_000;
-            return value.ToString("D6");
-        }
+        private static string GenerateOtp() =>
+            RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
         private static string GenerateResetToken() =>
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))

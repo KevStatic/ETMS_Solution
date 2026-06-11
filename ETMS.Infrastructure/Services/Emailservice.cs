@@ -23,47 +23,26 @@ namespace ETMS.Infrastructure.Services
 
         public async Task SendOtpEmailAsync(string toEmail, string otpCode)
         {
-            try
+            using var client = new SmtpClient(_host, _port)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("=== SMTP DEBUG ===");
-                Console.WriteLine($"Host:      {_host}");
-                Console.WriteLine($"Port:      {_port}");
-                Console.WriteLine($"Username:  {_username}");
-                Console.WriteLine($"Password:  {_password.Length} chars");
-                Console.ResetColor();
+                Credentials = new NetworkCredential(_username, _password),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Timeout = 30000   // 30 second timeout
+            };
 
-                using var client = new SmtpClient(_host, _port)
-                {
-                    Credentials = new NetworkCredential(_username, _password),
-                    EnableSsl = true,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Timeout = 30000   // 30 second timeout
-                };
-
-                var mail = new MailMessage
-                {
-                    From = new MailAddress(_fromEmail, "ETMS Support"),
-                    Subject = "Your ETMS Password Reset OTP",
-                    Body = BuildHtmlEmail(otpCode),
-                    IsBodyHtml = true
-                };
-                mail.To.Add(toEmail);
-
-                await client.SendMailAsync(mail);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("✅ EMAIL SENT SUCCESSFULLY!");
-                Console.ResetColor();
-            }
-            catch (Exception ex)
+            var mail = new MailMessage
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"❌ SMTP ERROR:  {ex.Message}");
-                Console.WriteLine($"❌ INNER ERROR: {ex.InnerException?.Message}");
-                Console.ResetColor();
-                throw;
-            }
+                From = new MailAddress(_fromEmail, "ETMS Support"),
+                Subject = "Your ETMS Password Reset OTP",
+                Body = BuildHtmlEmail(otpCode),
+                IsBodyHtml = true
+            };
+            mail.To.Add(toEmail);
+
+            // Failures propagate to the caller (ForgotPasswordService), which
+            // shows the user a generic message without leaking SMTP details.
+            await client.SendMailAsync(mail);
         }
 
         private static string BuildHtmlEmail(string otp) => $@"

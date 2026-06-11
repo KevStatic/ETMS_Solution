@@ -212,8 +212,9 @@ VALUES
 
 DECLARE @EmpId INT = SCOPE_IDENTITY();
 
+-- Password is the BCrypt hash of the demo password 'pass123'
 INSERT INTO UserAccounts (EmployeeId, Username, Password, Role)
-VALUES (@EmpId, 'keval', 'pass123', 'Employee');
+VALUES (@EmpId, 'keval', '$2a$12$neFWHcPZagH487DHPf7ZBeASOAoYx2mPL77lNPN5D3arVKmKTKUOy', 'Employee');
 
 
 /*==========================================================

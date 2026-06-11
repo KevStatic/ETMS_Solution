@@ -55,21 +55,24 @@ END
 GO
 
 -- 4. Create Login Accounts securely
+-- Passwords are the BCrypt hash of the demo password 'pass123'
+DECLARE @DemoHash NVARCHAR(200) = '$2a$12$neFWHcPZagH487DHPf7ZBeASOAoYx2mPL77lNPN5D3arVKmKTKUOy';
+
 IF NOT EXISTS (SELECT 1 FROM UserAccounts WHERE Username = 'anita_hr')
 BEGIN
     INSERT INTO UserAccounts (EmployeeId, Username, Password, Role, IsActive)
-    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP002'), 'anita_hr', 'pass123', 'HR', 1);
+    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP002'), 'anita_hr', @DemoHash, 'HR', 1);
 END
 
 IF NOT EXISTS (SELECT 1 FROM UserAccounts WHERE Username = 'tejas_emp')
 BEGIN
     INSERT INTO UserAccounts (EmployeeId, Username, Password, Role, IsActive)
-    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP003'), 'tejas_emp', 'pass123', 'Employee', 1);
+    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP003'), 'tejas_emp', @DemoHash, 'Employee', 1);
 END
 
 IF NOT EXISTS (SELECT 1 FROM UserAccounts WHERE Username = 'vikram_hod')
 BEGIN
     INSERT INTO UserAccounts (EmployeeId, Username, Password, Role, IsActive)
-    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP004'), 'vikram_hod', 'pass123', 'Admin', 1);
+    VALUES ((SELECT EmployeeId FROM Employee WHERE EmployeeCode = 'EMP004'), 'vikram_hod', @DemoHash, 'Admin', 1);
 END
 GO

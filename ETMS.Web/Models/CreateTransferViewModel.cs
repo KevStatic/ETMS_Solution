@@ -88,16 +88,32 @@ namespace ETMS.Web.Models
         public string Remarks { get; set; } = string.Empty;
 
         // --- RELOCATION & REIMBURSEMENT ---
+        [StringLength(50)]
         public string TravelMode { get; set; } = string.Empty;
+
+        [StringLength(50)]
         public string TravelClass { get; set; } = string.Empty;
+
+        [StringLength(3)]
         public string RelocationAllowance { get; set; } = "No";
+
+        [StringLength(50)]
         public string AccommodationRequired { get; set; } = "Not Required";
+
+        [Range(0, 20, ErrorMessage = "Dependents must be between 0 and 20.")]
         public int? DependentsCount { get; set; }
 
         // --- HANDOVER & TRANSITION ---
+        [Range(0, 52, ErrorMessage = "Notice period must be between 0 and 52 weeks.")]
         public int? NoticePeriodWeeks { get; set; }
+
+        [StringLength(2000)]
         public string CurrentTaskStatus { get; set; } = string.Empty;
+
+        [StringLength(2000)]
         public string HandoverPlan { get; set; } = string.Empty;
+
+        [StringLength(3)]
         public string KnowledgeTransferReqd { get; set; } = "No";
 
         // Dropdowns

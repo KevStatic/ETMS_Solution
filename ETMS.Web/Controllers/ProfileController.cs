@@ -26,6 +26,7 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
         {
             await _profileService.UpdateProfileAsync(GetUserId(), dto);
@@ -40,6 +41,7 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveSettings(UserSettingsDto dto)
         {
             var userId = GetUserId();
@@ -73,6 +75,7 @@ namespace ETMS.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
         {
             var ok = await _profileService.ChangePasswordAsync(GetUserId(), dto);
