@@ -11,6 +11,10 @@ namespace ETMS.Application.Interfaces
         // Profile methods
         Task<UserAccount?> GetByUserAccountIdAsync(int userAccountId);
         Task<UserAccount?> GetByEmployeeIdAsync(int employeeId);
+
+        /// <summary>Resolves the email address used for OTP delivery (falls back to Username).</summary>
+        Task<string?> GetLoginEmailByEmployeeIdAsync(int employeeId);
+
         Task<bool> UpdatePasswordByIdAsync(int userAccountId, string newPassword);
         Task<bool> UpdatePasswordByEmployeeIdAsync(int employeeId, string newPassword);
     }

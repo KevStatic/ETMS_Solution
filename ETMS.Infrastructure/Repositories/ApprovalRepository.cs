@@ -100,7 +100,13 @@ namespace ETMS.Infrastructure.Repositories
                     _ => $"Your transfer request TR-{requestId:D5} status has been updated to {newStatus}."
                 };
 
-                await _notificationRepo.AddAsync(empId, notifTitle, notifMsg, requestId);
+                var notifType = newStatus switch
+                {
+                    "Approved" => ETMS.Application.DTOs.Notifications.NotificationType.LetterReady,
+                    _ => ETMS.Application.DTOs.Notifications.NotificationType.TransferStatus
+                };
+
+                await _notificationRepo.AddAsync(empId, notifTitle, notifMsg, requestId, notifType);
 
                 tx.Commit();
                 return true;

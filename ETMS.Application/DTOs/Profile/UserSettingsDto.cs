@@ -1,15 +1,19 @@
-﻿namespace ETMS.Application.DTOs.Profile
+namespace ETMS.Application.DTOs.Profile
 {
     public class UserSettingsDto
     {
         public int UserId { get; set; }
-        public bool EmailLeaveNotif { get; set; }
-        public bool EmailAttendanceNotif { get; set; }
-        public bool EmailPayrollNotif { get; set; }
-        public bool PushInAppAlerts { get; set; }
+
+        // Notification preferences (transfer workflow)
+        public bool PushInAppAlerts { get; set; } = true;
+        public bool NotifyTransferStatus { get; set; } = true;
+        public bool NotifyApprovalRequests { get; set; } = true;
+        public bool NotifyLetterReady { get; set; } = true;
+
+        // Security
         public bool TwoFactorEnabled { get; set; }
-        public bool ProfileVisible { get; set; }
-        public bool ShowOnlineStatus { get; set; }
+
+        // Appearance
         public string Language { get; set; } = "English";
         public string Timezone { get; set; } = "IST";
         public string Theme { get; set; } = "Light";

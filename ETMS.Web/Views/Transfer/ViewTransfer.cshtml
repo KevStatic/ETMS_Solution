@@ -40,21 +40,21 @@
         "HODApproved" => "Approved by HOD and now waiting for HR final approval.",
         _ => "Awaiting the reporting manager's decision."
     };
-    var bannerBackground = Model.Status switch
+    var bannerSurface = Model.Status switch
     {
-        "Approved" => "#e8f5e9",
-        "Rejected" => "#ffebee",
-        "Cancelled" => "#f8fafc",
-        "ManagerApproved" or "HODApproved" => "#eef2ff",
-        _ => "#fff8e1"
+        "Approved" => "surface-success",
+        "Rejected" => "surface-danger",
+        "Cancelled" => "surface-neutral",
+        "ManagerApproved" or "HODApproved" => "surface-info",
+        _ => "surface-warning"
     };
     var bannerIcon = Model.Status switch
     {
-        "Approved" => "fa-check-circle text-success",
-        "Rejected" => "fa-times-circle text-danger",
-        "Cancelled" => "fa-ban text-secondary",
-        "ManagerApproved" or "HODApproved" => "fa-route text-primary",
-        _ => "fa-hourglass-half text-warning"
+        "Approved" => "fa-check-circle fg-success",
+        "Rejected" => "fa-times-circle fg-danger",
+        "Cancelled" => "fa-ban fg-muted",
+        "ManagerApproved" or "HODApproved" => "fa-route fg-info",
+        _ => "fa-hourglass-half fg-warning"
     };
     var nextAction = Model.Status switch
     {
@@ -112,8 +112,8 @@
     </div>
 
     <!-- Status Banner -->
-    <div class="alert border-0 mb-4 d-flex align-items-center gap-3"
-         style="border-radius:12px;background:@bannerBackground;">
+    <div class="@bannerSurface mb-4 d-flex align-items-center gap-3 p-3"
+         style="border-radius:12px;">
         <i class="fas @bannerIcon fa-lg"></i>
         <div>
             <div class="fw-bold">@statusHeadline</div>
@@ -125,7 +125,7 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-route text-primary me-2"></i>Request Progress</h5>
-                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                <span class="badge badge-soft-neutral px-3 py-2 rounded-pill">
                     Stage @(Math.Min(currentStage + 1, stages.Length)) of @stages.Length
                 </span>
             </div>
@@ -134,13 +134,13 @@
                 {
                     var isComplete = i < currentStage;
                     var isCurrent = i == currentStage;
-                    var bg = isComplete ? "#e8f5e9" : isCurrent ? "#eef2ff" : "#f8fafc";
-                    var border = isComplete ? "#22c55e" : isCurrent ? "#4F7EFF" : "#e9ecef";
+                    var surface = isComplete ? "surface-success" : isCurrent ? "surface-info" : "surface-neutral";
                     var icon = isComplete ? "fa-check" : isCurrent ? "fa-circle-dot" : "fa-circle";
+                    var iconFg = isComplete ? "fg-success" : isCurrent ? "fg-info" : "fg-muted";
                     <div class="col-lg-4 col-md-6">
-                        <div class="h-100 p-3 rounded" style="background:@bg;border:1px solid @border;">
+                        <div class="h-100 p-3 rounded @surface">
                             <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas @icon" style="color:@(isComplete ? "#16a34a" : isCurrent ? "#4F7EFF" : "#9ca3af");"></i>
+                                <i class="fas @icon @iconFg"></i>
                                 <span class="fw-bold text-dark">@stages[i].Item1</span>
                             </div>
                             <div class="text-muted small">@stages[i].Item2</div>
@@ -186,7 +186,7 @@
             <h5 class="fw-bold mb-3 text-dark border-bottom pb-2">Transfer Route</h5>
             <div class="row g-3 align-items-center">
                 <div class="col-md-5">
-                    <div class="p-3 rounded" style="background:#f8fafc;border:1px solid #e9ecef;">
+                    <div class="p-3 rounded surface-neutral">
                         <div class="text-muted small fw-semibold mb-1">FROM</div>
                         <div class="fw-bold text-dark">@ViewBag.FromLocation</div>
                         <div class="text-muted small">@ViewBag.FromDepartment</div>
@@ -196,7 +196,7 @@
                     <i class="fas fa-arrow-right text-primary fa-lg"></i>
                 </div>
                 <div class="col-md-5">
-                    <div class="p-3 rounded" style="background:#eef2ff;border:2px solid #4F7EFF;">
+                    <div class="p-3 rounded surface-accent">
                         <div class="text-muted small fw-semibold mb-1">TO</div>
                         <div class="fw-bold text-dark">@ViewBag.ToLocation</div>
                         <div class="text-muted small">@ViewBag.ToDepartment</div>
@@ -329,17 +329,15 @@
                                        style="font-size:.8rem;"></i>
                                 </div>
                             </div>
-                            <div class="flex-grow-1 p-3 rounded" style="background:#f8fafc;border:1px solid #e9ecef;">
+                            <div class="flex-grow-1 p-3 rounded surface-neutral">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <div>
                                         <span class="fw-bold text-dark">@step.ApproverRole</span>
                                         <span class="text-muted small ms-2">@step.ApproverName</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge px-2 py-1 rounded-pill"
-                                              style="font-size:.7rem;
-                                            background:@(isApproved ? "#e8f5e9" : isRejected ? "#ffebee" : "#fff8e1");
-                                            color:@(isApproved ? "#16a34a" : isRejected ? "#dc2626" : "#b45309");">
+                                        <span class="badge px-2 py-1 rounded-pill @(isApproved ? "badge-soft-success" : isRejected ? "badge-soft-danger" : "badge-soft-warning")"
+                                              style="font-size:.7rem;">
                                             @step.ApprovalStatus
                                         </span>
                                         @if (step.ActionDate.HasValue)

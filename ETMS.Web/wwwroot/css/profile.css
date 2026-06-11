@@ -382,6 +382,29 @@ body.theme-dark .alert-danger {
     margin-bottom: 8px;
 }
 
+/* Inline hint / help text under a setting */
+.settings-hint {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f1f5fb;
+    color: #5b6b8c;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+body.theme-dark .settings-hint {
+    background: #16202e;
+    color: #94a3b8;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.theme-system .settings-hint {
+        background: #16202e;
+        color: #94a3b8;
+    }
+}
+
 /* Toggle Switch */
 .toggle-row {
     display: flex;

@@ -38,6 +38,7 @@
     <link rel="stylesheet" href="~/ETMS.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Home.css" />
     <link rel="stylesheet" href="~/css/content-scroll.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme-surfaces.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chatbot.css" />
     <style>
         .dropdown-toggle-no-caret::after {
@@ -79,6 +80,11 @@
 
         body.theme-dark .dropdown-item:hover {
             background-color: #1e293b;
+        }
+
+        /* Unread notification rows (inline light highlight) in dark mode */
+        body.theme-dark .dropdown-item[style*="f0f4ff"] {
+            background: #172554 !important;
         }
 
         /* Recent changes */

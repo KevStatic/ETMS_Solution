@@ -21,6 +21,7 @@ namespace ETMS.Web.Controllers
         private readonly IEmployeeRepository _employeeRepo;
         private readonly IUrlEncryptionService _enc;
         private readonly IApprovalDashboardRepository _approvalRepo;
+        private readonly INotificationRepository _notificationRepo;
 
         public TransferController(
             ITransferRequestRepository transferRepo,
@@ -28,7 +29,8 @@ namespace ETMS.Web.Controllers
             IDepartmentRepository deptRepo,
             IEmployeeRepository employeeRepo,
             IUrlEncryptionService enc,
-            IApprovalDashboardRepository approvalRepo)
+            IApprovalDashboardRepository approvalRepo,
+            INotificationRepository notificationRepo)
         {
             _transferRepo = transferRepo;
             _locationRepo = locationRepo;
@@ -36,6 +38,7 @@ namespace ETMS.Web.Controllers
             _employeeRepo = employeeRepo;
             _enc = enc;
             _approvalRepo = approvalRepo;
+            _notificationRepo = notificationRepo;
         }
 
         [HttpGet]
@@ -165,7 +168,23 @@ namespace ETMS.Web.Controllers
                 KnowledgeTransferReqd = model.KnowledgeTransferReqd
             };
 
-            await _transferRepo.CreateAsync(newRequest);
+            var newRequestId = await _transferRepo.CreateAsync(newRequest);
+
+            // Notify the reporting manager that a request is waiting for their approval.
+            // Non-fatal: a notification failure must never block request creation.
+            if (currentEmployee.ReportingManagerId.HasValue)
+            {
+                try
+                {
+                    await _notificationRepo.AddAsync(
+                        currentEmployee.ReportingManagerId.Value,
+                        "Transfer Approval Requested",
+                        $"{currentEmployee.FirstName} {currentEmployee.LastName} submitted transfer request TR-{newRequestId:D5} for your approval.",
+                        newRequestId,
+                        ETMS.Application.DTOs.Notifications.NotificationType.ApprovalRequest);
+                }
+                catch { /* notification is best-effort */ }
+            }
 
             // Set the exact success message requested to trigger the Javascript toast
             TempData["SuccessMessage"] = "Transfer request sent for approval";

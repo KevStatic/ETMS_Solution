@@ -1,0 +1,137 @@
+/*
+   Theme-aware "soft" surfaces.
+
+   These replace hardcoded inline pastel backgrounds (e.g. style="background:#e8f5e9")
+   so cards keep proper contrast in dark mode. Each surface defines BOTH its
+   background and a readable foreground, driven by CSS variables that flip with the
+   active theme. Use the semantic classes (.surface-success, .badge-soft-danger, etc.)
+   instead of inline hex values.
+*/
+
+:root {
+    --surface-neutral-bg: #f8fafc;
+    --surface-neutral-border: #e9ecef;
+
+    --surface-success-bg: #e8f5e9;
+    --surface-success-border: #22c55e;
+    --surface-success-fg: #16a34a;
+
+    --surface-info-bg: #eef2ff;
+    --surface-info-border: #4f7eff;
+    --surface-info-fg: #4f7eff;
+
+    --surface-warning-bg: #fff8e1;
+    --surface-warning-border: #f1d18a;
+    --surface-warning-fg: #b45309;
+
+    --surface-danger-bg: #ffebee;
+    --surface-danger-border: #f3b6bd;
+    --surface-danger-fg: #dc2626;
+
+    --surface-fg: #1f2937;
+    --surface-fg-muted: #6b7280;
+}
+
+/* Dark theme (explicit) */
+body.theme-dark {
+    --surface-neutral-bg: #273347;
+    --surface-neutral-border: #3a4860;
+
+    --surface-success-bg: #13311f;
+    --surface-success-border: #2f7d4f;
+    --surface-success-fg: #4ade80;
+
+    --surface-info-bg: #1c3252;
+    --surface-info-border: #3b62a8;
+    --surface-info-fg: #93c5fd;
+
+    --surface-warning-bg: #3a2f12;
+    --surface-warning-border: #7a6320;
+    --surface-warning-fg: #fbbf24;
+
+    --surface-danger-bg: #3a1c1f;
+    --surface-danger-border: #8a3b42;
+    --surface-danger-fg: #f87171;
+
+    --surface-fg: #e2e8f0;
+    --surface-fg-muted: #94a3b8;
+}
+
+/* Dark theme (follow OS) */
+@media (prefers-color-scheme: dark) {
+    body.theme-system {
+        --surface-neutral-bg: #1e293b;
+        --surface-neutral-border: #334155;
+
+        --surface-success-bg: #13311f;
+        --surface-success-border: #2f7d4f;
+        --surface-success-fg: #4ade80;
+
+        --surface-info-bg: #1c3252;
+        --surface-info-border: #3b62a8;
+        --surface-info-fg: #93c5fd;
+
+        --surface-warning-bg: #3a2f12;
+        --surface-warning-border: #7a6320;
+        --surface-warning-fg: #fbbf24;
+
+        --surface-danger-bg: #3a1c1f;
+        --surface-danger-border: #8a3b42;
+        --surface-danger-fg: #f87171;
+
+        --surface-fg: #e2e8f0;
+        --surface-fg-muted: #94a3b8;
+    }
+}
+
+/* Soft surface blocks (cards, banners, tiles) */
+.surface {
+    background: var(--surface-neutral-bg);
+    border: 1px solid var(--surface-neutral-border);
+    color: var(--surface-fg);
+}
+
+.surface-neutral { background: var(--surface-neutral-bg); border: 1px solid var(--surface-neutral-border); color: var(--surface-fg); }
+.surface-success { background: var(--surface-success-bg); border: 1px solid var(--surface-success-border); color: var(--surface-fg); }
+.surface-info    { background: var(--surface-info-bg);    border: 1px solid var(--surface-info-border);    color: var(--surface-fg); }
+.surface-warning { background: var(--surface-warning-bg); border: 1px solid var(--surface-warning-border); color: var(--surface-fg); }
+.surface-danger  { background: var(--surface-danger-bg);  border: 1px solid var(--surface-danger-border);  color: var(--surface-fg); }
+.surface-accent  { background: var(--surface-info-bg);    border: 2px solid var(--surface-info-border);    color: var(--surface-fg); }
+
+/* Make muted/dark text inside a soft surface readable in any theme */
+.surface .text-muted,
+.surface-neutral .text-muted,
+.surface-success .text-muted,
+.surface-info .text-muted,
+.surface-warning .text-muted,
+.surface-danger .text-muted,
+.surface-accent .text-muted { color: var(--surface-fg-muted) !important; }
+
+.surface .text-dark,
+.surface-neutral .text-dark,
+.surface-success .text-dark,
+.surface-info .text-dark,
+.surface-warning .text-dark,
+.surface-danger .text-dark,
+.surface-accent .text-dark,
+.surface .fw-bold,
+.surface-neutral .fw-bold,
+.surface-success .fw-bold,
+.surface-info .fw-bold,
+.surface-warning .fw-bold,
+.surface-danger .fw-bold,
+.surface-accent .fw-bold { color: var(--surface-fg) !important; }
+
+/* Icon accent colors that track the surface meaning */
+.fg-success { color: var(--surface-success-fg) !important; }
+.fg-info    { color: var(--surface-info-fg) !important; }
+.fg-warning { color: var(--surface-warning-fg) !important; }
+.fg-danger  { color: var(--surface-danger-fg) !important; }
+.fg-muted   { color: var(--surface-fg-muted) !important; }
+
+/* Soft status badges */
+.badge-soft-success { background: var(--surface-success-bg); color: var(--surface-success-fg); }
+.badge-soft-info    { background: var(--surface-info-bg);    color: var(--surface-info-fg); }
+.badge-soft-warning { background: var(--surface-warning-bg); color: var(--surface-warning-fg); }
+.badge-soft-danger  { background: var(--surface-danger-bg);  color: var(--surface-danger-fg); }
+.badge-soft-neutral { background: var(--surface-neutral-bg); color: var(--surface-fg-muted); border: 1px solid var(--surface-neutral-border); }

@@ -48,13 +48,11 @@ namespace ETMS.Web.Controllers
             var settings = await _settingsService.GetSettingsAsync(userId);
             settings.UserId = userId;
 
-            ApplyPostedSetting(nameof(UserSettingsDto.EmailLeaveNotif), value => settings.EmailLeaveNotif = value, dto.EmailLeaveNotif);
-            ApplyPostedSetting(nameof(UserSettingsDto.EmailAttendanceNotif), value => settings.EmailAttendanceNotif = value, dto.EmailAttendanceNotif);
-            ApplyPostedSetting(nameof(UserSettingsDto.EmailPayrollNotif), value => settings.EmailPayrollNotif = value, dto.EmailPayrollNotif);
             ApplyPostedSetting(nameof(UserSettingsDto.PushInAppAlerts), value => settings.PushInAppAlerts = value, dto.PushInAppAlerts);
+            ApplyPostedSetting(nameof(UserSettingsDto.NotifyTransferStatus), value => settings.NotifyTransferStatus = value, dto.NotifyTransferStatus);
+            ApplyPostedSetting(nameof(UserSettingsDto.NotifyApprovalRequests), value => settings.NotifyApprovalRequests = value, dto.NotifyApprovalRequests);
+            ApplyPostedSetting(nameof(UserSettingsDto.NotifyLetterReady), value => settings.NotifyLetterReady = value, dto.NotifyLetterReady);
             ApplyPostedSetting(nameof(UserSettingsDto.TwoFactorEnabled), value => settings.TwoFactorEnabled = value, dto.TwoFactorEnabled);
-            ApplyPostedSetting(nameof(UserSettingsDto.ProfileVisible), value => settings.ProfileVisible = value, dto.ProfileVisible);
-            ApplyPostedSetting(nameof(UserSettingsDto.ShowOnlineStatus), value => settings.ShowOnlineStatus = value, dto.ShowOnlineStatus);
 
             if (Request.Form.ContainsKey(nameof(UserSettingsDto.Language)))
                 settings.Language = dto.Language;

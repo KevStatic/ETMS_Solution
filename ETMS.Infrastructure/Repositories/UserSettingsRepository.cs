@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using ETMS.Application.DTOs.Profile;
 using ETMS.Application.Interfaces;
 using ETMS.Infrastructure.Context;
@@ -22,13 +22,11 @@ namespace ETMS.Infrastructure.Repositories
             var sql = @"
                 SELECT
                     UserId,
-                    EmailLeaveNotif,
-                    EmailAttendanceNotif,
-                    EmailPayrollNotif,
                     PushInAppAlerts,
+                    NotifyTransferStatus,
+                    NotifyApprovalRequests,
+                    NotifyLetterReady,
                     TwoFactorEnabled,
-                    ProfileVisible,
-                    ShowOnlineStatus,
                     Language,
                     Timezone,
                     Theme
@@ -49,40 +47,34 @@ namespace ETMS.Infrastructure.Repositories
                 ON target.UserId = source.UserId
                 WHEN MATCHED THEN
                     UPDATE SET
-                        EmailLeaveNotif      = @EmailLeaveNotif,
-                        EmailAttendanceNotif = @EmailAttendanceNotif,
-                        EmailPayrollNotif    = @EmailPayrollNotif,
-                        PushInAppAlerts      = @PushInAppAlerts,
-                        TwoFactorEnabled     = @TwoFactorEnabled,
-                        ProfileVisible       = @ProfileVisible,
-                        ShowOnlineStatus     = @ShowOnlineStatus,
-                        Language             = @Language,
-                        Timezone             = @Timezone,
-                        Theme                = @Theme,
-                        UpdatedAt            = SYSUTCDATETIME()
+                        PushInAppAlerts        = @PushInAppAlerts,
+                        NotifyTransferStatus   = @NotifyTransferStatus,
+                        NotifyApprovalRequests = @NotifyApprovalRequests,
+                        NotifyLetterReady      = @NotifyLetterReady,
+                        TwoFactorEnabled       = @TwoFactorEnabled,
+                        Language               = @Language,
+                        Timezone               = @Timezone,
+                        Theme                  = @Theme,
+                        UpdatedAt              = SYSUTCDATETIME()
                 WHEN NOT MATCHED THEN
                     INSERT (
                         UserId,
-                        EmailLeaveNotif,
-                        EmailAttendanceNotif,
-                        EmailPayrollNotif,
                         PushInAppAlerts,
+                        NotifyTransferStatus,
+                        NotifyApprovalRequests,
+                        NotifyLetterReady,
                         TwoFactorEnabled,
-                        ProfileVisible,
-                        ShowOnlineStatus,
                         Language,
                         Timezone,
                         Theme
                     )
                     VALUES (
                         @UserId,
-                        @EmailLeaveNotif,
-                        @EmailAttendanceNotif,
-                        @EmailPayrollNotif,
                         @PushInAppAlerts,
+                        @NotifyTransferStatus,
+                        @NotifyApprovalRequests,
+                        @NotifyLetterReady,
                         @TwoFactorEnabled,
-                        @ProfileVisible,
-                        @ShowOnlineStatus,
                         @Language,
                         @Timezone,
                         @Theme
@@ -90,13 +82,11 @@ namespace ETMS.Infrastructure.Repositories
 
             var rows = await conn.ExecuteAsync(sql, new
             {
-                dto.EmailLeaveNotif,
-                dto.EmailAttendanceNotif,
-                dto.EmailPayrollNotif,
                 dto.PushInAppAlerts,
+                dto.NotifyTransferStatus,
+                dto.NotifyApprovalRequests,
+                dto.NotifyLetterReady,
                 dto.TwoFactorEnabled,
-                dto.ProfileVisible,
-                dto.ShowOnlineStatus,
                 dto.Language,
                 dto.Timezone,
                 dto.Theme,
@@ -109,13 +99,11 @@ namespace ETMS.Infrastructure.Repositories
             new()
             {
                 UserId = userId,
-                EmailLeaveNotif = true,
-                EmailAttendanceNotif = true,
-                EmailPayrollNotif = true,
                 PushInAppAlerts = true,
+                NotifyTransferStatus = true,
+                NotifyApprovalRequests = true,
+                NotifyLetterReady = true,
                 TwoFactorEnabled = false,
-                ProfileVisible = true,
-                ShowOnlineStatus = true,
                 Language = "English",
                 Timezone = "IST",
                 Theme = "Light"
@@ -133,23 +121,30 @@ namespace ETMS.Infrastructure.Repositories
                 BEGIN
                     CREATE TABLE dbo.UserSettings
                     (
-                        UserSettingsId       INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_UserSettings PRIMARY KEY,
-                        UserId               INT NOT NULL,
-                        EmailLeaveNotif      BIT NOT NULL CONSTRAINT DF_UserSettings_EmailLeaveNotif DEFAULT 1,
-                        EmailAttendanceNotif BIT NOT NULL CONSTRAINT DF_UserSettings_EmailAttendanceNotif DEFAULT 1,
-                        EmailPayrollNotif    BIT NOT NULL CONSTRAINT DF_UserSettings_EmailPayrollNotif DEFAULT 1,
-                        PushInAppAlerts      BIT NOT NULL CONSTRAINT DF_UserSettings_PushInAppAlerts DEFAULT 1,
-                        TwoFactorEnabled     BIT NOT NULL CONSTRAINT DF_UserSettings_TwoFactorEnabled DEFAULT 0,
-                        ProfileVisible       BIT NOT NULL CONSTRAINT DF_UserSettings_ProfileVisible DEFAULT 1,
-                        ShowOnlineStatus     BIT NOT NULL CONSTRAINT DF_UserSettings_ShowOnlineStatus DEFAULT 1,
-                        Language             NVARCHAR(50) NOT NULL CONSTRAINT DF_UserSettings_Language DEFAULT N'English',
-                        Timezone             NVARCHAR(50) NOT NULL CONSTRAINT DF_UserSettings_Timezone DEFAULT N'IST',
-                        Theme                NVARCHAR(20) NOT NULL CONSTRAINT DF_UserSettings_Theme DEFAULT N'Light',
-                        CreatedAt            DATETIME2 NOT NULL CONSTRAINT DF_UserSettings_CreatedAt DEFAULT SYSUTCDATETIME(),
-                        UpdatedAt            DATETIME2 NULL,
+                        UserSettingsId         INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_UserSettings PRIMARY KEY,
+                        UserId                 INT NOT NULL,
+                        PushInAppAlerts        BIT NOT NULL CONSTRAINT DF_UserSettings_PushInAppAlerts DEFAULT 1,
+                        NotifyTransferStatus   BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyTransferStatus DEFAULT 1,
+                        NotifyApprovalRequests BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyApprovalRequests DEFAULT 1,
+                        NotifyLetterReady      BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyLetterReady DEFAULT 1,
+                        TwoFactorEnabled       BIT NOT NULL CONSTRAINT DF_UserSettings_TwoFactorEnabled DEFAULT 0,
+                        Language               NVARCHAR(50) NOT NULL CONSTRAINT DF_UserSettings_Language DEFAULT N'English',
+                        Timezone               NVARCHAR(50) NOT NULL CONSTRAINT DF_UserSettings_Timezone DEFAULT N'IST',
+                        Theme                  NVARCHAR(20) NOT NULL CONSTRAINT DF_UserSettings_Theme DEFAULT N'Light',
+                        CreatedAt              DATETIME2 NOT NULL CONSTRAINT DF_UserSettings_CreatedAt DEFAULT SYSUTCDATETIME(),
+                        UpdatedAt              DATETIME2 NULL,
                         CONSTRAINT UQ_UserSettings_UserId UNIQUE (UserId)
                     );
-                END";
+                END;
+
+                -- Self-heal: add the transfer-notification columns on databases created
+                -- before this schema (older deployments had leave/attendance/payroll columns).
+                IF COL_LENGTH('dbo.UserSettings', 'NotifyTransferStatus') IS NULL
+                    ALTER TABLE dbo.UserSettings ADD NotifyTransferStatus BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyTransferStatus DEFAULT 1;
+                IF COL_LENGTH('dbo.UserSettings', 'NotifyApprovalRequests') IS NULL
+                    ALTER TABLE dbo.UserSettings ADD NotifyApprovalRequests BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyApprovalRequests DEFAULT 1;
+                IF COL_LENGTH('dbo.UserSettings', 'NotifyLetterReady') IS NULL
+                    ALTER TABLE dbo.UserSettings ADD NotifyLetterReady BIT NOT NULL CONSTRAINT DF_UserSettings_NotifyLetterReady DEFAULT 1;";
 
             await conn.ExecuteAsync(sql);
         }

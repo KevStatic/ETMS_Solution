@@ -45,9 +45,6 @@
             <div class="settings-nav-item" onclick="showSection('appearance', this)">
                 🎨 Appearance
             </div>
-            <div class="settings-nav-item" onclick="showSection('privacy', this)">
-                🛡️ Privacy
-            </div>
         </div>
 
         <!-- Content -->
@@ -58,6 +55,7 @@
                 <div class="profile-card mb-4">
                     <div class="profile-card-title">🔑 Change Password</div>
                     <form asp-action="ChangePassword" method="post">
+                        @Html.AntiForgeryToken()
                         <div class="info-row">
                             <label>Current Password</label>
                             <input type="password" class="form-control"
@@ -82,11 +80,14 @@
                 <div class="profile-card mb-4">
                     <div class="profile-card-title">🛡️ Two-Factor Authentication</div>
                     <form asp-action="SaveSettings" method="post">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="UserId" value="@Model.UserId" />
                         <div class="toggle-row">
                             <div>
                                 <div class="toggle-label">Enable 2FA</div>
-                                <div class="toggle-desc">Secure your account with OTP on login</div>
+                                <div class="toggle-desc">
+                                    Require a one-time code emailed to you each time you sign in.
+                                </div>
                             </div>
                             <label class="toggle-switch">
                                 @if (Model.TwoFactorEnabled)
@@ -101,6 +102,11 @@
                                 <input type="hidden" name="TwoFactorEnabled" value="false" />
                             </label>
                         </div>
+                        <div class="settings-hint">
+                            <i class="fas fa-circle-info me-1"></i>
+                            When enabled, after entering your password you'll be asked for a 6-digit
+                            code sent to your registered email before you're signed in.
+                        </div>
                         <div class="text-end mt-3">
                             <button type="submit" class="btn btn-primary">Save</button>
                         </div>
@@ -113,68 +119,14 @@
                 <div class="profile-card mb-4">
                     <div class="profile-card-title">🔔 Notification Preferences</div>
                     <form asp-action="SaveSettings" method="post">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="UserId" value="@Model.UserId" />
-                        <p class="settings-group-label">Email Notifications</p>
-                        <div class="toggle-row">
-                            <div>
-                                <div class="toggle-label">Leave Approvals</div>
-                                <div class="toggle-desc">Notified when leave is approved/rejected</div>
-                            </div>
-                            <label class="toggle-switch">
-                                @if (Model.EmailLeaveNotif)
-                                {
-                                    <input type="checkbox" name="EmailLeaveNotif" value="true" checked />
-                                }
-                                else
-                                {
-                                    <input type="checkbox" name="EmailLeaveNotif" value="true" />
-                                }
-                                <span class="toggle-slider"></span>
-                                <input type="hidden" name="EmailLeaveNotif" value="false" />
-                            </label>
-                        </div>
-                        <div class="toggle-row">
-                            <div>
-                                <div class="toggle-label">Attendance Alerts</div>
-                                <div class="toggle-desc">Daily attendance summary via email</div>
-                            </div>
-                            <label class="toggle-switch">
-                                @if (Model.EmailAttendanceNotif)
-                                {
-                                    <input type="checkbox" name="EmailAttendanceNotif" value="true" checked />
-                                }
-                                else
-                                {
-                                    <input type="checkbox" name="EmailAttendanceNotif" value="true" />
-                                }
-                                <span class="toggle-slider"></span>
-                                <input type="hidden" name="EmailAttendanceNotif" value="false" />
-                            </label>
-                        </div>
-                        <div class="toggle-row">
-                            <div>
-                                <div class="toggle-label">Payroll Updates</div>
-                                <div class="toggle-desc">Salary slip and payroll notifications</div>
-                            </div>
-                            <label class="toggle-switch">
-                                @if (Model.EmailPayrollNotif)
-                                {
-                                    <input type="checkbox" name="EmailPayrollNotif" value="true" checked />
-                                }
-                                else
-                                {
-                                    <input type="checkbox" name="EmailPayrollNotif" value="true" />
-                                }
-                                <span class="toggle-slider"></span>
-                                <input type="hidden" name="EmailPayrollNotif" value="false" />
-                            </label>
-                        </div>
 
-                        <p class="settings-group-label mt-4">Push Notifications</p>
+                        <p class="settings-group-label">In-App Alerts</p>
                         <div class="toggle-row">
                             <div>
-                                <div class="toggle-label">In-App Alerts</div>
-                                <div class="toggle-desc">Real-time alerts within ETMS</div>
+                                <div class="toggle-label">Enable In-App Alerts</div>
+                                <div class="toggle-desc">Master switch for the notification bell. Turning this off mutes every alert below.</div>
                             </div>
                             <label class="toggle-switch">
                                 @if (Model.PushInAppAlerts)
@@ -189,6 +141,63 @@
                                 <input type="hidden" name="PushInAppAlerts" value="false" />
                             </label>
                         </div>
+
+                        <p class="settings-group-label mt-4">Transfer Workflow</p>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Transfer Status Updates</div>
+                                <div class="toggle-desc">When your request moves a stage or is rejected.</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.NotifyTransferStatus)
+                                {
+                                    <input type="checkbox" name="NotifyTransferStatus" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="NotifyTransferStatus" value="true" />
+                                }
+                                <span class="toggle-slider"></span>
+                                <input type="hidden" name="NotifyTransferStatus" value="false" />
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Approval Requests</div>
+                                <div class="toggle-desc">When a request is waiting for you to approve (for managers, HOD and HR).</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.NotifyApprovalRequests)
+                                {
+                                    <input type="checkbox" name="NotifyApprovalRequests" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="NotifyApprovalRequests" value="true" />
+                                }
+                                <span class="toggle-slider"></span>
+                                <input type="hidden" name="NotifyApprovalRequests" value="false" />
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">Transfer Letter Ready</div>
+                                <div class="toggle-desc">When your transfer is fully approved and the letter is available to download.</div>
+                            </div>
+                            <label class="toggle-switch">
+                                @if (Model.NotifyLetterReady)
+                                {
+                                    <input type="checkbox" name="NotifyLetterReady" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" name="NotifyLetterReady" value="true" />
+                                }
+                                <span class="toggle-slider"></span>
+                                <input type="hidden" name="NotifyLetterReady" value="false" />
+                            </label>
+                        </div>
+
                         <div class="text-end mt-3">
                             <button type="submit" class="btn btn-primary">Save</button>
                         </div>
@@ -201,6 +210,7 @@
                 <div class="profile-card mb-4">
                     <div class="profile-card-title">🎨 Appearance & Display</div>
                     <form asp-action="SaveSettings" method="post">
+                        @Html.AntiForgeryToken()
                         <input type="hidden" name="UserId" value="@Model.UserId" />
                         <div class="info-row">
                             <label>Theme</label>
@@ -269,66 +279,6 @@
                             <button type="submit" class="btn btn-primary">Save</button>
                         </div>
                     </form>
-                </div>
-            </div>
-
-            <!-- Privacy -->
-            <div id="section-privacy" class="settings-section" style="display:none;">
-                <div class="profile-card mb-4">
-                    <div class="profile-card-title">🛡️ Privacy Settings</div>
-                    <form asp-action="SaveSettings" method="post">
-                        <input type="hidden" name="UserId" value="@Model.UserId" />
-                        <div class="toggle-row">
-                            <div>
-                                <div class="toggle-label">Profile Visibility</div>
-                                <div class="toggle-desc">Allow other employees to see your profile</div>
-                            </div>
-                            <label class="toggle-switch">
-                                @if (Model.ProfileVisible)
-                                {
-                                    <input type="checkbox" name="ProfileVisible" value="true" checked />
-                                }
-                                else
-                                {
-                                    <input type="checkbox" name="ProfileVisible" value="true" />
-                                }
-                                <span class="toggle-slider"></span>
-                                <input type="hidden" name="ProfileVisible" value="false" />
-                            </label>
-                        </div>
-                        <div class="toggle-row">
-                            <div>
-                                <div class="toggle-label">Show Online Status</div>
-                                <div class="toggle-desc">Let others know when you're active</div>
-                            </div>
-                            <label class="toggle-switch">
-                                @if (Model.ShowOnlineStatus)
-                                {
-                                    <input type="checkbox" name="ShowOnlineStatus" value="true" checked />
-                                }
-                                else
-                                {
-                                    <input type="checkbox" name="ShowOnlineStatus" value="true" />
-                                }
-                                <span class="toggle-slider"></span>
-                                <input type="hidden" name="ShowOnlineStatus" value="false" />
-                            </label>
-                        </div>
-                        <div class="text-end mt-3">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="profile-card danger-zone">
-                    <div class="profile-card-title" style="color:#ef4444;">⚠️ Danger Zone</div>
-                    <p class="text-muted" style="font-size:13px;">
-                        These actions cannot be undone. Please proceed carefully.
-                    </p>
-                    <button class="btn btn-outline-danger btn-sm">
-                        Request Account Deletion
-                    </button>
                 </div>
             </div>
 

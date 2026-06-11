@@ -89,6 +89,17 @@ namespace ETMS.Infrastructure.Repositories
             return rows > 0;
         }
 
+        public async Task<string?> GetLoginEmailByEmployeeIdAsync(int employeeId)
+        {
+            const string sql = @"
+                SELECT COALESCE(NULLIF(Email, ''), Username)
+                FROM UserAccounts
+                WHERE EmployeeId = @EmployeeId AND IsActive = 1;";
+
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteScalarAsync<string?>(sql, new { EmployeeId = employeeId });
+        }
+
         public async Task<bool> UpdatePasswordByEmployeeIdAsync(int employeeId, string newPassword)
         {
             const string sql = @"

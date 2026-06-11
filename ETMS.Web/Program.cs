@@ -64,6 +64,7 @@ try
     // ── Application Layer ─────────────────────────────────────────────────────
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
+    builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 
     // ── Antiforgery ───────────────────────────────────────────────────────────
     builder.Services.AddAntiforgery(options =>

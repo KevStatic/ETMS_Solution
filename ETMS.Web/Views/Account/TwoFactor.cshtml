@@ -1,0 +1,159 @@
+@{
+    ViewData["Title"] = "Two-Factor Verification";
+    Layout = null;
+    var email = ViewBag.Email as string ?? "your email";
+    var info = ViewBag.Info as string;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ETMS – Two-Factor Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            background: #1a2744;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('/images/login-bg.jpg') center/cover no-repeat;
+            opacity: .35;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px 44px;
+            width: 460px;
+            max-width: 95vw;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 24px 64px rgba(0,0,0,.35);
+            animation: slideUp .4s cubic-bezier(.22,1,.36,1);
+        }
+
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .icon-wrap {
+            width: 62px; height: 62px;
+            background: #e8eefb;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+        }
+        .icon-wrap svg {
+            width: 28px; height: 28px;
+            stroke: #2a56c6; fill: none; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        h2 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; text-align: center; margin-bottom: 6px; }
+        .sub { color: #6b7a99; font-size: .9rem; text-align: center; margin-bottom: 8px; line-height: 1.5; }
+
+        .contact-badge {
+            background: #e8eefb; color: #2a56c6;
+            font-size: .85rem; font-weight: 600;
+            padding: 4px 14px; border-radius: 99px;
+            display: block; margin: 0 auto 20px; text-align: center;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #d0d8e8;
+            border-radius: 12px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 12px;
+            text-align: center;
+            color: #1a1a2e;
+            background: #f4f7fc;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .code-input:focus {
+            border-color: #2a56c6;
+            box-shadow: 0 0 0 3px rgba(42,86,198,.15);
+        }
+
+        .val-summary {
+            background: #fdecea; border: 1px solid #f5c6c2; border-radius: 8px;
+            color: #d93025; font-size: .875rem; padding: 10px 14px; margin-bottom: 14px;
+        }
+        .info-msg {
+            background: #e8f4fd; border: 1px solid #b3d4f5; border-radius: 8px;
+            color: #1a5799; font-size: .875rem; padding: 10px 14px; margin-bottom: 14px;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: #2a56c6; color: #fff; font-family: inherit;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: background .2s, transform .15s; margin-top: 16px;
+        }
+        .btn:hover { background: #1e3f99; transform: translateY(-1px); }
+
+        .back-link {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 18px; color: #6b7a99; font-size: .875rem; text-decoration: none;
+        }
+        .back-link:hover { color: #2a56c6; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+        </div>
+        <h2>Two-Factor Verification</h2>
+        <p class="sub">Enter the 6-digit code we emailed to</p>
+        <div class="contact-badge">@email</div>
+
+        @if (!string.IsNullOrEmpty(info))
+        {
+            <div class="info-msg">@info</div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="val-summary">
+                @Html.ValidationSummary(false)
+            </div>
+        }
+
+        <form asp-action="TwoFactor" method="post">
+            @Html.AntiForgeryToken()
+            <input type="text" name="code" class="code-input" maxlength="6"
+                   inputmode="numeric" autocomplete="one-time-code"
+                   pattern="[0-9]*" placeholder="······" autofocus required />
+            <button type="submit" class="btn">Verify &amp; Sign In</button>
+        </form>
+
+        <a class="back-link" asp-action="Login">← Back to login</a>
+    </div>
+
+    <script>
+        // Keep only digits in the code field.
+        const input = document.querySelector('.code-input');
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 6);
+        });
+    </script>
+</body>
+</html>

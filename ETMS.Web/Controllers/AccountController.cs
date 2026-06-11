@@ -14,13 +14,22 @@ namespace ETMS.Web.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IForgotPasswordService _forgotPasswordService;
+        private readonly IUserSettingsService _settingsService;
+        private readonly ITwoFactorService _twoFactorService;
+        private readonly IUserAccountRepository _userAccountRepo;
 
         public AccountController(
             IAuthService authService,
-            IForgotPasswordService forgotPasswordService)
+            IForgotPasswordService forgotPasswordService,
+            IUserSettingsService settingsService,
+            ITwoFactorService twoFactorService,
+            IUserAccountRepository userAccountRepo)
         {
             _authService = authService;
             _forgotPasswordService = forgotPasswordService;
+            _settingsService = settingsService;
+            _twoFactorService = twoFactorService;
+            _userAccountRepo = userAccountRepo;
         }
 
         // GET: /Account/Login
@@ -52,26 +61,35 @@ namespace ETMS.Web.Controllers
                 return View(model);
             }
 
-            var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, result.EmployeeId.ToString()),
-        new Claim(ClaimTypes.Name, result.Username),
-        new Claim(ClaimTypes.Role, result.Role)
-    };
+            var employeeId = result.EmployeeId!.Value;
 
-            var claimsIdentity = new ClaimsIdentity(
-                claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var authProperties = new AuthenticationProperties
+            // ── Two-factor gate ──────────────────────────────────────────────
+            // If the account has 2FA enabled, the password is only the first factor.
+            // Don't issue the auth cookie yet — send an email OTP and require it.
+            var settings = await _settingsService.GetSettingsAsync(employeeId);
+            if (settings.TwoFactorEnabled)
             {
-                IsPersistent = model.RememberMe,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
-            };
+                string email = await ResolveLoginEmailAsync(employeeId, result.Username!);
+                var (sent, message) = await _twoFactorService.SendLoginOtpAsync(email);
 
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
+                if (!sent)
+                {
+                    ModelState.AddModelError(string.Empty, message);
+                    ViewData["ReturnUrl"] = returnUrl;
+                    return View(model);
+                }
+
+                TempData["2fa_EmployeeId"] = employeeId;
+                TempData["2fa_Username"] = result.Username;
+                TempData["2fa_Role"] = result.Role;
+                TempData["2fa_Email"] = email;
+                TempData["2fa_Remember"] = model.RememberMe;
+                TempData["2fa_ReturnUrl"] = returnUrl;
+                TempData["2fa_Info"] = message;
+                return RedirectToAction(nameof(TwoFactor));
+            }
+
+            await SignInAsync(employeeId, result.Username!, result.Role!, model.RememberMe);
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -79,6 +97,96 @@ namespace ETMS.Web.Controllers
             }
 
             return RedirectToAction("Index", "Dashboard");
+        }
+
+        // GET: /Account/TwoFactor
+        [HttpGet]
+        public IActionResult TwoFactor()
+        {
+            if (TempData["2fa_EmployeeId"] == null)
+                return RedirectToAction(nameof(Login));
+
+            ViewBag.Info = TempData["2fa_Info"];
+            ViewBag.Email = TempData["2fa_Email"];
+            TempData.Keep();
+            return View();
+        }
+
+        // POST: /Account/TwoFactor
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TwoFactor(string code)
+        {
+            if (TempData["2fa_EmployeeId"] == null)
+                return RedirectToAction(nameof(Login));
+
+            // Pull the pending login context before TempData is consumed.
+            var employeeId = (int)TempData["2fa_EmployeeId"]!;
+            var username = TempData["2fa_Username"]?.ToString() ?? string.Empty;
+            var role = TempData["2fa_Role"]?.ToString() ?? "Employee";
+            var email = TempData["2fa_Email"]?.ToString() ?? string.Empty;
+            var remember = TempData["2fa_Remember"] is true;
+            var returnUrl = TempData["2fa_ReturnUrl"]?.ToString();
+
+            var (ok, message) = await _twoFactorService.VerifyLoginOtpAsync(email, code);
+            if (!ok)
+            {
+                ModelState.AddModelError(string.Empty, message);
+                ViewBag.Email = email;
+                // Keep the context so the user can retry on the same page.
+                TempData["2fa_EmployeeId"] = employeeId;
+                TempData["2fa_Username"] = username;
+                TempData["2fa_Role"] = role;
+                TempData["2fa_Email"] = email;
+                TempData["2fa_Remember"] = remember;
+                TempData["2fa_ReturnUrl"] = returnUrl;
+                return View();
+            }
+
+            await SignInAsync(employeeId, username, role, remember);
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        private async Task SignInAsync(int employeeId, string username, string role, bool rememberMe)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, employeeId.ToString()),
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = rememberMe,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+        }
+
+        private async Task<string> ResolveLoginEmailAsync(int employeeId, string fallbackUsername)
+        {
+            try
+            {
+                var email = await _userAccountRepo.GetLoginEmailByEmployeeIdAsync(employeeId);
+                return string.IsNullOrWhiteSpace(email) ? fallbackUsername : email;
+            }
+            catch
+            {
+                // Email column may not exist on an un-migrated database.
+                return fallbackUsername;
+            }
         }
 
         // GET: /Account/ForgotPassword
