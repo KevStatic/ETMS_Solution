@@ -148,7 +148,20 @@ namespace ETMS.Web.Controllers
                 NewISName = model.NewISName,
                 NewISEmail = model.NewISEmail,
                 ICHead = model.ICHead,
-                Remarks = model.Remarks
+                Remarks = model.Remarks,
+
+                // Relocation & Reimbursement
+                TravelMode = model.TravelMode,
+                TravelClass = model.TravelClass,
+                RelocationAllowance = model.RelocationAllowance,
+                AccommodationRequired = model.AccommodationRequired,
+                DependentsCount = model.DependentsCount,
+
+                // Handover & Transition
+                NoticePeriodWeeks = model.NoticePeriodWeeks,
+                CurrentTaskStatus = model.CurrentTaskStatus,
+                HandoverPlan = model.HandoverPlan,
+                KnowledgeTransferReqd = model.KnowledgeTransferReqd
             };
 
             await _transferRepo.CreateAsync(newRequest);
@@ -311,6 +324,17 @@ namespace ETMS.Web.Controllers
             model.NewISEmail = request.NewISEmail ?? string.Empty;
             model.ICHead = request.ICHead ?? string.Empty;
             model.Remarks = request.Remarks ?? request.Reason;
+
+            model.TravelMode = request.TravelMode ?? string.Empty;
+            model.TravelClass = request.TravelClass ?? string.Empty;
+            model.RelocationAllowance = request.RelocationAllowance ?? "No";
+            model.AccommodationRequired = request.AccommodationRequired ?? "Not Required";
+            model.DependentsCount = request.DependentsCount;
+            model.NoticePeriodWeeks = request.NoticePeriodWeeks;
+            model.CurrentTaskStatus = request.CurrentTaskStatus ?? string.Empty;
+            model.HandoverPlan = request.HandoverPlan ?? string.Empty;
+            model.KnowledgeTransferReqd = request.KnowledgeTransferReqd ?? "No";
+
             model.PrefilledFromRequestId = request.TransferRequestId;
         }
     }

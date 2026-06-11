@@ -400,7 +400,117 @@
                     </div>
                 </div>
 
-                <!-- 5. Remarks -->
+                <!-- 5. Relocation & Reimbursement -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-suitcase-rolling" style="color:var(--accent);"></i> Relocation &amp; Reimbursement
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Travel Mode</label>
+                                <select asp-for="TravelMode" class="form-select" id="travelModeSelect">
+                                    <option value="">Select Mode</option>
+                                    <option value="Air">Air</option>
+                                    <option value="Train">Train</option>
+                                    <option value="Road / Personal Vehicle">Road / Personal Vehicle</option>
+                                    <option value="Company Transport">Company Transport</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="travelClassCol" style="display:none;">
+                                <label class="form-label">Class of Travel</label>
+                                <select asp-for="TravelClass" class="form-select" id="travelClassSelect">
+                                    <option value="">Select Class</option>
+                                    <option value="Economy" class="air-train">Economy</option>
+                                    <option value="Business" class="air-only">Business</option>
+                                    <option value="AC 1st Class" class="train-only">AC 1st Class</option>
+                                    <option value="AC 2-Tier" class="train-only">AC 2-Tier</option>
+                                    <option value="AC 3-Tier" class="train-only">AC 3-Tier</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Relocation Allowance Requested</label>
+                                <div class="radio-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationAllowance" value="Yes" id="relAllowYes">
+                                        <label class="form-check-label" for="relAllowYes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="RelocationAllowance" value="No" id="relAllowNo">
+                                        <label class="form-check-label" for="relAllowNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Accommodation at New Location</label>
+                                <select asp-for="AccommodationRequired" class="form-select">
+                                    <option value="Not Required">Not Required</option>
+                                    <option value="Company Guest House">Company Guest House</option>
+                                    <option value="Leased Accommodation">Leased Accommodation</option>
+                                    <option value="Self-Arranged">Self-Arranged</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="dependentsCol" style="display:none;">
+                                <label class="form-label">No. of Dependents Relocating</label>
+                                <select asp-for="DependentsCount" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4+</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Handover & Transition -->
+                <div class="section-card">
+                    <div class="section-head">
+                        <i class="fas fa-tasks" style="color:var(--accent);"></i> Handover &amp; Transition
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Notice Period</label>
+                                <select asp-for="NoticePeriodWeeks" class="form-select">
+                                    <option value="">Select</option>
+                                    <option value="2">2 Weeks</option>
+                                    <option value="4">4 Weeks</option>
+                                    <option value="6">6 Weeks</option>
+                                    <option value="8">8 Weeks</option>
+                                    <option value="12">12 Weeks</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Knowledge Transfer Required</label>
+                                <div class="radio-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="KnowledgeTransferReqd" value="Yes" id="ktYes">
+                                        <label class="form-check-label" for="ktYes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="KnowledgeTransferReqd" value="No" id="ktNo">
+                                        <label class="form-check-label" for="ktNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Current Project / Task Status</label>
+                                <textarea asp-for="CurrentTaskStatus" class="form-control" rows="2"
+                                          placeholder="Briefly describe the current state of your projects and tasks…"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Handover Plan</label>
+                                <textarea asp-for="HandoverPlan" class="form-control" rows="3"
+                                          placeholder="Outline how responsibilities will be handed over — who takes over, timeline, documentation…"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Remarks -->
                 <div class="section-card">
                     <div class="section-head">
                         <i class="fas fa-comment-alt" style="color:var(--accent);"></i> Remarks
@@ -543,6 +653,42 @@
             localStorage.removeItem(draftKey);
             hideBanner();
         });
+
+        // Travel mode → show/hide class of travel with relevant options
+        const travelModeSelect = document.getElementById('travelModeSelect');
+        const travelClassCol   = document.getElementById('travelClassCol');
+        const travelClassSelect = document.getElementById('travelClassSelect');
+
+        function updateTravelClass() {
+            const mode = travelModeSelect.value;
+            const isAir   = mode === 'Air';
+            const isTrain = mode === 'Train';
+            travelClassCol.style.display = (isAir || isTrain) ? '' : 'none';
+            Array.from(travelClassSelect.options).forEach(opt => {
+                if (opt.value === '') return;
+                const forAir   = opt.classList.contains('air-only');
+                const forTrain = opt.classList.contains('train-only');
+                const both     = opt.classList.contains('air-train');
+                opt.hidden = forAir   ? !isAir
+                           : forTrain ? !isTrain
+                           : both     ? !(isAir || isTrain)
+                           : false;
+            });
+            if (travelClassSelect.selectedOptions[0]?.hidden) travelClassSelect.value = '';
+        }
+        travelModeSelect.addEventListener('change', updateTravelClass);
+        updateTravelClass();
+
+        // Relocation status → show dependents count only for Family moves
+        const relocationRadios  = document.querySelectorAll('[name="RelocationStatus"]');
+        const dependentsCol     = document.getElementById('dependentsCol');
+
+        function updateDependents() {
+            const isFamily = document.querySelector('[name="RelocationStatus"]:checked')?.value === 'Family';
+            dependentsCol.style.display = isFamily ? '' : 'none';
+        }
+        relocationRadios.forEach(r => r.addEventListener('change', updateDependents));
+        updateDependents();
 
         if (localStorage.getItem(draftKey)) {
             showBanner('A saved draft is available for this request form. Use Restore Draft to continue from where you left off.', 'info');

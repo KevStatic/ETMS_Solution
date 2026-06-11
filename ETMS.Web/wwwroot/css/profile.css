@@ -4,6 +4,192 @@
     padding: 24px 16px;
 }
 
+.settings-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.settings-page-header h2 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a2340;
+}
+
+.settings-page-header p {
+    margin: 0;
+    font-size: 13px;
+    color: #8a99b3;
+}
+
+body.theme-dark .settings-page-header h2 {
+    color: #e5edf7;
+}
+
+body.theme-dark .settings-page-header p,
+body.theme-dark .settings-group-label,
+body.theme-dark .toggle-desc,
+body.theme-dark .info-row label {
+    color: #94a3b8;
+}
+
+body.theme-dark .profile-card,
+body.theme-dark .settings-sidebar {
+    background: #111827;
+    border-color: #263244;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.24);
+}
+
+body.theme-dark .profile-card-title,
+body.theme-dark .toggle-label {
+    color: #e5edf7;
+}
+
+body.theme-dark .toggle-row {
+    border-color: #263244;
+}
+
+body.theme-dark .settings-nav-item {
+    color: #cbd5e1;
+}
+
+body.theme-dark .settings-nav-item:hover {
+    background: #1e293b;
+}
+
+body.theme-dark .settings-nav-item.active {
+    background: #172554;
+    color: #93c5fd;
+}
+
+body.theme-dark .info-row .form-control,
+body.theme-dark .info-row .form-select,
+body.theme-dark .theme-btn {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e5edf7;
+}
+
+body.theme-dark .info-row .form-control:focus,
+body.theme-dark .info-row .form-select:focus {
+    background: #111827;
+    border-color: #60a5fa;
+    color: #e5edf7;
+}
+
+body.theme-dark .theme-btn.active {
+    background: #172554;
+    border-color: #60a5fa;
+    color: #bfdbfe;
+}
+
+body.theme-dark .danger-zone {
+    background: #2b1216 !important;
+    border-color: #7f1d1d !important;
+}
+
+body.theme-dark .alert-success {
+    background: #123524;
+    border-color: #1f6b45;
+    color: #bbf7d0;
+}
+
+body.theme-dark .alert-danger {
+    background: #3f1518;
+    border-color: #7f1d1d;
+    color: #fecaca;
+}
+
+@media (max-width: 768px) {
+    .settings-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    body.theme-system .settings-page-header h2 {
+        color: #e5edf7;
+    }
+
+    body.theme-system .settings-page-header p,
+    body.theme-system .settings-group-label,
+    body.theme-system .toggle-desc,
+    body.theme-system .info-row label {
+        color: #94a3b8;
+    }
+
+    body.theme-system .profile-card,
+    body.theme-system .settings-sidebar {
+        background: #111827;
+        border-color: #263244;
+        box-shadow: 0 2px 18px rgba(0,0,0,0.24);
+    }
+
+    body.theme-system .profile-card-title,
+    body.theme-system .toggle-label {
+        color: #e5edf7;
+    }
+
+    body.theme-system .toggle-row {
+        border-color: #263244;
+    }
+
+    body.theme-system .settings-nav-item {
+        color: #cbd5e1;
+    }
+
+    body.theme-system .settings-nav-item:hover {
+        background: #1e293b;
+    }
+
+    body.theme-system .settings-nav-item.active {
+        background: #172554;
+        color: #93c5fd;
+    }
+
+    body.theme-system .info-row .form-control,
+    body.theme-system .info-row .form-select,
+    body.theme-system .theme-btn {
+        background: #0f172a;
+        border-color: #334155;
+        color: #e5edf7;
+    }
+
+    body.theme-system .info-row .form-control:focus,
+    body.theme-system .info-row .form-select:focus {
+        background: #111827;
+        border-color: #60a5fa;
+        color: #e5edf7;
+    }
+
+    body.theme-system .theme-btn.active {
+        background: #172554;
+        border-color: #60a5fa;
+        color: #bfdbfe;
+    }
+
+    body.theme-system .danger-zone {
+        background: #2b1216 !important;
+        border-color: #7f1d1d !important;
+    }
+
+    body.theme-system .alert-success {
+        background: #123524;
+        border-color: #1f6b45;
+        color: #bbf7d0;
+    }
+
+    body.theme-system .alert-danger {
+        background: #3f1518;
+        border-color: #7f1d1d;
+        color: #fecaca;
+    }
+}
+
 /* Header Card */
 .profile-header-card {
     background: linear-gradient(135deg, #1a73e8, #0d47a1);

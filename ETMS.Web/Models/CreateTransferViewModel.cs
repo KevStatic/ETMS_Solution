@@ -87,6 +87,19 @@ namespace ETMS.Web.Models
         [Required]
         public string Remarks { get; set; } = string.Empty;
 
+        // --- RELOCATION & REIMBURSEMENT ---
+        public string TravelMode { get; set; } = string.Empty;
+        public string TravelClass { get; set; } = string.Empty;
+        public string RelocationAllowance { get; set; } = "No";
+        public string AccommodationRequired { get; set; } = "Not Required";
+        public int? DependentsCount { get; set; }
+
+        // --- HANDOVER & TRANSITION ---
+        public int? NoticePeriodWeeks { get; set; }
+        public string CurrentTaskStatus { get; set; } = string.Empty;
+        public string HandoverPlan { get; set; } = string.Empty;
+        public string KnowledgeTransferReqd { get; set; } = "No";
+
         // Dropdowns
         public IEnumerable<SelectListItem>? Locations { get; set; }
         public IEnumerable<SelectListItem>? Departments { get; set; }

@@ -124,6 +124,11 @@ namespace ETMS.Infrastructure.Repositories
         private static async Task EnsureUserSettingsTableAsync(System.Data.IDbConnection conn)
         {
             const string sql = @"
+                IF OBJECT_ID(N'dbo.FK_UserSettings_Employee', N'F') IS NOT NULL
+                BEGIN
+                    ALTER TABLE dbo.UserSettings DROP CONSTRAINT FK_UserSettings_Employee;
+                END;
+
                 IF OBJECT_ID(N'dbo.UserSettings', N'U') IS NULL
                 BEGIN
                     CREATE TABLE dbo.UserSettings
@@ -142,8 +147,7 @@ namespace ETMS.Infrastructure.Repositories
                         Theme                NVARCHAR(20) NOT NULL CONSTRAINT DF_UserSettings_Theme DEFAULT N'Light',
                         CreatedAt            DATETIME2 NOT NULL CONSTRAINT DF_UserSettings_CreatedAt DEFAULT SYSUTCDATETIME(),
                         UpdatedAt            DATETIME2 NULL,
-                        CONSTRAINT UQ_UserSettings_UserId UNIQUE (UserId),
-                        CONSTRAINT FK_UserSettings_Employee FOREIGN KEY (UserId) REFERENCES dbo.Employee(EmployeeId)
+                        CONSTRAINT UQ_UserSettings_UserId UNIQUE (UserId)
                     );
                 END";
 

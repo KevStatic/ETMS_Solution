@@ -7,6 +7,15 @@
 <link rel="stylesheet" href="~/css/profile.css" />
 
 <div class="profile-wrapper">
+    <div class="settings-page-header">
+        <div>
+            <h2>Settings</h2>
+            <p>Manage your account preferences</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-controller="Dashboard" asp-action="Index">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
     @if (TempData["Success"] != null)
     {
@@ -340,6 +349,9 @@
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('themeInput').value = val;
+
+            document.body.classList.remove('theme-light', 'theme-dark', 'theme-system');
+            document.body.classList.add('theme-' + val.toLowerCase());
         }
     </script>
 }

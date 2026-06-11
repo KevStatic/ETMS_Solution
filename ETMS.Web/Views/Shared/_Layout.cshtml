@@ -3,6 +3,27 @@
 @inject IEmployeeRepository EmployeeRepo
 @inject ITransferRequestRepository TransferRepo
 @inject INotificationRepository NotificationRepo
+@inject IUserSettingsService SettingsService
+@inject IUrlEncryptionService UrlEnc
+
+@{
+    var themeClass = "theme-light";
+
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var themeUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (int.TryParse(themeUserIdClaim, out var themeUserId))
+        {
+            var settings = await SettingsService.GetSettingsAsync(themeUserId);
+            themeClass = settings.Theme switch
+            {
+                "Dark" => "theme-dark",
+                "System" => "theme-system",
+                _ => "theme-light"
+            };
+        }
+    }
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,9 +47,210 @@
         body {
             background-color: #f4f7fa;
         }
+
+        body.theme-dark {
+            background-color: #0f172a;
+            color: #dbe4f0;
+        }
+
+        body.theme-dark .navbar,
+        body.theme-dark .dropdown-menu {
+            background-color: #111827 !important;
+            border-color: #263244 !important;
+        }
+
+        body.theme-dark .navbar-brand,
+        body.theme-dark .link-dark,
+        body.theme-dark .dropdown-item,
+        body.theme-dark .dropdown-header,
+        body.theme-dark .fw-bold,
+        body.theme-dark .text-dark {
+            color: #e5edf7 !important;
+        }
+
+        body.theme-dark .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        body.theme-dark .dropdown-divider,
+        body.theme-dark .border-bottom {
+            border-color: #263244 !important;
+        }
+
+        body.theme-dark .dropdown-item:hover {
+            background-color: #1e293b;
+        }
+
+        /* Recent changes */
+
+        body.theme-dark .card,
+        body.theme-dark .bg-white,
+        body.theme-dark .bg-light,
+        body.theme-dark .filter-input,
+        body.theme-dark .table-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #dbe4f0 !important;
+        }
+
+        body.theme-dark .metric-card[style*="e8f5e9"],
+        body.theme-dark .metric-card[style*="fff8e1"],
+        body.theme-dark .metric-card[style*="ffebee"] {
+            background-color: #1e293b !important;
+        }
+
+        body.theme-dark .text-dark,
+        body.theme-dark .fw-bold.text-dark,
+        body.theme-dark h4.text-dark,
+        body.theme-dark h3.text-dark,
+        body.theme-dark td.text-dark,
+        body.theme-dark td.fw-bold,
+        body.theme-dark [style*="color: #333"],
+        body.theme-dark [style*="color:#333"] {
+            color: #e2e8f0 !important;
+        }
+
+        body.theme-dark .table {
+            color: #dbe4f0;
+        }
+        body.theme-dark .table thead th {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark .table tbody tr {
+            border-color: #334155 !important;
+        }
+        body.theme-dark .table-hover tbody tr:hover {
+            background-color: #263244 !important;
+        }
+
+        body.theme-dark .form-control,
+        body.theme-dark .form-select,
+        body.theme-dark .input-group-text {
+            background-color: #263244 !important;
+            color: #dbe4f0 !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark .form-control::placeholder {
+            color: #64748b !important;
+        }
+        body.theme-dark .form-select option {
+            background-color: #1e293b;
+        }
+
+        body.theme-dark .btn-light,
+        body.theme-dark .btn-light.border {
+            background-color: #263244 !important;
+            color: #dbe4f0 !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark .nav-link.text-muted {
+            color: #64748b !important;
+        }
+        body.theme-dark .active-tab {
+            color: #e2e8f0 !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+
+        body.theme-dark {
+            --card: #1e293b;
+            --bg: #0f172a;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --border: #334155;
+            --accent-soft: #1e3a5f; 
+            --teal-soft: #0f2e2b;
+        }
+
+        /* Table rows */
+        body.theme-dark .table > tbody > tr {
+            background-color: #1e293b !important;
+            color: #dbe4f0 !important;
+        }
+
+        body.theme-dark .table > tbody > tr:hover {
+            background-color: #263244 !important;
+        }
+
+        /* The card wrapper around the table */
+        body.theme-dark .card.border-0 {
+            background-color: #1e293b !important;
+        }
+
+        /* The card-body padding wrapper */
+        body.theme-dark .card-body {
+            background-color: #1e293b !important;
+        }
+
+        /* Transfer ID accent color (blue text on accent-soft bg) */
+        body.theme-dark .table tbody td a,
+        body.theme-dark .table tbody td span.fw-bold {
+            color: #93c5fd !important;
+        }
+
+        /* Bottom border between rows */
+        body.theme-dark .table > tbody > tr > td {
+            border-color: #334155 !important;
+        }
+
+        /* Kill Bootstrap's table CSS variable overrides */
+        body.theme-dark .table {
+            --bs-table-bg: #1e293b;
+            --bs-table-striped-bg: #263244;
+            --bs-table-hover-bg: #263244;
+            --bs-table-border-color: #334155;
+            --bs-table-color: #dbe4f0;
+        }
+
+        /* Force the table-responsive wrapper too */
+        body.theme-dark .table-responsive {
+            background-color: #1e293b;
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            body.theme-system {
+                background-color: #0f172a;
+                color: #dbe4f0;
+            }
+
+            body.theme-system .navbar,
+            body.theme-system .dropdown-menu {
+                background-color: #111827 !important;
+                border-color: #263244 !important;
+            }
+
+            body.theme-system .navbar-brand,
+            body.theme-system .link-dark,
+            body.theme-system .dropdown-item,
+            body.theme-system .dropdown-header,
+            body.theme-system .fw-bold,
+            body.theme-system .text-dark {
+                color: #e5edf7 !important;
+            }
+
+            body.theme-system .text-muted {
+                color: #94a3b8 !important;
+            }
+
+            body.theme-system .dropdown-divider,
+            body.theme-system .border-bottom {
+                border-color: #263244 !important;
+            }
+
+            body.theme-system .dropdown-item:hover {
+                background-color: #1e293b;
+            }
+
+            body.theme-dark .table > tbody > tr {
+                background-color: #1e293b !important;
+                color: #dbe4f0 !important;
+            }
+        }
     </style>
 </head>
-<body>
+
+<body class="@themeClass">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -103,7 +325,7 @@
 
                                                     <li>
                                                         <a class="dropdown-item py-2 px-3"
-                                                               href="@(notif.TransferRequestId.HasValue ? $"/Transfer/View/{notif.TransferRequestId}" : "/Dashboard/Index")"
+                                                               href="@(notif.TransferRequestId.HasValue ? $"/Transfer/View/{UrlEnc.Encrypt(notif.TransferRequestId.Value)}" : "/portal")"
                                                                style="@rowBg">
                                                             <div class="d-flex align-items-start gap-2">
                                                                 <div class="@bgClass text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1"

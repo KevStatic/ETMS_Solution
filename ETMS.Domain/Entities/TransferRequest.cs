@@ -34,5 +34,18 @@ namespace ETMS.Domain.Entities
         public string? NewISEmail { get; set; }
         public string? ICHead { get; set; }
         public string? Remarks { get; set; }
+
+        // --- RELOCATION & REIMBURSEMENT ---
+        public string? TravelMode { get; set; }
+        public string? TravelClass { get; set; }
+        public string? RelocationAllowance { get; set; }
+        public string? AccommodationRequired { get; set; }
+        public int? DependentsCount { get; set; }
+
+        // --- HANDOVER & TRANSITION ---
+        public int? NoticePeriodWeeks { get; set; }
+        public string? CurrentTaskStatus { get; set; }
+        public string? HandoverPlan { get; set; }
+        public string? KnowledgeTransferReqd { get; set; }
     }
 }

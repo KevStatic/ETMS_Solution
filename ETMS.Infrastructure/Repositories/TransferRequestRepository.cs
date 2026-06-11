@@ -26,21 +26,27 @@ namespace ETMS.Infrastructure.Repositories
 INSERT INTO TransferRequests
 (
     EmployeeId, FromDepartmentId, ToDepartmentId, FromLocationId, ToLocationId,
-    OldManagerId, NewManagerId, TransferType, Reason, RequestDate, 
+    OldManagerId, NewManagerId, TransferType, Reason, RequestDate,
     ExpectedRelievingDate, ExpectedJoiningDate, Status, IsActive,
-    -- NEW FIELDS
-    LetterType, WithinCity, RelocationStatus, StartDate, EndDate, 
-    ProjectName, NewVertical, NewBU, NewISPsno, NewISName, NewISEmail, ICHead, Remarks
+    LetterType, WithinCity, RelocationStatus, StartDate, EndDate,
+    ProjectName, NewVertical, NewBU, NewISPsno, NewISName, NewISEmail, ICHead, Remarks,
+    -- RELOCATION & REIMBURSEMENT
+    TravelMode, TravelClass, RelocationAllowance, AccommodationRequired, DependentsCount,
+    -- HANDOVER & TRANSITION
+    NoticePeriodWeeks, CurrentTaskStatus, HandoverPlan, KnowledgeTransferReqd
 )
 OUTPUT INSERTED.TransferRequestId
 VALUES
 (
     @EmployeeId, @FromDepartmentId, @ToDepartmentId, @FromLocationId, @ToLocationId,
-    @OldManagerId, @NewManagerId, @TransferType, @Reason, @RequestDate, 
+    @OldManagerId, @NewManagerId, @TransferType, @Reason, @RequestDate,
     @ExpectedRelievingDate, @ExpectedJoiningDate, @Status, @IsActive,
-    -- NEW FIELDS
-    @LetterType, @WithinCity, @RelocationStatus, @StartDate, @EndDate, 
-    @ProjectName, @NewVertical, @NewBU, @NewISPsno, @NewISName, @NewISEmail, @ICHead, @Remarks
+    @LetterType, @WithinCity, @RelocationStatus, @StartDate, @EndDate,
+    @ProjectName, @NewVertical, @NewBU, @NewISPsno, @NewISName, @NewISEmail, @ICHead, @Remarks,
+    -- RELOCATION & REIMBURSEMENT
+    @TravelMode, @TravelClass, @RelocationAllowance, @AccommodationRequired, @DependentsCount,
+    -- HANDOVER & TRANSITION
+    @NoticePeriodWeeks, @CurrentTaskStatus, @HandoverPlan, @KnowledgeTransferReqd
 );";
 
             using var connection = _context.CreateConnection();
@@ -163,6 +169,7 @@ VALUES
 );";
 
             using var connection = _context.CreateConnection();
+            connection.Open();
             using var tx = connection.BeginTransaction();
             try
             {
@@ -278,11 +285,13 @@ SELECT CAST(SCOPE_IDENTITY() as int);";
             var counts = await multi.ReadFirstOrDefaultAsync<DashboardMetrics>() ?? new DashboardMetrics();
             var avgApprovalDays = await multi.ReadFirstOrDefaultAsync<double?>();
             var totalOpenPositions = await multi.ReadFirstOrDefaultAsync<int>();
-            var positionsList = await multi.ReadAsync<KeyValuePair<string, int>>();
+            var positionsList = (await multi.ReadAsync<dynamic>()).ToList();
 
             counts.AvgApprovalDays = avgApprovalDays ?? 0;
             counts.TotalOpenPositions = totalOpenPositions;
-            counts.OpenPositionsByLocation = positionsList.ToDictionary(x => x.Key, x => x.Value);
+            counts.OpenPositionsByLocation = positionsList.ToDictionary(
+                (dynamic x) => (string)x.Key,
+                (dynamic x) => (int)x.Value);
 
             return counts;
         }

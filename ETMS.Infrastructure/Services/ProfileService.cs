@@ -1,4 +1,5 @@
-﻿using ETMS.Application.DTOs.Profile;
+﻿using BCrypt.Net;
+using ETMS.Application.DTOs.Profile;
 using ETMS.Application.Interfaces;
 
 namespace ETMS.Application.Services
@@ -32,10 +33,10 @@ namespace ETMS.Application.Services
             var user = await _userRepo.GetByEmployeeIdAsync(employeeId);
             if (user == null) return false;
 
-            // Plain text comparison (use BCrypt if you hash passwords)
-            if (user.Password != dto.CurrentPassword) return false;
+            if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.Password)) return false;
 
-            return await _userRepo.UpdatePasswordByEmployeeIdAsync(employeeId, dto.NewPassword!);
+            string hashed = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword!);
+            return await _userRepo.UpdatePasswordByEmployeeIdAsync(employeeId, hashed);
         }
     }
 }

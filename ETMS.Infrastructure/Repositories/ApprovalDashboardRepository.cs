@@ -188,9 +188,9 @@ namespace ETMS.Infrastructure.Repositories
                     tr.EmployeeId,
                     CONCAT(e.FirstName,' ',e.LastName)  AS EmployeeName,
                     e.EmployeeCode,
-                    lFrom.LocationName                  AS FromLocation,
+                    lFrom.City + ', ' + lFrom.State     AS FromLocation,
                     dFrom.DepartmentName                AS FromDepartment,
-                    lTo.LocationName                    AS TargetLocation,
+                    lTo.City + ', ' + lTo.State         AS TargetLocation,
                     dTo.DepartmentName                  AS TargetDepartment,
                     tr.TransferType,
                     tr.Reason,
@@ -222,9 +222,9 @@ namespace ETMS.Infrastructure.Repositories
                     tr.EmployeeId,
                     CONCAT(e.FirstName,' ',e.LastName)  AS EmployeeName,
                     e.EmployeeCode,
-                    lFrom.LocationName                  AS FromLocation,
+                    lFrom.City + ', ' + lFrom.State     AS FromLocation,
                     dFrom.DepartmentName                AS FromDepartment,
-                    lTo.LocationName                    AS TargetLocation,
+                    lTo.City + ', ' + lTo.State         AS TargetLocation,
                     dTo.DepartmentName                  AS TargetDepartment,
                     tr.TransferType,
                     tr.Reason,
@@ -258,14 +258,14 @@ namespace ETMS.Infrastructure.Repositories
             const string sql = @"
                 SELECT TOP (@Top)
                     tr.TransferRequestId,
-                    CONCAT(e.FirstName,' ',e.LastName) AS EmployeeName,
-                    lTo.LocationName                   AS TargetLocation,
-                    dTo.DepartmentName                 AS TargetDepartment,
-                    ta.ApprovalStatus                  AS Decision,
-                    ta.ActionDate                      AS ActionedOn,
+                    CONCAT(e.FirstName,' ',e.LastName)        AS EmployeeName,
+                    lTo.City + ', ' + lTo.State               AS TargetLocation,
+                    dTo.DepartmentName                        AS TargetDepartment,
+                    ta.ApprovalStatus                         AS Decision,
+                    ta.ActionDate                             AS ActionedOn,
                     ta.Comments,
-                    tr.Status                          AS FinalStatus,
-                    tr.LetterPath                      AS LetterPath
+                    tr.Status                                 AS FinalStatus,
+                    tr.LetterPath                             AS LetterPath
                 FROM TransferApprovals ta
                 INNER JOIN TransferRequests tr ON tr.TransferRequestId = ta.TransferRequestId
                 INNER JOIN Employee e           ON e.EmployeeId = tr.EmployeeId
@@ -282,13 +282,13 @@ namespace ETMS.Infrastructure.Repositories
             const string sql = @"
                 SELECT TOP (@Top)
                     tr.TransferRequestId,
-                    CONCAT(e.FirstName,' ',e.LastName) AS EmployeeName,
-                    lTo.LocationName                   AS TargetLocation,
-                    dTo.DepartmentName                 AS TargetDepartment,
-                    ta.ApprovalStatus                  AS Decision,
-                    ta.ActionDate                      AS ActionedOn,
+                    CONCAT(e.FirstName,' ',e.LastName)   AS EmployeeName,
+                    lTo.City + ', ' + lTo.State          AS TargetLocation,
+                    dTo.DepartmentName                   AS TargetDepartment,
+                    ta.ApprovalStatus                    AS Decision,
+                    ta.ActionDate                        AS ActionedOn,
                     ta.Comments,
-                    tr.Status                          AS FinalStatus
+                    tr.Status                            AS FinalStatus
                 FROM TransferApprovals ta
                 INNER JOIN TransferRequests tr ON tr.TransferRequestId = ta.TransferRequestId
                 INNER JOIN Employee e           ON e.EmployeeId = tr.EmployeeId
@@ -313,7 +313,7 @@ namespace ETMS.Infrastructure.Repositories
             };
             string searchClause = string.IsNullOrWhiteSpace(searchTerm)
                 ? ""
-                : "AND (CONCAT(e.FirstName,' ',e.LastName) LIKE @Search OR e.EmployeeCode LIKE @Search OR lTo.LocationName LIKE @Search)";
+                : "AND (CONCAT(e.FirstName,' ',e.LastName) LIKE @Search OR e.EmployeeCode LIKE @Search OR (lTo.City + ' ' + lTo.State) LIKE @Search)";
             string orderClause = sortOrder switch
             {
                 "date_asc" => "tr.RequestDate ASC",
@@ -326,10 +326,10 @@ namespace ETMS.Infrastructure.Repositories
             string sql = $@"
                 SELECT
                     tr.TransferRequestId,
-                    CONCAT(e.FirstName,' ',e.LastName) AS EmployeeName,
-                    lTo.LocationName                   AS TargetLocation,
-                    dTo.DepartmentName                 AS TargetDepartment,
-                    hr_ta.ApprovalStatus               AS Decision,
+                    CONCAT(e.FirstName,' ',e.LastName)   AS EmployeeName,
+                    lTo.City + ', ' + lTo.State          AS TargetLocation,
+                    dTo.DepartmentName                   AS TargetDepartment,
+                    hr_ta.ApprovalStatus                 AS Decision,
                     hr_ta.ActionDate                   AS ActionedOn,
                     hr_ta.Comments,
                     tr.Status                          AS FinalStatus,
