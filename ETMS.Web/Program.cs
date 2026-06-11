@@ -76,8 +76,10 @@ try
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
-            options.LoginPath = "/Account/Login";   // ✅ Fixed login path
-            options.AccessDeniedPath = "/Account/Login";
+            options.LoginPath = "/Account/Login";   // unauthenticated users
+            // Authenticated-but-unauthorized users go to their dashboard, not the
+            // login screen (which looked like a broken login loop).
+            options.AccessDeniedPath = "/Dashboard/Index";
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
         });
 
