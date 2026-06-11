@@ -105,7 +105,7 @@ namespace ETMS.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "HR,HOD")]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> AddPosition(UpdatePositionDto model)
         {
             await _repo.AddOpenPositionAsync(model.LocationName, model.DepartmentName);
@@ -115,7 +115,7 @@ namespace ETMS.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "HR,HOD")]
+        [Authorize(Roles = "HR")]
         public async Task<IActionResult> RemovePosition(int positionId)
         {
             await _repo.RemoveOpenPositionAsync(positionId);

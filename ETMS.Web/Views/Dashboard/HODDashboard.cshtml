@@ -57,26 +57,6 @@
         </div>
     </div>
 
-    <!-- Workflow Banner -->
-    <div class="alert border-0 mb-4 d-flex align-items-center gap-3 flex-wrap" style="background:#f0f4ff;border-radius:10px;">
-        <span class="fw-semibold text-primary small"><i class="fas fa-route me-1"></i> Approval Workflow:</span>
-        @{
-            var wfStages = new[] {
-                ("Employee Submits","fas fa-paper-plane","#6c757d"),
-                ("Manager Approved","fas fa-user-check","#198754"),
-                ("You Review","fas fa-building","#0d6efd"),
-                ("HR Final","fas fa-shield-alt","#6c757d"),
-                ("Letter Issued","fas fa-file-pdf","#6c757d")
-            };
-        }
-        @foreach (var (lbl, ico, col) in wfStages)
-        {
-            <span class="d-flex align-items-center gap-1 small fw-medium" style="color:@col;">
-                <i class="@ico"></i> @lbl
-            </span>
-            @if (lbl != "Letter Issued") { <i class="fas fa-chevron-right text-muted" style="font-size:.65rem;"></i> }
-        }
-    </div>
 
     <!-- Metrics (identical layout to Employee dashboard) -->
     <div class="row g-3 mb-4">
@@ -355,15 +335,13 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-door-open text-primary me-2"></i>Open Positions</h5>
-                        <button class="btn btn-sm text-white fw-bold px-3"
-                                style="background:#66D2CE;border-radius:8px;"
-                                data-bs-toggle="modal" data-bs-target="#addPositionModal">
-                            <i class="fas fa-plus me-1"></i> Add
-                        </button>
+                        <span class="badge badge-soft-neutral px-3 py-2 rounded-pill">
+                            <i class="fas fa-lock me-1"></i> Managed by HR
+                        </span>
                     </div>
                     <p class="text-muted small mb-3">
-                        These positions are visible to employees when submitting a transfer request.
-                        Removing a position closes it from new applications.
+                        Positions published by HR that are visible to employees when submitting a transfer
+                        request. These are managed centrally by HR.
                     </p>
 
                     @if (!Model.AllOpenPositions.Any())
@@ -389,16 +367,6 @@
                                         <span class="position-pill">
                                             <i class="fas fa-briefcase" style="font-size:.7rem;color:#5c9bba;"></i>
                                             @pos.DepartmentName
-                                            <form asp-controller="Approval" asp-action="RemovePosition"
-                                                  method="post" class="d-inline mb-0">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="positionId" value="@pos.PositionId" />
-                                                <button type="submit" class="remove-btn border-0 bg-transparent p-0"
-                                                        title="Remove this position"
-                                                        onclick="return confirm('Remove this open position?')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </form>
                                         </span>
                                     }
                                 </div>
@@ -488,47 +456,6 @@
     </div>
 </div>
 
-<!-- Add Position Modal -->
-<div class="modal fade" id="addPositionModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow" style="border-radius:14px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle text-primary me-2"></i>Add Open Position</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form asp-controller="Approval" asp-action="AddPosition" method="post">
-                @Html.AntiForgeryToken()
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">This position will appear in the employee transfer form as an available destination.</p>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Location</label>
-                        <select name="LocationName" class="form-select filter-input" required>
-                            <option value="">— Select Location —</option>
-                            @foreach (var loc in Model.Locations)
-                            {
-                                <option value="@loc.Text">@loc.Text</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Department</label>
-                        <select name="DepartmentName" class="form-select filter-input" required>
-                            <option value="">— Select Department —</option>
-                            @foreach (var dept in Model.Departments)
-                            {
-                                <option value="@dept.Text">@dept.Text</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white rounded-pill px-4" style="background:#66D2CE;">Add Position</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
 <script>

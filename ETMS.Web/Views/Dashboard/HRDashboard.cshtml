@@ -57,26 +57,6 @@
         </div>
     </div>
 
-    <!-- Workflow Banner -->
-    <div class="alert border-0 mb-4 d-flex align-items-center gap-3 flex-wrap" style="background:#f0f4ff;border-radius:10px;">
-        <span class="fw-semibold text-primary small"><i class="fas fa-route me-1"></i> Approval Workflow:</span>
-        @{
-            var wfStages = new[] {
-                ("Employee Submits","fas fa-paper-plane","#6c757d"),
-                ("Manager Approved","fas fa-user-check","#198754"),
-                ("HOD Approved","fas fa-building","#198754"),
-                ("You Finalise","fas fa-shield-alt","#0d6efd"),
-                ("Letter Issued","fas fa-file-pdf","#0d6efd")
-            };
-        }
-        @foreach (var (lbl, ico, col) in wfStages)
-        {
-            <span class="d-flex align-items-center gap-1 small fw-medium" style="color:@col;">
-                <i class="@ico"></i> @lbl
-            </span>
-            @if (lbl != "Letter Issued") { <i class="fas fa-chevron-right text-muted" style="font-size:.65rem;"></i> }
-        }
-    </div>
 
     <!-- Metrics -->
     <div class="row g-3 mb-4">
@@ -374,7 +354,7 @@
                     @foreach (var grp in locationGroups)
                     {
                         <div class="col-md-3 col-sm-6">
-                            <div class="p-3 border rounded" style="border-radius:10px;background:#fafafa;">
+                            <div class="p-3 rounded surface-neutral h-100">
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <i class="fas fa-map-marker-alt text-muted" style="font-size:.8rem;"></i>
                                     <span class="fw-semibold text-dark small text-uppercase" style="letter-spacing:.5px;">@grp.Key</span>

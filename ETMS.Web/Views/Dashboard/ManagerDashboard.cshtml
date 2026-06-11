@@ -53,27 +53,6 @@
         </div>
     </div>
 
-    <!-- Workflow Banner -->
-    <div class="alert border-0 mb-4 d-flex align-items-center gap-3 flex-wrap"
-         style="background:#f0f4ff;border-radius:10px;">
-        <span class="fw-semibold text-primary small"><i class="fas fa-route me-1"></i> Approval Workflow:</span>
-        @{
-            var stages = new[] {
-                ("Employee Submits","fas fa-paper-plane","#6c757d"),
-                ("You Approve","fas fa-user-check","#0d6efd"),
-                ("HOD Reviews","fas fa-building","#6c757d"),
-                ("HR Final","fas fa-shield-alt","#6c757d"),
-                ("Letter Issued","fas fa-file-pdf","#6c757d")
-            };
-        }
-        @foreach (var (label, icon, color) in stages)
-        {
-            <span class="d-flex align-items-center gap-1 small fw-medium" style="color:@color;">
-                <i class="@icon"></i> @label
-            </span>
-            @if (label != "Letter Issued") { <i class="fas fa-chevron-right text-muted" style="font-size:.65rem;"></i> }
-        }
-    </div>
 
     <!-- Metrics -->
     <div class="row g-3 mb-4">

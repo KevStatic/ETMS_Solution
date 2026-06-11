@@ -135,3 +135,76 @@ body.theme-dark {
 .badge-soft-warning { background: var(--surface-warning-bg); color: var(--surface-warning-fg); }
 .badge-soft-danger  { background: var(--surface-danger-bg);  color: var(--surface-danger-fg); }
 .badge-soft-neutral { background: var(--surface-neutral-bg); color: var(--surface-fg-muted); border: 1px solid var(--surface-neutral-border); }
+
+/* =====================================================================
+   Dark-mode robustness for common Bootstrap containers.
+   These live in the globally-loaded stylesheet so any modal/card added
+   later adapts automatically instead of showing light-on-light text.
+   ===================================================================== */
+
+/* Modals — white modal-content kept text dark while the global rules flip
+   .text-dark/.fw-bold to light, causing invisible headings. Make the whole
+   modal dark so the flipped-light text is readable. */
+body.theme-dark .modal-content {
+    background-color: #1e293b;
+    color: #dbe4f0;
+    border: 1px solid #334155;
+}
+body.theme-dark .modal-header,
+body.theme-dark .modal-footer {
+    border-color: #334155 !important;
+}
+body.theme-dark .modal-title,
+body.theme-dark .modal-content .fw-bold,
+body.theme-dark .modal-content .text-dark {
+    color: #e5edf7 !important;
+}
+body.theme-dark .modal-content .text-muted {
+    color: #94a3b8 !important;
+}
+/* The × close button is a dark glyph; invert it so it shows on a dark modal. */
+body.theme-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Safety net: neutral light inline backgrounds that aren't status colours.
+   (Status pastels #e8f5e9/#fff8e1/#ffebee are handled elsewhere.) */
+body.theme-dark [style*="background:#fafafa"],
+body.theme-dark [style*="background:#f9fafc"],
+body.theme-dark [style*="background:#f8f9fa"],
+body.theme-dark [style*="background:#f4f7fc"],
+body.theme-dark [style*="background:#f0f4ff"] {
+    background: #273347 !important;
+    color: #dbe4f0;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.theme-system .modal-content {
+        background-color: #1e293b;
+        color: #dbe4f0;
+        border: 1px solid #334155;
+    }
+    body.theme-system .modal-header,
+    body.theme-system .modal-footer {
+        border-color: #334155 !important;
+    }
+    body.theme-system .modal-title,
+    body.theme-system .modal-content .fw-bold,
+    body.theme-system .modal-content .text-dark {
+        color: #e5edf7 !important;
+    }
+    body.theme-system .modal-content .text-muted {
+        color: #94a3b8 !important;
+    }
+    body.theme-system .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    body.theme-system [style*="background:#fafafa"],
+    body.theme-system [style*="background:#f9fafc"],
+    body.theme-system [style*="background:#f8f9fa"],
+    body.theme-system [style*="background:#f4f7fc"],
+    body.theme-system [style*="background:#f0f4ff"] {
+        background: #273347 !important;
+        color: #dbe4f0;
+    }
+}
